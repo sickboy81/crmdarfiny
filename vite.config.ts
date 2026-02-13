@@ -17,13 +17,24 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-ui': ['lucide-react', 'sonner', 'clsx', 'tailwind-merge'],
-            'vendor-utils': ['zustand', '@supabase/supabase-js'],
-            'vendor-ai': ['@google/genai', 'tesseract.js'],
-            'vendor-charts': ['recharts'],
-            'vendor-pdf': ['jspdf', 'pdf-lib'],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              // Group React and Recharts together to avoid dependency issues with React 19
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('recharts')) {
+                return 'vendor-core';
+              }
+              // Other large libraries still get their own chunks
+              if (id.includes('tesseract.js') || id.includes('@google/genai')) {
+                return 'vendor-ai';
+              }
+              if (id.includes('jspdf') || id.includes('pdf-lib')) {
+                return 'vendor-pdf';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-ui';
+              }
+              return 'vendor-lib';
+            }
           },
         },
       },
