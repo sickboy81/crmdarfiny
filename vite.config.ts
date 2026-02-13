@@ -19,26 +19,20 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              // Group React and Recharts together to avoid dependency issues with React 19
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('recharts')) {
-                return 'vendor-core';
-              }
-              // Other large libraries still get their own chunks
+              // Heavy AI and PDF libraries are safely split as they are mostly standalone/worker-based
               if (id.includes('tesseract.js') || id.includes('@google/genai')) {
                 return 'vendor-ai';
               }
               if (id.includes('jspdf') || id.includes('pdf-lib')) {
                 return 'vendor-pdf';
               }
-              if (id.includes('lucide-react')) {
-                return 'vendor-ui';
-              }
-              return 'vendor-lib';
+              // Keep all UI and Core libs together to avoid reference issues (like lucide-react or recharts)
+              return 'vendor';
             }
           },
         },
       },
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
     },
     resolve: {
       alias: {
