@@ -14,7 +14,10 @@ export const useWhatsAppSocket = () => {
 
         const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
         console.log(`🔌 Iniciando conexão Socket.IO com ${serverUrl}...`);
-        const socket = io(serverUrl);
+        const socket = io(serverUrl, {
+            transports: ['polling', 'websocket'],
+            path: '/socket.io/'
+        });
         socketRef.current = socket;
 
         socket.on('connect', () => {

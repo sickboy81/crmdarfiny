@@ -11,7 +11,10 @@ export const WhatsAppConnection: React.FC = () => {
 
     useEffect(() => {
         const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
-        const newSocket = io(serverUrl);
+        const newSocket = io(serverUrl, {
+            transports: ['polling', 'websocket'],
+            path: '/socket.io/'
+        });
         setSocket(newSocket);
 
         newSocket.on('status', (newStatus: string) => {
