@@ -21,6 +21,8 @@ import { Session, User } from '@supabase/supabase-js';
 import { getDBSettings, saveDBSettings } from './services/settingsService';
 import { useWhatsAppPolling } from './hooks/useWhatsAppPolling';
 import { useWhatsAppSocket } from './hooks/useWhatsAppSocket';
+import { supabaseService } from './services/supabaseService';
+import { useRealEstateStore } from './stores/useRealEstateStore';
 
 const App: React.FC = () => {
   useWhatsAppPolling();
@@ -37,8 +39,13 @@ const App: React.FC = () => {
     setUser,
     setIsAdmin,
     settings,
-    setSettings
+    setSettings,
+    setContacts,
+    setMessages,
+    setCampaigns
   } = useAppStore();
+
+  const { setProperties } = useRealEstateStore();
 
   React.useEffect(() => {
     const updateAuthState = async (session: Session | null) => {
@@ -72,6 +79,23 @@ const App: React.FC = () => {
             setSettings(localSettings);
           }
         }
+
+        // Load CRM Data from Supabase
+        try {
+          const [dbContacts, dbMessages, dbProperties, dbCampaigns] = await Promise.all([
+            supabaseService.fetchContacts(),
+            supabaseService.fetchMessages(),
+            supabaseService.fetchProperties(),
+            supabaseService.fetchCampaigns()
+          ]);
+
+          if (dbContacts.length > 0) setContacts(dbContacts);
+          if (Object.keys(dbMessages).length > 0) setMessages(dbMessages);
+          if (dbProperties.length > 0) setProperties(dbProperties);
+          if (dbCampaigns.length > 0) setCampaigns(dbCampaigns);
+        } catch (error) {
+          console.error('Error loading CRM data from Supabase:', error);
+        }
       }
     };
 
@@ -86,7 +110,7 @@ const App: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [setSession, setUser, setIsAdmin, setSettings]);
+  }, [setSession, setUser, setIsAdmin, setSettings, setContacts, setMessages, setCampaigns, setProperties]);
 
   if (!session) {
     return (

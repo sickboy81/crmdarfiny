@@ -12,8 +12,9 @@ export const useWhatsAppSocket = () => {
         // Conecta apenas uma vez
         if (socketRef.current) return;
 
-        console.log('🔌 Iniciando conexão Socket.IO com servidor WhatsApp...');
-        const socket = io('http://localhost:3001');
+        const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+        console.log(`🔌 Iniciando conexão Socket.IO com ${serverUrl}...`);
+        const socket = io(serverUrl);
         socketRef.current = socket;
 
         socket.on('connect', () => {

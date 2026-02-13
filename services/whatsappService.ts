@@ -101,7 +101,8 @@ export const sendRealWhatsAppMessage = async (
   // 1. Tentar enviar via Servidor Local (Baileys/Mirroring) primeiro
   // Isso resolve o problema de CORS e usa a conexão que o usuário acabou de configurar via QR Code
   try {
-    const localServerUrl = 'http://localhost:3001/send';
+    const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+    const localServerUrl = `${serverUrl}/send`;
     const cleanPhone = to.replace(/\D/g, '');
 
     // Formata o JID conforme padrão do WhatsApp/Baileys

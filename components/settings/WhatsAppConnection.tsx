@@ -10,8 +10,8 @@ export const WhatsAppConnection: React.FC = () => {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        // Conecta ao servidor Socket.IO do Baileys
-        const newSocket = io('http://localhost:3001');
+        const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+        const newSocket = io(serverUrl);
         setSocket(newSocket);
 
         newSocket.on('status', (newStatus: string) => {
@@ -31,9 +31,9 @@ export const WhatsAppConnection: React.FC = () => {
     }, []);
 
     const startConnection = async () => {
-        setStatus('connecting');
+        const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
         try {
-            const response = await fetch('http://localhost:3001/connect', {
+            const response = await fetch(`${serverUrl}/connect`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -46,8 +46,9 @@ export const WhatsAppConnection: React.FC = () => {
     };
 
     const handleDisconnect = async () => {
+        const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
         try {
-            await fetch('http://localhost:3001/disconnect', {
+            await fetch(`${serverUrl}/disconnect`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
