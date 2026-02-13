@@ -8,17 +8,25 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: '*', // Permitir qualquer origem (Frontend Vercel)
-        methods: ['GET', 'POST'],
+        origin: "*",
+        methods: ["GET", "POST", "OPTIONS"],
+        allowedHeaders: ["*"],
         credentials: true
-    }
+    },
+    allowEIO3: true
 });
 
 app.use(cors({
-    origin: '*', // Permitir qualquer origem
-    methods: ['GET', 'POST'],
+    origin: true, // Reflete a origem da requisição
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     credentials: true
 }));
+
+// Rota de Health Check
+app.get('/', (req, res) => {
+    res.send('WhatsApp Server is running! 🚀');
+});
 app.use(express.json());
 
 let sock = null;
