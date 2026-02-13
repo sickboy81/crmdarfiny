@@ -9,7 +9,12 @@ import {
     Globe,
     Save,
     Camera,
+    Lock,
+    Key,
+    Loader2
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 
 export interface CompanyProfile {
     companyName: string;
@@ -36,8 +41,49 @@ export const AccountSettings: React.FC<AccountSettingsProps> = ({
     setProfile,
     onSave,
 }) => {
+    const [newPassword, setNewPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+
     const updateField = (field: keyof CompanyProfile, value: string) => {
         setProfile({ ...profile, [field]: value });
+    };
+
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!newPassword) {
+            toast.error('Informe a nova senha');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            toast.error('As senhas não coincidem');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            toast.error('A senha deve ter pelo menos 6 caracteres');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) throw error;
+
+            toast.success('Senha atualizada com sucesso!');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error: any) {
+            console.error('Erro ao mudar senha:', error);
+            toast.error(error.message || 'Erro ao atualizar senha');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -216,6 +262,59 @@ export const AccountSettings: React.FC<AccountSettingsProps> = ({
                         </select>
                     </div>
                 </div>
+            </div>
+
+            {/* Security Settings */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <Lock className="text-purple-600" size={20} />
+                    Segurança e Acesso
+                </h3>
+
+                <form onSubmit={handleUpdatePassword} className="space-y-4 max-w-md">
+                    <p className="text-sm text-gray-500">Altere sua senha de acesso ao CRM.</p>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Nova Senha
+                        </label>
+                        <div className="relative group">
+                            <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-600 transition-colors" size={16} />
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Mínimo 6 caracteres"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl pl-12 focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-900 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Confirmar Nova Senha
+                        </label>
+                        <div className="relative group">
+                            <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-600 transition-colors" size={16} />
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Repita a nova senha"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl pl-12 focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-900 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-all w-full md:w-auto"
+                    >
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                        Atualizar Senha
+                    </button>
+                </form>
             </div>
 
             {/* Save Button */}
