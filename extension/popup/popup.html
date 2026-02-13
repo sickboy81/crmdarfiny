@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM All-in-One</title>
+  <style>
+    :root {
+      --primary: #1877f2;
+      /* Facebook Blue */
+      --secondary: #25D366;
+      /* WhatsApp Green */
+      --bg: #f0f2f5;
+      --text: #1c1e21;
+    }
+
+    body {
+      width: 350px;
+      min-height: 200px;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 500;
+      color: #65676b;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab[data-target="whatsapp"].active {
+      color: var(--secondary);
+      border-bottom-color: var(--secondary);
+    }
+
+    /* Content */
+    .tab-content {
+      display: none;
+      padding: 16px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Common Styles */
+    h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    p {
+      margin: 0 0 15px;
+      font-size: 13px;
+      color: #65676b;
+    }
+
+    .status {
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .status.ok {
+      background: #e7f9ed;
+      color: #0d6832;
+    }
+
+    .status.err {
+      background: #fef3e6;
+      color: #8a4a00;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .btn-fb {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-fb:hover {
+      background: #166fe5;
+    }
+
+    .btn-wa {
+      background: var(--secondary);
+      color: #fff;
+    }
+
+    .btn-wa:hover {
+      background: #20bd5a;
+    }
+
+    .btn-secondary {
+      background: #e4e6eb;
+      color: #1c1e21;
+    }
+
+    .btn-secondary:hover {
+      background: #d8dadf;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="tabs">
+    <div class="tab active" data-target="facebook">Auto Post</div>
+    <div class="tab" data-target="whatsapp">WhatsApp</div>
+  </div>
+
+  <!-- Facebook Auto Post Tab -->
+  <div id="facebook" class="tab-content active">
+    <h3>Facebook Auto Post</h3>
+    <div id="fb-content"></div> <!-- Dynamic Content from popup.js -->
+  </div>
+
+  <!-- WhatsApp Extractor Tab -->
+  <div id="whatsapp" class="tab-content">
+    <h3>Extrator de Contatos</h3>
+    <p>Abra o WhatsApp Web e acesse uma conversa para extrair os dados.</p>
+
+    <div id="wa-status" class="status" style="display:none;"></div>
+
+    <button id="btn-extract" class="btn-wa">Extrair Contato Atual</button>
+    <button id="btn-download-csv" class="btn-secondary">Baixar Todos (CSV)</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

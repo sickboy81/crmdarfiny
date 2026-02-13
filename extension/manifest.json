@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "CRM All-in-One (WhatsApp & AutoPost)",
+  "version": "3.0.1",
+  "description": "Ferramenta unificada: Extraia contatos do WhatsApp Web e automatize posts no Facebook/Instagram.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://www.facebook.com/*",
+    "*://web.facebook.com/*",
+    "*://m.facebook.com/*",
+    "*://mbasic.facebook.com/*",
+    "*://web.whatsapp.com/*",
+    "http://localhost/*",
+    "http://localhost:*/*",
+    "http://127.0.0.1/*",
+    "http://127.0.0.1:*/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icon.svg",
+      "32": "icon.svg",
+      "48": "icon.svg",
+      "128": "icon.svg"
+    }
+  },
+  "icons": {
+    "16": "icon.svg",
+    "32": "icon.svg",
+    "48": "icon.svg",
+    "128": "icon.svg"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.facebook.com/*",
+        "*://web.facebook.com/*",
+        "*://m.facebook.com/*",
+        "*://mbasic.facebook.com/*"
+      ],
+      "js": [
+        "scripts/content-fb-session.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "*://web.whatsapp.com/*"
+      ],
+      "js": [
+        "scripts/content-whatsapp.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
+      ],
+      "js": [
+        "scripts/content-crm.js"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}
