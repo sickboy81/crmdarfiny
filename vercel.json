@@ -6,11 +6,11 @@
         },
         {
             "source": "/api/og",
-            "destination": "/api/og.tsx"
+            "destination": "/api/og"
         },
         {
             "source": "/api/bio",
-            "destination": "/api/bio.ts"
+            "destination": "/api/bio"
         },
         {
             "source": "/bio",
