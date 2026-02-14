@@ -177,7 +177,8 @@ export const LinkBio: React.FC = () => {
     };
 
     const copyBioLink = () => {
-        const url = `${window.location.origin}/bio`;
+        // Points to the main domain, assuming a Vercel Rewrite is configured there
+        const url = `https://darfinyavila.com.br/bio`;
         navigator.clipboard.writeText(url);
         setCopied(true);
         toast.success('Link da Bio copiado!');
