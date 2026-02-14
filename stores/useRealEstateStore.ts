@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Property, Meeting } from '../types';
+import { supabaseService } from '../services/supabaseService';
 
 interface RealEstateState {
     properties: Property[];
@@ -28,14 +29,20 @@ export const useRealEstateStore = create<RealEstateState>()(
             meetings: [],
 
             addProperty: (property) =>
-                set((state) => ({ properties: [...state.properties, property] })),
+                set((state) => {
+                    const newProperties = [...state.properties, property];
+                    supabaseService.syncProperties(newProperties).catch(console.error);
+                    return { properties: newProperties };
+                }),
 
             updateProperty: (id, updates) =>
-                set((state) => ({
-                    properties: state.properties.map((p) =>
+                set((state) => {
+                    const updatedProperties = state.properties.map((p) =>
                         p.id === id ? { ...p, ...updates } : p
-                    ),
-                })),
+                    );
+                    supabaseService.syncProperties(updatedProperties).catch(console.error);
+                    return { properties: updatedProperties };
+                }),
 
             deleteProperty: (id) =>
                 set((state) => ({

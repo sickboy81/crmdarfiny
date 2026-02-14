@@ -13,7 +13,8 @@ interface ChatListProps {
 }
 
 export const ChatList: React.FC<ChatListProps> = ({ selectedChatId, onSelectChat }) => {
-  const { contacts, messages, setCurrentView, updateContact, markChatReadStatus, deleteContact, deleteChat } = useAppStore();
+  const { contacts, messages, setCurrentView, updateContact, markChatReadStatus, deleteContact, deleteChat, settings } = useAppStore();
+  const isPrivacyMode = settings.crm_preferences?.blurSensitive;
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'archived'>('all');
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, chatId: string } | null>(null);
@@ -314,7 +315,10 @@ export const ChatList: React.FC<ChatListProps> = ({ selectedChatId, onSelectChat
                       </div>
                     ) : (
                       <h3
-                        className="font-semibold text-gray-900 truncate text-[15px] flex items-center gap-1 cursor-pointer hover:text-green-600 transition-colors"
+                        className={clsx(
+                          "font-semibold text-gray-900 truncate text-[15px] flex items-center gap-1 cursor-pointer hover:text-green-600 transition-colors",
+                          isPrivacyMode && "privacy-blur"
+                        )}
                         onDoubleClick={() => {
                           setEditingContactId(chatContact.id);
                           setEditingContactName(chatContact.name);
@@ -332,7 +336,7 @@ export const ChatList: React.FC<ChatListProps> = ({ selectedChatId, onSelectChat
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500 truncate pr-2">
+                    <p className={clsx("text-sm text-gray-500 truncate pr-2", isPrivacyMode && "privacy-blur")}>
                       {/* Icone de arquivo se arquivado */}
                       {chatContact.status === 'archived' && <Archive size={12} className="inline mr-1 text-gray-400" />}
                       {chat.lastMessage.senderId === 'me' ? 'Você: ' : ''}

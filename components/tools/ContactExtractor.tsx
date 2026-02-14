@@ -7,15 +7,15 @@ import {
 import { toast } from 'sonner';
 import { useAppStore } from '../../stores/useAppStore';
 import clsx from 'clsx';
-
-import { processImageWithAI } from '../../services/geminiService';
+// No AI import
 
 interface ExtractedContact {
-    id: string; // unique temp id
-    type: 'email' | 'phone';
-    value: string;
-    original: string;
+    id: string;
+    name?: string;
+    phone?: string;
+    email?: string;
     selected: boolean;
+    source: string; // The original line or context
 }
 
 export const ContactExtractor: React.FC = () => {
@@ -31,89 +31,168 @@ export const ContactExtractor: React.FC = () => {
     const [tags, setTags] = useState<string[]>(['Importado']);
 
     const processText = (text: string) => {
-        // Regex for Emails
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-        const emails = text.match(emailRegex) || [];
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        const newLeads: ExtractedContact[] = [];
 
-        // Advanced Regex for BR Phones: 
-        // Handles: +55 11 99999-9999, (11) 99999-9999, 11 999999999, 99999-9999
-        // This is a permissive regex to catch most candidates, then we filter.
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
         const phoneRegex = /(?:(?:\+|00)?(55)\s?)?(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-9])\d{3})[-.\s]?(\d{4}))/g;
 
-        const matches = [...text.matchAll(phoneRegex)];
-        const phones = matches.map(m => {
-            const ddd = m[2];
-            const part1 = m[3];
-            const part2 = m[4];
+        // Smart Window Processing: Look at blocks of 4 lines
+        for (let i = 0; i < lines.length; i++) {
+            const window = lines.slice(i, i + 4);
+            let name = '';
+            let phone = '';
+            let email = '';
 
-            // Reconstruct standard format
-            const clean = `${ddd || ''}${part1}${part2}`.replace(/\D/g, '');
+            window.forEach((line, idx) => {
+                const emails = line.match(emailRegex);
+                const phones = [...line.matchAll(phoneRegex)].map(m => `${m[2] || ''}${m[3]}${m[4]}`.replace(/\D/g, ''));
 
-            // Basic validation for BR numbers
-            // 10 digits (Landline w/ DDD): 11 3333 4444
-            // 11 digits await (Mobile w/ DDD): 11 99999 8888
-            // 8 digits (Landline wo/ DDD): 3333 4444 (skip? maybe risky)
-            // 9 digits (Mobile wo/ DDD): 99999 8888 (skip? risky)
-            if (clean.length < 10) return null; // Only accept with DDD for safety or strict 10/11 digits
-
-            return {
-                original: m[0],
-                clean: clean
-            };
-        }).filter(Boolean);
-
-        const newContacts: ExtractedContact[] = [];
-
-        emails.forEach(e => {
-            newContacts.push({
-                id: Math.random().toString(36).substr(2, 9),
-                type: 'email',
-                value: e,
-                original: e,
-                selected: true
+                if (emails) {
+                    if (!email) email = emails[0];
+                } else if (phones.length > 0) {
+                    if (!phone) phone = phones[0];
+                } else if (!name && line.length > 2 && line.length < 40 && !line.includes('---')) {
+                    // Possible name if it's not a phone/email and look like a short label
+                    name = line;
+                }
             });
-        });
 
-        phones.forEach(p => {
-            if (p) {
-                newContacts.push({
+            if (phone || email) {
+                newLeads.push({
                     id: Math.random().toString(36).substr(2, 9),
-                    type: 'phone',
-                    value: p.clean,
-                    original: p.original,
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    source: window[0].substring(0, 30),
                     selected: true
                 });
+
+                // Skip the lines we consumed to avoid duplicate fragments
+                if (phone && email) i += 2;
+                else if (phone || email) i += 1;
             }
+        }
+
+        consolidateAndSetLeads(newLeads);
+    };
+
+    const consolidateAndSetLeads = (newLeads: ExtractedContact[]) => {
+        setExtractedData(prev => {
+            const consolidated: ExtractedContact[] = [...prev];
+
+            newLeads.forEach(current => {
+                const existing = consolidated.find(c =>
+                    (current.phone && c.phone === current.phone) ||
+                    (current.email && c.email === current.email) ||
+                    (current.name && c.name && current.name.toLowerCase() === c.name.toLowerCase() && current.name.length > 3)
+                );
+
+                if (existing) {
+                    if (!existing.name && current.name) existing.name = current.name;
+                    if (!existing.phone && current.phone) existing.phone = current.phone;
+                    if (!existing.email && current.email) existing.email = current.email;
+                    if (current.source && !existing.source.includes(current.source)) {
+                        existing.source += ` | ${current.source}`;
+                    }
+                } else {
+                    consolidated.push({ ...current });
+                }
+            });
+
+            return consolidated;
         });
 
-        // Deduplicate against existing extracted data
-        const unique = newContacts.filter(
-            nc => !extractedData.some(ed => ed.value === nc.value)
-        );
+        if (newLeads.length > 0) toast.success(`${newLeads.length} leads qualificados processados!`);
+    };
 
-        if (unique.length > 0) {
-            setExtractedData(prev => [...prev, ...unique]);
-            toast.success(`${unique.length} novos contatos encontrados!`);
-        } else {
-            toast.info('Nenhum dado novo encontrado.');
+    const performOCR = async (source: File | string, filename: string, isPdfPage = false) => {
+        try {
+            const { extractContactsFromImage } = await import('../../services/geminiService');
+
+            if (!isPdfPage) toast.loading('IA do Google analisando documento...', { id: 'ocr-loading' });
+
+            let fileToProcess: File;
+            if (typeof source === 'string') {
+                const res = await fetch(source);
+                const blob = await res.blob();
+                fileToProcess = new File([blob], filename, { type: 'image/png' });
+            } else {
+                fileToProcess = source;
+            }
+
+            const results = await extractContactsFromImage(fileToProcess);
+
+            if (!results || results.length === 0) {
+                // If structured extraction fails or finds nothing, try literal text as fallback
+                const { processImageWithAI } = await import('../../services/geminiService');
+                const text = await processImageWithAI(fileToProcess, "Extraia todo o texto literal para busca manual.");
+                if (text) {
+                    setInputText(prev => prev + '\n\n' + `--- Texto OCR: ${filename} ---\n` + text);
+                    processText(text);
+                }
+            } else {
+                // Process structured results
+                const newLeads: ExtractedContact[] = results.map((r: any) => ({
+                    id: Math.random().toString(36).substring(2, 11),
+                    name: r.name || '',
+                    phone: r.phone || '',
+                    email: r.email || '',
+                    selected: true,
+                    source: `IA Vision: ${filename}`
+                }));
+
+                consolidateAndSetLeads(newLeads);
+            }
+
+            if (!isPdfPage) {
+                toast.dismiss('ocr-loading');
+            }
+        } catch (error: any) {
+            console.error('AI OCR Error:', error);
+            if (!isPdfPage) {
+                toast.dismiss('ocr-loading');
+                toast.error('Erro ao processar imagem via IA.');
+            }
+            throw error;
         }
     };
 
     const processImage = async (file: File) => {
         setIsProcessing(true);
-        toast.info('Iniciando OCR com IA... analisando imagem.');
         try {
-            // Using AI for OCR (respects configured provider)
-            const text = await processImageWithAI(file,
-                "Analise esta imagem e extraia TODO o texto legível. Se for um print de conversa ou lista, tente manter a estrutura. O objetivo é encontrar nomes, telefones e emails."
-            );
+            await performOCR(file, file.name);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
-            setInputText(prev => prev + '\n\n' + `--- OCR (IA): ${file.name} ---\n` + text);
-            processText(text);
-            toast.success('OCR via IA concluído com sucesso!');
+    const processPdf = async (file: File) => {
+        setIsProcessing(true);
+        const toastId = toast.loading('Convertendo PDF para imagens...');
+
+        try {
+            const { convertPdfToImages } = await import('../../utils/pdfProcessor');
+            const images = await convertPdfToImages(file);
+
+            toast.dismiss(toastId);
+            toast.success(`${images.length} páginas encontradas. Iniciando leitura...`);
+
+            for (let i = 0; i < images.length; i++) {
+                toast.loading(`Lendo página ${i + 1} de ${images.length}...`, { id: 'pdf-ocr' });
+                // Add slight delay to allow UI update
+                await new Promise(r => setTimeout(r, 100));
+                await performOCR(images[i], `${file.name} (Pág ${i + 1})`, true);
+            }
+
+            toast.dismiss('pdf-ocr');
+            toast.success('Leitura do PDF concluída!');
+
         } catch (error) {
-            console.error('OCR Error:', error);
-            toast.error('Erro ao processar imagem. Verifique sua chave de IA.');
+            console.error('PDF Process Error:', error);
+            toast.dismiss(toastId);
+            toast.dismiss('pdf-ocr');
+            toast.error('Erro ao processar PDF.');
         } finally {
             setIsProcessing(false);
         }
@@ -133,7 +212,9 @@ export const ContactExtractor: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.type.startsWith('image/')) {
+        if (file.type === 'application/pdf') {
+            processPdf(file);
+        } else if (file.type.startsWith('image/')) {
             processImage(file);
         } else {
             const reader = new FileReader();
@@ -144,11 +225,11 @@ export const ContactExtractor: React.FC = () => {
             };
 
             if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-                reader.readAsText(file); // logic is same as txt for regex extraction
+                reader.readAsText(file);
             } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
                 reader.readAsText(file);
             } else {
-                toast.error('Formato não suportado. Use .txt, .csv ou Imagens (OCR)');
+                toast.error('Formato não suportado. Use .txt, .csv, PDF ou Imagens');
             }
         }
 
@@ -181,12 +262,14 @@ export const ContactExtractor: React.FC = () => {
         toImport.forEach(c => {
             addContact({
                 id: `ext_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                name: c.type === 'email' ? c.value.split('@')[0] : `Lead ${c.value.substr(-4)}`,
-                phoneNumber: c.type === 'phone' ? c.value : '',
-                email: c.type === 'email' ? c.value : undefined,
-                avatar: `https://ui-avatars.com/api/?name=${c.type === 'email' ? 'E' : 'T'}&background=random`,
+                name: c.name || (c.email ? c.email.split('@')[0] : `Lead ${c.phone?.substr(-4) || 'S/N'}`),
+                phoneNumber: c.phone || '',
+                email: c.email || undefined,
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name || 'L')}&background=random`,
                 status: 'active',
-                tags: tags, // Apply configured tags
+                tags: [...tags, 'Extrator'],
+                isLead: true,
+                source: c.source,
                 lastSeen: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             });
             count++;
@@ -194,7 +277,7 @@ export const ContactExtractor: React.FC = () => {
 
         // Remove imported
         setExtractedData(prev => prev.filter(c => !c.selected));
-        toast.success(`${count} contatos importados com sucesso!`);
+        toast.success(`${count} leads importados e agrupados com sucesso!`);
     };
 
     const downloadCSV = () => {
@@ -203,8 +286,8 @@ export const ContactExtractor: React.FC = () => {
             toast.warning('Selecione contatos para exportar.');
             return;
         }
-        const csvContent = "data:text/csv;charset=utf-8,Type,Value,Original,Tags\n" +
-            toExport.map(c => `${c.type},${c.value},"${c.original}","${tags.join(';')}"`).join("\n");
+        const csvContent = "data:text/csv;charset=utf-8,Nome,Telefone,Email,Fonte,Tags\n" +
+            toExport.map(c => `"${c.name || ''}",${c.phone || ''},${c.email || ''},"${c.source}","${tags.join(';')}"`).join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -231,8 +314,8 @@ export const ContactExtractor: React.FC = () => {
             {isProcessing && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-in fade-in">
                     <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                    <p className="text-indigo-700 font-bold text-lg">Processando Imagem com IA...</p>
-                    <p className="text-gray-500 text-sm">Extraindo texto para encontrar contatos</p>
+                    <p className="text-indigo-700 font-bold text-lg">Processando...</p>
+                    <p className="text-gray-500 text-sm">Lendo documentos...</p>
                 </div>
             )}
 
@@ -243,7 +326,7 @@ export const ContactExtractor: React.FC = () => {
                         Extrator de Contatos Pro
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
-                        Cole prints, textos ou CSVs para gerar leads qualificados.
+                        Cole prints, textos, PDFs ou CSVs para gerar leads qualificados.
                     </p>
                 </div>
             </div>
@@ -261,7 +344,7 @@ export const ContactExtractor: React.FC = () => {
                                 type="file"
                                 ref={fileInputRef}
                                 className="hidden"
-                                accept=".txt,.csv"
+                                accept=".txt,.csv,.pdf"
                                 onChange={handleFileUpload}
                             />
                             <input
@@ -281,7 +364,7 @@ export const ContactExtractor: React.FC = () => {
                                 onClick={() => fileInputRef.current?.click()}
                                 className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50 transition-colors font-medium border border-indigo-100"
                             >
-                                <Upload size={14} /> Upload (.txt/.csv)
+                                <Upload size={14} /> Upload (PDF/TXT/CSV)
                             </button>
                             <button
                                 onClick={() => setInputText('')}
@@ -345,9 +428,11 @@ export const ContactExtractor: React.FC = () => {
                         <div className="p-3 border-b border-gray-100 bg-indigo-50/50 flex justify-between items-center">
                             <h2 className="font-bold text-gray-800 flex items-center gap-2">
                                 Leads
-                                <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
-                                    {extractedData.length}
-                                </span>
+                                <div className="flex gap-1 items-center">
+                                    <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                        <Database size={10} /> {extractedData.length} Contatos
+                                    </span>
+                                </div>
                             </h2>
                             <div className="flex gap-2">
                                 <button onClick={deleteSelected} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Excluir Selecionados">
@@ -365,22 +450,42 @@ export const ContactExtractor: React.FC = () => {
                                     <div
                                         key={item.id}
                                         className={clsx(
-                                            "group flex items-center gap-3 p-3 border rounded-lg transition-all cursor-pointer select-none",
-                                            item.selected ? "bg-indigo-50 border-indigo-200" : "bg-white border-gray-100 hover:border-indigo-200"
+                                            "group flex flex-col gap-2 p-3 border rounded-xl transition-all cursor-pointer select-none",
+                                            item.selected ? "bg-indigo-50 border-indigo-200 shadow-sm" : "bg-white border-gray-100 hover:border-indigo-200"
                                         )}
                                         onClick={() => toggleSelect(item.id)}
                                     >
-                                        <div className={item.selected ? "text-indigo-600" : "text-gray-300"}>
-                                            {item.selected ? <CheckSquare size={18} /> : <Square size={18} />}
+                                        <div className="flex items-center gap-3">
+                                            <div className={item.selected ? "text-indigo-600" : "text-gray-300"}>
+                                                {item.selected ? <CheckSquare size={18} /> : <Square size={18} />}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm text-gray-900 font-bold truncate">
+                                                    {item.name || 'Lead s/ Nome'}
+                                                </div>
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 font-mono italic">
+                                                {item.source.split(':').pop()?.trim().substring(0, 15)}...
+                                            </div>
                                         </div>
 
-                                        <div className={`p-2 rounded-full shrink-0 ${item.type === 'email' ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
-                                            {item.type === 'email' ? <Mail size={16} /> : <Phone size={16} />}
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm text-gray-800 font-medium truncate">{item.value}</div>
-                                            <div className="text-xs text-gray-400 truncate" title={item.original}>{item.original}</div>
+                                        <div className="pl-7 space-y-1">
+                                            {item.phone && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <div className="p-1 bg-green-50 text-green-600 rounded">
+                                                        <Phone size={10} />
+                                                    </div>
+                                                    {item.phone}
+                                                </div>
+                                            )}
+                                            {item.email && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <div className="p-1 bg-orange-50 text-orange-600 rounded">
+                                                        <Mail size={10} />
+                                                    </div>
+                                                    {item.email}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))

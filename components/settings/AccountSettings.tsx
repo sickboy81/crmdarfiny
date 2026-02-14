@@ -11,8 +11,10 @@ import {
     Camera,
     Lock,
     Key,
-    Loader2
+    Loader2,
+    ImageIcon
 } from 'lucide-react';
+import { UserProfile } from '../../hooks/useSettings';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 
@@ -34,19 +36,72 @@ interface AccountSettingsProps {
     profile: CompanyProfile;
     setProfile: (profile: CompanyProfile) => void;
     onSave: () => void;
+    userProfile: UserProfile;
+    setUserProfile: (profile: UserProfile) => void;
+    onSaveUser: () => void;
 }
 
 export const AccountSettings: React.FC<AccountSettingsProps> = ({
     profile,
     setProfile,
     onSave,
+    userProfile,
+    setUserProfile,
+    onSaveUser,
 }) => {
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
     const [loading, setLoading] = React.useState(false);
+    const [uploading, setUploading] = React.useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const updateField = (field: keyof CompanyProfile, value: string) => {
         setProfile({ ...profile, [field]: value });
+    };
+
+    const updateUserField = (field: keyof UserProfile, value: string) => {
+        setUserProfile({ ...userProfile, [field]: value });
+    };
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validations
+        if (!file.type.startsWith('image/')) {
+            toast.error('Por favor, selecione uma imagem');
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('A imagem deve ter no máximo 2MB');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `profiles/${fileName}`;
+
+            const { error: uploadError, data } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            updateUserField('photoUrl', publicUrl);
+            toast.success('Foto carregada com sucesso!');
+        } catch (error: any) {
+            console.error('Erro no upload:', error);
+            toast.error('Falha ao subir imagem. Verifique se o bucket "avatars" existe no Supabase.');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -88,6 +143,85 @@ export const AccountSettings: React.FC<AccountSettingsProps> = ({
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300 max-w-4xl">
+            {/* User Profile Info */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <User className="text-indigo-600" size={20} />
+                    Perfil do Usuário
+                </h3>
+
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="relative group self-center md:self-start">
+                        <div className="w-24 h-24 rounded-full border-4 border-indigo-50 overflow-hidden shadow-inner">
+                            <img
+                                src={userProfile.photoUrl}
+                                alt="User Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handlePhotoUpload}
+                            accept="image/*"
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                            className="absolute -bottom-1 -right-1 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all disabled:bg-gray-400"
+                            title="Mudar foto"
+                        >
+                            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+                        </button>
+                    </div>
+
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">URL da Foto de Perfil</label>
+                            <div className="relative">
+                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                    type="text"
+                                    value={userProfile.photoUrl}
+                                    onChange={(e) => updateUserField('photoUrl', e.target.value)}
+                                    placeholder="https://exemplo.com/foto.jpg"
+                                    className="w-full p-3 pl-10 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900 text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome de Exibição</label>
+                            <input
+                                type="text"
+                                value={userProfile.name}
+                                onChange={(e) => updateUserField('name', e.target.value)}
+                                placeholder="Seu Nome"
+                                className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Função</label>
+                            <input
+                                type="text"
+                                value={userProfile.role}
+                                onChange={(e) => updateUserField('role', e.target.value)}
+                                placeholder="Ex: Master Corretor"
+                                className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-900"
+                            />
+                        </div>
+                        <div className="md:col-span-2 flex justify-end">
+                            <button
+                                onClick={onSaveUser}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95"
+                            >
+                                <Save size={16} />
+                                Atualizar Perfil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {/* Company Logo & Name Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-2xl text-white shadow-lg">
                 <div className="flex items-center gap-6">

@@ -13,6 +13,18 @@ export interface UserPreferences {
   blurSensitive: boolean;
   sendOnEnter: boolean;
   playSounds: boolean;
+  notificationEvents: {
+    wa: boolean;
+    leads: boolean;
+    email: boolean;
+    system: boolean;
+  };
+}
+
+export interface UserProfile {
+  name: string;
+  role: string;
+  photoUrl: string;
 }
 
 export interface CompanyProfile {
@@ -73,6 +85,12 @@ const DEFAULT_COMPANY_PROFILE: CompanyProfile = {
   creci: '',
 };
 
+const DEFAULT_USER_PROFILE: UserProfile = {
+  name: 'Darfiny Corretora',
+  role: 'Administrador',
+  photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
+};
+
 const DEFAULT_AUTO_MESSAGES: AutoMessages = {
   welcomeEnabled: false,
   welcomeMessage: '',
@@ -108,6 +126,7 @@ export const useSettings = () => {
   });
 
   const [fbConfig, setFbConfig] = useState<FacebookConfig>(settings.facebook_config || { accessToken: '', postMethod: 'api' });
+  const [emailConfig, setEmailConfig] = useState<{ apiKey: string; verifiedSender: string }>(settings.email_config || { apiKey: '', verifiedSender: '' });
   const [crmTags, setCrmTags] = useState<string[]>(settings.crm_tags || [
     'Cliente VIP',
     'Lead Quente',
@@ -116,11 +135,18 @@ export const useSettings = () => {
     'Suporte',
   ]);
   const [documentCompanyName, setDocumentCompanyName] = useState(settings.crm_document_company_name || '');
-  const [preferences, setPreferences] = useState<UserPreferences>(settings.crm_preferences || {
+  const [preferences, setPreferences] = useState<UserPreferences>({
     theme: 'light',
     blurSensitive: false,
     sendOnEnter: true,
     playSounds: true,
+    notificationEvents: {
+      wa: true,
+      leads: true,
+      email: true,
+      system: true,
+    },
+    ...(settings.crm_preferences || {})
   });
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile>(settings.crm_company_profile || DEFAULT_COMPANY_PROFILE);
   const [businessHours, setBusinessHours] = useState<BusinessHours>(settings.crm_business_hours || {
@@ -129,6 +155,7 @@ export const useSettings = () => {
     schedule: DEFAULT_SCHEDULE,
   });
   const [autoMessages, setAutoMessages] = useState<AutoMessages>(settings.crm_auto_messages || DEFAULT_AUTO_MESSAGES);
+  const [userProfile, setUserProfile] = useState<UserProfile>(settings.crm_user_profile || DEFAULT_USER_PROFILE);
 
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [testStatus, setTestStatus] = useState<{
@@ -156,6 +183,7 @@ export const useSettings = () => {
     if (settings.crm_company_profile) setCompanyProfile(settings.crm_company_profile);
     if (settings.crm_business_hours) setBusinessHours(settings.crm_business_hours);
     if (settings.crm_auto_messages) setAutoMessages(settings.crm_auto_messages);
+    if (settings.crm_user_profile) setUserProfile(settings.crm_user_profile);
   }, [settings]);
 
   const updateGlobalSettings = async (updates: any) => {
@@ -196,6 +224,11 @@ export const useSettings = () => {
       crm_auto_messages: autoMessages
     });
     toast.success('Automações salvas com sucesso!');
+  };
+
+  const handleSaveUserProfile = () => {
+    updateGlobalSettings({ crm_user_profile: userProfile });
+    toast.success('Perfil atualizado com sucesso!');
   };
 
   const handleSaveWa = () => {
@@ -252,7 +285,7 @@ export const useSettings = () => {
   };
 
   return {
-    configs: { waConfig, aiConfig, botConfig, fbConfig, crmTags, documentCompanyName, preferences, companyProfile, businessHours, autoMessages },
+    configs: { waConfig, aiConfig, botConfig, fbConfig, crmTags, documentCompanyName, preferences, companyProfile, businessHours, autoMessages, userProfile },
     sets: {
       setWaConfig,
       setAiConfig,
@@ -270,8 +303,9 @@ export const useSettings = () => {
       setCompanyProfile,
       setBusinessHours,
       setAutoMessages,
+      setUserProfile,
     },
-    actions: { handleSaveWa, handleSaveAIProvider, handleTestAPI, handleSaveBot, handleSaveCompanyProfile, handleSaveAutomation },
+    actions: { handleSaveWa, handleSaveAIProvider, handleTestAPI, handleSaveBot, handleSaveCompanyProfile, handleSaveAutomation, handleSaveUserProfile },
     statuses: {
       status,
       setStatus,

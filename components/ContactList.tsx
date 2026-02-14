@@ -42,7 +42,8 @@ export const ContactList: React.FC<ContactListProps> = ({
   onUpdateContact,
   onAddContact,
 }) => {
-  const { setCurrentView, addMessage, messages, setSelectedContactId } = useAppStore();
+  const { setCurrentView, addMessage, messages, setSelectedContactId, settings } = useAppStore();
+  const isPrivacyMode = settings.crm_preferences?.blurSensitive;
   const [filterText, setFilterText] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<Contact['status'] | 'all'>('all');
@@ -211,7 +212,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       fullPhoneNumber = '55' + phoneInput;
     }
 
-    const updates = {
+    const updates: Partial<Contact> = {
       name,
       phoneNumber: fullPhoneNumber,
       company: (form.querySelector('[name="company"]') as HTMLInputElement)?.value?.trim() || undefined,
@@ -221,6 +222,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       pipelineStage: (form.querySelector('[name="pipelineStage"]') as HTMLSelectElement)?.value as Contact['pipelineStage'],
       dealValue: Number((form.querySelector('[name="dealValue"]') as HTMLInputElement)?.value) || 0,
       tags: (form.querySelector('[name="tags"]') as HTMLInputElement)?.value?.trim().split(/[,;]/).map(t => t.trim()).filter(Boolean) || [],
+      assignedTo: (form.querySelector('[name="assignedTo"]') as HTMLSelectElement)?.value || undefined,
     };
 
     onUpdateContact(editContact.id, updates);
@@ -497,6 +499,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                 <th className="p-4 pl-2">Nome</th>
                 <th className="p-4 hidden md:table-cell">Empresa</th>
                 <th className="p-4 hidden sm:table-cell">Status</th>
+                <th className="p-4">Responsável</th>
                 <th className="p-4">Estágio</th>
                 <th className="p-4 hidden lg:table-cell">Tags</th>
                 <th className="p-4 text-center">Ações</th>
@@ -532,8 +535,8 @@ export const ContactList: React.FC<ContactListProps> = ({
                         />
                       </button>
                       <div>
-                        <div className="font-semibold text-gray-900">{contact.name}</div>
-                        <div className="text-xs text-gray-400 font-mono">{contact.phoneNumber}</div>
+                        <div className={clsx("font-semibold text-gray-900", isPrivacyMode && "privacy-blur")}>{contact.name}</div>
+                        <div className={clsx("text-xs text-gray-400 font-mono", isPrivacyMode && "privacy-blur")}>{contact.phoneNumber}</div>
                       </div>
                     </div>
                   </td>
@@ -555,12 +558,20 @@ export const ContactList: React.FC<ContactListProps> = ({
                     </span>
                   </td>
                   <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[var(--bg-input)] flex items-center justify-center text-[10px] font-bold text-[var(--accent-main)]">
+                        {contact.assignedTo ? '👤' : '?'}
+                      </div>
+                      <span className="text-xs text-[var(--text-muted)]">{contact.assignedTo === useAppStore.getState().user?.id ? 'Eu' : (contact.assignedTo ? 'Equipe' : 'Sem resp.')}</span>
+                    </div>
+                  </td>
+                  <td className="p-4">
                     {(() => {
                       const stage = PIPELINE_STAGES.find(s => s.id === (contact.pipelineStage || 'new'));
                       return (
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${stage?.color || 'bg-gray-300'}`} />
-                          <span className="text-sm text-gray-700 max-w-[100px] truncate">{stage?.label || 'Novo'}</span>
+                          <span className="text-sm text-[var(--text-main)] max-w-[100px] truncate">{stage?.label || 'Novo'}</span>
                         </div>
                       );
                     })()}

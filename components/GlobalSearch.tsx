@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Command } from 'cmdk';
 import { Search, MessageSquare, User, Home, ArrowRight, X } from 'lucide-react';
+import clsx from 'clsx';
 import { useAppStore } from '../stores/useAppStore';
 import { View } from '../types';
 
 export const GlobalSearch: React.FC = () => {
-    const [open, setOpen] = useState(false);
-    const { contacts, messages, campaigns, setCurrentView, setSelectedContactId } = useAppStore();
+    const {
+        contacts,
+        messages,
+        campaigns,
+        setCurrentView,
+        setSelectedContactId,
+        settings,
+        isSearchOpen: open,
+        setIsSearchOpen: setOpen,
+        toggleSearch
+    } = useAppStore();
+    const isPrivacyMode = settings.crm_preferences?.blurSensitive;
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
                 e.preventDefault();
-                setOpen((open) => !open);
+                toggleSearch();
             }
         };
 
@@ -75,7 +86,7 @@ export const GlobalSearch: React.FC = () => {
                                     <img src={contact.avatar} alt="" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1">
-                                    <div className="font-medium flex items-center gap-2">
+                                    <div className={clsx("font-medium flex items-center gap-2", isPrivacyMode && "privacy-blur")}>
                                         {contact.name}
                                         {contact.tags.map(tag => (
                                             <span key={tag} className="px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] font-normal lowercase">
@@ -83,7 +94,7 @@ export const GlobalSearch: React.FC = () => {
                                             </span>
                                         ))}
                                     </div>
-                                    <div className="text-xs text-gray-400">{contact.phoneNumber}</div>
+                                    <div className={clsx("text-xs text-gray-400", isPrivacyMode && "privacy-blur")}>{contact.phoneNumber}</div>
                                 </div>
                                 <ArrowRight size={16} className="text-gray-300 opacity-0 group-aria-selected:opacity-100" />
                             </Command.Item>

@@ -274,17 +274,17 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
             {PIPELINE_STAGES.map((stage) => (
               <div
                 key={stage.id}
-                className="w-[280px] flex flex-col h-full max-h-full"
+                className="w-[220px] flex flex-col h-full max-h-full"
               >
                 {/* Stage Header */}
-                <div className="flex items-center justify-between mb-8 px-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-6 bg-gray-900 rounded-full"></div>
+                <div className="flex items-center justify-between mb-4 px-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-4 bg-gray-900 rounded-full"></div>
                     <div>
-                      <span className="text-[12px] font-black text-gray-900 uppercase tracking-widest block">
+                      <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest block">
                         {stage.label}
                       </span>
-                      <span className="text-[10px] font-bold text-gray-400">
+                      <span className="text-[8px] font-bold text-gray-400">
                         {getColumnCount(stage.id)} Negócios
                       </span>
                     </div>
@@ -301,7 +301,7 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                       className={clsx(
-                        "flex-1 rounded-[32px] transition-all duration-300 flex flex-col gap-5 p-4 overflow-y-auto scrollbar-hide pb-24 border border-slate-300/50 bg-slate-200/60 shadow-[inset_0_2px_8px_rgba(0,0,0,0.05)]",
+                        "flex-1 rounded-[24px] transition-all duration-300 flex flex-col gap-3 p-2.5 overflow-y-auto scrollbar-hide pb-24 border border-slate-300/50 bg-slate-200/60 shadow-[inset_0_2px_8px_rgba(0,0,0,0.05)]",
                         snapshot.isDraggingOver ? "bg-slate-200/80 ring-4 ring-blue-500/20" : ""
                       )}
                     >
@@ -317,7 +317,7 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                                 onClick={() => openEdit(contact)}
                                 onContextMenu={(e) => handleContextMenu(e, contact.id)}
                                 className={clsx(
-                                  "group relative bg-white p-4 rounded-[20px] transition-all duration-300 border border-gray-200 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.15)] cursor-pointer hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-300",
+                                  "group relative bg-white p-2.5 rounded-[12px] transition-all duration-300 border border-gray-200 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] cursor-pointer hover:shadow-[0_8px_16px_-4px_rgba(0,0,0,0.2)] hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-300",
                                   snapshot.isDragging ? "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] rotate-2 scale-110 z-50 ring-4 ring-blue-600 border-blue-600" : ""
                                 )}
                                 style={{
@@ -332,7 +332,7 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                                     onMouseDown={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === contact.id ? null : contact.id); }}
                                     className="p-2 bg-gray-50 hover:bg-white rounded-xl text-gray-400 hover:text-gray-900 transition-all shadow-sm"
                                   >
-                                    <MoreHorizontal size={18} />
+                                    <MoreHorizontal size={16} />
                                   </button>
                                 </div>
 
@@ -340,7 +340,7 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                                   <div className="absolute right-6 top-14 z-[60] bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100/50 py-2 min-w-[200px] animate-in fade-in zoom-in-95" onMouseDown={(e) => e.stopPropagation()}>
                                     <button
                                       onMouseDown={(e) => { e.stopPropagation(); openEdit(contact); }}
-                                      className="w-full text-left px-5 py-3 text-xs font-black text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                                      className="w-full text-left px-4 py-2 text-[11px] font-black text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                                     >
                                       EDITAR DETALHES
                                     </button>
@@ -374,8 +374,8 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
 
                                 {/* Card Content */}
                                 <div className="space-y-4">
-                                  <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 overflow-hidden flex-shrink-0 relative group-hover:shadow-md transition-shadow">
+                                  <div className="flex items-start gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 overflow-hidden flex-shrink-0 relative group-hover:shadow-md transition-shadow">
                                       <img src={contact.avatar} alt={contact.name} className="w-full h-full object-cover" />
                                       <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                     </div>
@@ -387,18 +387,18 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                                           </span>
                                         )}
                                       </div>
-                                      <h4 className="text-sm font-black text-gray-900 leading-tight group-hover:text-blue-600 transition-colors truncate">
+                                      <h4 className="text-xs font-black text-gray-900 leading-tight group-hover:text-blue-600 transition-colors truncate">
                                         {contact.name}
                                       </h4>
                                     </div>
                                   </div>
 
-                                  <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 shadow-inner group-hover:bg-white transition-colors">
-                                    <div className="flex items-center gap-2 text-gray-400 mb-1">
-                                      <DollarSign size={14} className="text-green-500" />
-                                      <span className="text-[10px] font-black tracking-widest uppercase">Valor do Negócio</span>
+                                  <div className="bg-gray-50/50 rounded-lg p-2 border border-gray-100 shadow-inner group-hover:bg-white transition-colors">
+                                    <div className="flex items-center gap-1.5 text-gray-400 mb-0.5">
+                                      <DollarSign size={10} className="text-green-500" />
+                                      <span className="text-[8px] font-black tracking-widest uppercase">Valor</span>
                                     </div>
-                                    <div className="text-xl font-black text-gray-900 tracking-tighter">
+                                    <div className="text-sm font-black text-gray-900 tracking-tighter">
                                       {contact.dealValue ? formatCurrency(contact.dealValue) : "R$ 0,00"}
                                     </div>
                                   </div>
@@ -438,7 +438,7 @@ export const Pipeline: React.FC<PipelineProps> = ({ contacts, onUpdateContact, o
                       {/* Add Button Inside Column */}
                       <button
                         onClick={() => openCreate(stage.id)}
-                        className="group flex flex-col items-center justify-center gap-3 p-8 rounded-[32px] border-2 border-dashed border-gray-200/50 hover:border-blue-400/40 hover:bg-white transition-all text-gray-300 hover:text-blue-600 shadow-sm hover:shadow-xl"
+                        className="group flex flex-col items-center justify-center gap-2 p-4 rounded-[16px] border-2 border-dashed border-gray-200/50 hover:border-blue-400/40 hover:bg-white transition-all text-gray-300 hover:text-blue-600 shadow-sm hover:shadow-xl"
                       >
                         <div className="w-10 h-10 rounded-2xl bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center transition-all group-hover:rotate-180">
                           <Plus size={20} strokeWidth={3} />

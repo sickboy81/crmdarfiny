@@ -3,30 +3,24 @@ import express from 'express';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+// Carrega variáveis do .env do projeto
+dotenv.config({ path: './.env' });
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["*"],
-        credentials: true
-    },
-    allowEIO3: true
+    cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-app.use(cors({
-    origin: true, // Reflete a origem da requisição
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    credentials: true
-}));
+// Configuração Supabase (Usando Anon Key por enquanto, pois as políticas permitem)
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Rota de Health Check
-app.get('/', (req, res) => {
-    res.send('WhatsApp Server is running! 🚀');
-});
+app.use(cors());
 app.use(express.json());
 
 let sock = null;
@@ -38,7 +32,8 @@ async function connectToWhatsApp() {
 
     sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true
+        printQRInTerminal: true,
+        browser: ['Darfiny CRM', 'Chrome', '1.0.0']
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -50,157 +45,113 @@ async function connectToWhatsApp() {
             qrCodeData = qr;
             connectionStatus = 'connecting';
             io.emit('qr', qr);
-            console.log('📱 QR Code gerado! Escaneie com seu WhatsApp.');
         }
 
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('❌ Conexão fechada. Reconectando:', shouldReconnect);
             connectionStatus = 'disconnected';
             io.emit('status', 'disconnected');
-
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }
+            if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
-            console.log('✅ WhatsApp conectado com sucesso!');
             connectionStatus = 'connected';
             qrCodeData = null;
             io.emit('status', 'connected');
+            console.log('✅ WhatsApp conectado e pronto para sincronizar!');
         }
     });
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.key.fromMe && msg.message) {
-            console.log('📩 Nova mensagem:', msg);
-
-            // WhatsApp usa remoteJidAlt para o número real quando remoteJid é um LID
-            const phoneJid = msg.key.remoteJidAlt || msg.key.remoteJid;
+            const phoneJid = msg.key.remoteJid;
+            const phoneNumber = phoneJid.split('@')[0];
             const messageText = msg.message.conversation ||
                 msg.message.extendedTextMessage?.text ||
                 msg.message.imageMessage?.caption ||
                 '[Mídia]';
 
-            // Busca informações reais do contato no WhatsApp
-            let contactName = msg.pushName && msg.pushName !== '.' ? msg.pushName : null;
-            let profilePicUrl = null;
+            const contactName = msg.pushName || phoneNumber;
+            const contactId = `c-${phoneNumber}`;
 
             try {
-                // Tenta buscar a foto de perfil
-                try {
-                    profilePicUrl = await sock.profilePictureUrl(phoneJid, 'image');
-                    console.log('✅ Foto de perfil encontrada para:', phoneJid);
-                } catch (e) {
-                    console.log('⚠️ Sem foto de perfil para:', phoneJid);
-                }
+                // 1. Sincroniza Contato no Supabase
+                const { error: contactError } = await supabase.from('contacts').upsert({
+                    id: contactId,
+                    name: contactName,
+                    phone_number: phoneNumber,
+                    source: 'WhatsApp',
+                    last_seen: new Date().toISOString(),
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(contactName)}&background=random`
+                }, { onConflict: 'id' });
 
-                // Se não tiver nome, tenta buscar do WhatsApp Business
-                if (!contactName) {
-                    try {
-                        const [result] = await sock.onWhatsApp(phoneJid);
-                        if (result?.verifiedName) {
-                            contactName = result.verifiedName;
-                            console.log('✅ Nome verificado encontrado:', contactName);
-                        }
-                    } catch (e) {
-                        console.log('⚠️ Não foi possível buscar nome verificado');
-                    }
-                }
-            } catch (error) {
-                console.log('⚠️ Erro ao buscar info do contato:', error.message);
+                if (contactError) console.error('Erro ao salvar contato:', contactError);
+
+                // 2. Salva Mensagem no Supabase
+                const { error: msgError } = await supabase.from('messages').upsert({
+                    id: msg.key.id,
+                    contact_id: contactId,
+                    text: messageText,
+                    sender: 'contact',
+                    timestamp: new Date().toISOString(),
+                    status: 'received'
+                }, { onConflict: 'id' });
+
+                if (msgError) console.error('Erro ao salvar mensagem:', msgError);
+
+                // 3. Emite para o frontend (Opcional, pois o useRealtimeSync do frontend já vai pegar do Supabase!)
+                io.emit('message', {
+                    from: phoneJid,
+                    text: messageText,
+                    contactName
+                });
+
+                console.log(`📩 [SYNC] Mensagem de ${contactName} salva no banco.`);
+            } catch (err) {
+                console.error('Falha crítica na sincronização Supabase:', err);
             }
-
-            console.log(`📱 De: ${contactName || phoneJid.split('@')[0]} (${phoneJid}) | Mensagem: ${messageText}`);
-
-            // Envia a mensagem para o frontend via Socket.IO
-            io.emit('message', {
-                from: phoneJid,
-                text: messageText,
-                timestamp: new Date(msg.messageTimestamp * 1000),
-                contactName: contactName,
-                profilePicUrl: profilePicUrl
-            });
         }
     });
 }
 
-// API Endpoints
-app.get('/status', (req, res) => {
-    res.json({
-        status: connectionStatus,
-        qr: qrCodeData
-    });
+// Endpoints
+app.get('/status', (req, res) => res.json({ status: connectionStatus, qr: qrCodeData }));
+app.post('/connect', (req, res) => {
+    if (connectionStatus === 'disconnected') connectToWhatsApp();
+    res.json({ message: 'Iniciando...' });
 });
-
-app.post('/connect', async (req, res) => {
-    if (connectionStatus === 'disconnected') {
-        connectToWhatsApp();
-        res.json({ message: 'Iniciando conexão...' });
-    } else {
-        res.json({ message: 'Já conectado ou conectando' });
-    }
-});
-
 app.post('/disconnect', async (req, res) => {
-    if (sock) {
-        await sock.logout();
-        connectionStatus = 'disconnected';
-        res.json({ message: 'Desconectado com sucesso' });
-    } else {
-        res.json({ message: 'Nenhuma conexão ativa' });
-    }
+    if (sock) await sock.logout();
+    res.json({ message: 'Desconectado' });
 });
-
 app.post('/send', async (req, res) => {
     const { to, message } = req.body;
-
-    console.log(`📤 Tentando enviar mensagem para ${to}: ${message}`);
-
-    if (!sock || connectionStatus !== 'connected') {
-        console.error('❌ Erro: WhatsApp não conectado no servidor');
-        return res.status(400).json({ error: 'WhatsApp não conectado' });
-    }
+    if (!sock || connectionStatus !== 'connected') return res.status(400).json({ error: 'Offline' });
 
     try {
-        // Formatar JID se necessário
         const jid = to.includes('@') ? to : `${to.replace(/\D/g, '')}@s.whatsapp.net`;
-
         const result = await sock.sendMessage(jid, { text: message });
 
-        console.log(`✅ Mensagem enviada com sucesso para ${jid}`);
-
-        // Emitir confirmação para o frontend
-        io.emit('message_sent', {
-            to: jid,
+        // Salva mensagem enviada no Supabase para manter histórico completo
+        await supabase.from('messages').insert({
+            id: result.key.id,
+            contact_id: `c-${to.replace(/\D/g, '')}`,
             text: message,
-            status: 'sent',
-            id: result.key.id
+            sender: 'user',
+            timestamp: new Date().toISOString(),
+            status: 'sent'
         });
 
         res.json({ success: true, id: result.key.id });
     } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Socket.IO para comunicação em tempo real
 io.on('connection', (socket) => {
-    console.log('🔌 Cliente conectado ao Socket.IO');
-
     socket.emit('status', connectionStatus);
-    if (qrCodeData) {
-        socket.emit('qr', qrCodeData);
-    }
-
-    socket.on('disconnect', () => {
-        console.log('🔌 Cliente desconectado');
-    });
+    if (qrCodeData) socket.emit('qr', qrCodeData);
 });
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-    console.log(`🚀 Servidor Baileys rodando na porta ${PORT}`);
-    console.log(`📡 Socket.IO pronto para conexões em tempo real`);
-});
+const PORT = 3001;
+server.listen(PORT, () => console.log(`🚀 Servidor WhatsApp/Supabase Bridge rodando na porta ${PORT}`));
+connectToWhatsApp(); // Tenta conectar no início se houver auth salvo

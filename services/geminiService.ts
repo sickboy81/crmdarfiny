@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
-import { Message, BotConfig, AIProvider, AIConfig } from '../types';
+import { Message, BotConfig, AIProvider, AIConfig, SocialPostVariant } from '../types';
 import { chatCompletion, PROVIDER_ENDPOINTS } from './openaiCompatibleService';
 import { useAppStore } from '../stores/useAppStore';
 
@@ -29,7 +29,7 @@ function getApiKeyForProvider(provider: AIProvider): string {
   const key = config.apiKeys[provider];
   if (key?.trim()) return key.trim();
   if (provider === 'gemini') {
-    return '';
+    return import.meta.env.VITE_GOOGLE_API_KEY || '';
   }
   return '';
 }
@@ -45,7 +45,8 @@ function getGeminiClient(): GoogleGenAI | null {
   const key = getApiKeyForProvider('gemini');
   if (!key) return null;
   if (!geminiClient) {
-    geminiClient = new GoogleGenAI({ apiKey: key });
+    // Voltamos para v1beta, pois o 2.0 Flash costuma ter as cotas gratuitas liberadas nesta rota primeiro
+    geminiClient = new GoogleGenAI({ apiKey: key, apiVersion: 'v1beta' });
   }
   return geminiClient;
 }
@@ -59,7 +60,7 @@ async function generateWithProvider(prompt: string, jsonMode: boolean = false): 
     const client = getGeminiClient();
     if (!client) return '';
     const response = await client.models.generateContent({
-      model: config.modelOverrides?.gemini || 'gemini-1.5-flash',
+      model: config.modelOverrides?.gemini || 'gemini-2.5-flash',
       contents: prompt,
       ...(jsonMode && {
         config: {
@@ -113,8 +114,8 @@ export async function testAIConnection(options?: {
     if (provider === 'gemini') {
       const key = options?.apiKey?.trim() || getApiKeyForProvider('gemini');
       if (!key) return { success: false, message: 'API Key não configurada.' };
-      const client = new GoogleGenAI({ apiKey: key });
-      const model = options?.model || getAIConfig().modelOverrides?.gemini || 'gemini-1.5-flash';
+      const client = new GoogleGenAI({ apiKey: key, apiVersion: 'v1beta' });
+      const model = options?.model || getAIConfig().modelOverrides?.gemini || 'gemini-2.5-flash';
       const response = await client.models.generateContent({ model, contents: prompt });
       const text = response.text?.trim() || '';
       return { success: true, message: 'Conexão OK! A API está funcionando.' };
@@ -541,12 +542,15 @@ export const processImageWithAI = async (
 
   try {
     const base64Image = await fileToBase64(file);
+    const geminiKey = getApiKeyForProvider('gemini');
 
-    if (provider === 'gemini') {
+    // Se temos uma chave do Gemini, vamos usá-lo para OCR (mesmo que o provedor global seja outro),
+    // pois o Gemini 1.5 Flash é superior e mais barato/grátis para isso.
+    if (provider === 'gemini' || geminiKey) {
       const client = getGeminiClient();
-      if (!client) throw new Error('Cliente Gemini não inicializado.');
+      if (!client) throw new Error('API Key do Gemini não configurada. Verifique nas configurações do CRM ou no .env');
 
-      const model = config.modelOverrides?.gemini || 'gemini-1.5-flash';
+      const model = config.modelOverrides?.gemini || 'gemini-2.5-flash';
 
       const response = await client.models.generateContent({
         model: model,
@@ -624,5 +628,186 @@ export const processImageWithAI = async (
       console.error('Tesseract Fallback Error:', tesseractError);
       throw error; // Throw original AI error if fallback also fails
     }
+  }
+};
+
+export const extractContactsFromImage = async (file: File): Promise<any[]> => {
+  const config = getAIConfig();
+  const provider = config.provider;
+  const apiKey = getApiKeyForProvider(provider);
+
+  if (!apiKey) throw new Error('API Key não configurada.');
+
+  // Convert File to Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        let encoded = reader.result?.toString().replace(/^data:(.*,)?/, '') || '';
+        const padding = encoded.length % 4;
+        if (padding > 0) encoded += '='.repeat(4 - padding);
+        resolve(encoded);
+      };
+      reader.onerror = reject;
+    });
+  };
+
+  const prompt = `
+    Analise esta imagem que contém informações de contatos (pode ser um print de tela, cartão de visita, lista ou planilha).
+    Extraia TODOS os contatos encontrados.
+    Retorne APENAS um JSON no seguinte formato array:
+    [
+      { "name": "Nome", "phone": "Telefone (apenas números com DDD)", "email": "Email" }
+    ]
+    Se não encontrar nada, retorne [].
+    Tente corrigir OCR de telefones (ex: 'O' virar '0', 'l' virar '1').
+    Ignore cabeçalhos ou textos irrelevantes.
+  `;
+
+  try {
+    const base64Image = await fileToBase64(file);
+    const geminiKey = getApiKeyForProvider('gemini');
+    let jsonStr = '';
+
+    // Priorizamos o Gemini para OCR de imagem por ser superior e mais barato/grátis
+    if (provider === 'gemini' || geminiKey) {
+      const client = getGeminiClient();
+      if (!client) throw new Error('Gemini Client Error - Verifique sua API Key');
+
+      const model = config.modelOverrides?.gemini || 'gemini-2.5-flash';
+      const response = await client.models.generateContent({
+        model: model,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { data: base64Image, mimeType: file.type } }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                phone: { type: Type.STRING },
+                email: { type: Type.STRING }
+              }
+            }
+          }
+        }
+      });
+      jsonStr = response.text || '[]';
+    } else {
+      // OpenAI Fallback para outros provedores (ChatGPT, OpenRouter, etc)
+      const endpoint = PROVIDER_ENDPOINTS[provider];
+      const model = config.modelOverrides?.[provider] || endpoint.defaultModel;
+
+      const response = await fetch(`${endpoint.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          ...(provider === 'openrouter' && {
+            'HTTP-Referer': 'https://darfiny.com',
+            'X-Title': 'Darfiny CRM',
+          }),
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt + " Responda apenas com o JSON puro (array de objetos)." },
+                { type: 'image_url', image_url: { url: `data:${file.type};base64,${base64Image}` } }
+              ]
+            }
+          ],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`API Error ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      jsonStr = data.choices?.[0]?.message?.content || '[]';
+    }
+
+    // Clean markdown if present
+    jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Handle cases where output might be wrapped in { "contacts": [...] } by some models
+    if (jsonStr.trim().startsWith('{')) {
+      const parsed = JSON.parse(jsonStr);
+      if (Array.isArray(parsed.contacts)) return parsed.contacts;
+      if (Array.isArray(parsed.data)) return parsed.data;
+      return []; // Unexpected object format
+    }
+
+    return JSON.parse(jsonStr);
+
+  } catch (error) {
+    console.error('Structured OCR Error:', error);
+    // Fallback to text mode handled by caller if this fails
+    throw error;
+  }
+};
+
+export const generateSocialPosts = async (
+  topic: string,
+  tone: string = 'professional',
+  mediaDescription?: string
+): Promise<SocialPostVariant[]> => {
+  const config = getAIConfig();
+  const apiKey = getApiKeyForProvider(config.provider);
+  if (!apiKey) return [];
+
+  const prompt = `
+    Atue como um especialista em marketing digital e mídias sociais.
+    OBJETIVO: Criar postagens para diferentes redes sociais baseadas no seguinte tópico:
+    "${topic}"
+    ${mediaDescription ? `DESCRIÇÃO DA Mídia (Foto/Vídeo): ${mediaDescription}` : ''}
+    TOM DE VOZ: ${tone}
+
+    REGRAS POR PLATAFORMA:
+    1. Facebook: Texto engajador, pode ser mais longo, use emojis, CTA claro.
+    2. Instagram: Foco em storytelling visual, legendas que prendem a atenção, uso estratégico de emojis.
+    3. X (Twitter): Curto, direto, provocativo ou informativo, máximo 280 caracteres.
+    4. TikTok: Roteiro curto e ganchos iniciais fortes (hooks), linguagem jovem e dinâmica.
+    5. LinkedIn: Profissional, focado em insights, valor e autoridade.
+
+    RETORNE APENAS um JSON no formato:
+    {
+      "variants": [
+        {
+          "platform": "facebook",
+          "content": "texto aqui",
+          "hashtags": ["#marketing", "#exemplo"]
+        },
+        ...
+      ]
+    }
+
+    Regra: O conteúdo deve estar em Português do Brasil.
+  `;
+
+  try {
+    const text = await generateWithProvider(prompt, true);
+    if (text) {
+      const data = JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
+      return data.variants || [];
+    }
+    return [];
+  } catch (error) {
+    console.error('Social Posts Error:', error);
+    return [];
   }
 };

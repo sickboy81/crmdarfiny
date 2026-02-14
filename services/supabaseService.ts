@@ -6,8 +6,17 @@ export const supabaseService = {
     async syncContacts(contacts: Contact[]) {
         if (!contacts.length) return;
 
-        // 1. Upsert Contacts
-        const contactRecords = contacts.map(c => ({
+        const contactRecords = contacts.map(c => this.mapContactToDB(c));
+
+        const { error: contactError } = await supabase
+            .from('contacts')
+            .upsert(contactRecords, { onConflict: 'id' });
+
+        if (contactError) throw contactError;
+    },
+
+    mapContactToDB(c: Contact) {
+        return {
             id: c.id,
             name: c.name,
             phone_number: c.phoneNumber,
@@ -16,15 +25,52 @@ export const supabaseService = {
             status: c.status,
             tags: c.tags,
             pipeline_stage: c.pipelineStage,
-            last_seen: c.lastSeen ? new Date().toISOString() : null,
-            // unread_count is not in Contact type
-        }));
+            last_seen: c.lastSeen ? new Date(c.lastSeen).toISOString() : new Date().toISOString(),
+            is_lead: c.isLead || false,
+            source: c.source,
+            property_interest: c.propertyInterest,
+            real_estate_preferences: c.realEstatePreferences || {},
+            deal_value: c.dealValue,
+            notes: c.notes
+        };
+    },
 
-        const { error: contactError } = await supabase
+    async saveContact(contact: Contact) {
+        const { error } = await supabase
             .from('contacts')
-            .upsert(contactRecords, { onConflict: 'id' });
+            .upsert(this.mapContactToDB(contact), { onConflict: 'id' });
+        if (error) throw error;
+    },
 
-        if (contactError) throw contactError;
+    async deleteContact(id: string) {
+        const { error } = await supabase
+            .from('contacts')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    },
+
+    async saveMessage(chatId: string, message: Message) {
+        const { error } = await supabase
+            .from('messages')
+            .upsert({
+                id: message.id,
+                contact_id: chatId,
+                text: message.content,
+                sender: message.senderId === 'me' ? 'user' : 'contact',
+                timestamp: new Date().toISOString(),
+                status: message.status,
+                type: message.type
+            }, { onConflict: 'id' });
+        if (error) throw error;
+    },
+
+    async updateMessageStatus(messageId: string, status: string) {
+        const { error } = await supabase
+            .from('messages')
+            .update({ status })
+            .eq('id', messageId);
+        if (error) throw error;
     },
 
     async fetchContacts(): Promise<Contact[]> {
@@ -45,7 +91,12 @@ export const supabaseService = {
             tags: d.tags || [],
             pipelineStage: d.pipeline_stage || 'lead',
             lastSeen: d.last_seen || undefined,
-            // messages are fetched separately to avoid huge payload
+            isLead: d.is_lead,
+            source: d.source,
+            propertyInterest: d.property_interest,
+            realEstatePreferences: d.real_estate_preferences,
+            dealValue: d.deal_value,
+            notes: d.notes
         }));
     },
 
@@ -114,18 +165,18 @@ export const supabaseService = {
 
         return data.map((p: any) => ({
             id: p.id,
-            code: 'N/A', // Schema missing code
+            code: p.code || 'N/A',
             title: p.title,
-            description: '', // Schema missing description
-            type: 'house', // Schema missing type, default to house
-            status: p.stage || 'available',
-            price: p.price,
-            address: p.location,
-            neighborhood: '', // Schema missing
-            city: '', // Schema missing
-            features: p.tags || [],
+            description: p.description || '',
+            type: p.type || 'house',
+            status: p.status || 'available',
+            price: p.price || 0,
+            address: p.address || '',
+            neighborhood: p.neighborhood || '',
+            city: p.city || '',
+            features: p.features || [],
             specs: p.specs || { area: 0, bedrooms: 0, bathrooms: 0, parking: 0 },
-            photos: p.image ? [p.image] : [],
+            photos: p.photos || [],
         }));
     },
 

@@ -31,8 +31,58 @@
 }
 
 @layer base {
+  :root {
+    --bg-main: theme('colors.slate.50');
+    --bg-card: theme('colors.white');
+    --bg-sidebar: theme('colors.white');
+    --bg-input: theme('colors.gray.100');
+    --text-main: theme('colors.slate.900');
+    --text-muted: theme('colors.slate.500');
+    --border-main: theme('colors.slate.200');
+    --accent-main: theme('colors.green.600');
+
+    --cmdk-bg: theme('colors.white');
+    --cmdk-text: theme('colors.slate.900');
+    --cmdk-border: theme('colors.slate.200');
+    --cmdk-item-hover: theme('colors.slate.100');
+  }
+
+  .dark {
+    --bg-main: #020617;
+    /* slate-950 */
+    --bg-card: #0f172a;
+    /* slate-900 */
+    --bg-sidebar: #0f172a;
+    --bg-input: #1e293b;
+    /* slate-800 */
+    --text-main: #f8fafc;
+    /* slate-50 */
+    --text-muted: #94a3b8;
+    /* slate-400 */
+    --border-main: #334155;
+    /* slate-700 */
+    --accent-main: #22c55e;
+    /* green-500 */
+
+    --cmdk-bg: #0f172a;
+    --cmdk-text: #f8fafc;
+    --cmdk-border: #334155;
+    --cmdk-item-hover: #1e293b;
+
+    color-scheme: dark;
+  }
+
   body {
-    @apply font-sans antialiased bg-slate-50 text-slate-900;
+    @apply font-sans antialiased transition-colors duration-300;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+  }
+
+  /* Transition for all theme-sensitive elements */
+  *,
+  ::before,
+  ::after {
+    @apply border-[var(--border-main)];
   }
 }
 
@@ -103,4 +153,16 @@
   color: #6b7280;
   padding: 0 8px;
   margin-bottom: 8px;
+}
+
+/* Privacy Mode Blur */
+.privacy-blur {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.privacy-blur:hover {
+  filter: blur(0);
 }

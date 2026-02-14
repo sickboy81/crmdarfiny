@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { MousePointer2, Code, Smartphone, MessageSquare, Copy, Check, ExternalLink, QrCode, Layout, Palette, Zap, X, Save } from 'lucide-react';
+import { MousePointer2, Code, Smartphone, MessageSquare, Copy, Check, ExternalLink, QrCode, Layout, Palette, Zap, X, Save, Download } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import { toPng } from 'html-to-image';
 
 export const LeadCaptureSettings: React.FC = () => {
     const { settings, updateSettings } = useAppStore();
     const leadCapture = settings.leadCapture || {};
+    const qrCardRef = React.useRef<HTMLDivElement>(null);
 
     const [themeColor, setThemeColor] = useState(leadCapture.themeColor || '#25D366');
     const [welcomeMessage, setWelcomeMessage] = useState(leadCapture.welcomeMessage || 'Olá! Gostaria de mais informações sobre este imóvel.');
@@ -333,6 +335,7 @@ export const LeadCaptureSettings: React.FC = () => {
             {showQRModal && qrCodeUrl && (
                 <div className="fixed inset-0 z-[999] bg-[#0F172A]/80 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowQRModal(false)}>
                     <div
+                        ref={qrCardRef}
                         className="relative w-full max-w-[380px] aspect-[3/4] rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in zoom-in-95 duration-500"
                         onClick={e => e.stopPropagation()}
                         style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #0F172A 100%)` }}
@@ -385,28 +388,25 @@ export const LeadCaptureSettings: React.FC = () => {
                             <div className="flex gap-3 w-full">
                                 <button
                                     onClick={async () => {
+                                        if (!qrCardRef.current) return;
                                         try {
-                                            const response = await fetch(qrCodeUrl);
-                                            const blob = await response.blob();
-                                            const url = window.URL.createObjectURL(blob);
+                                            const dataUrl = await toPng(qrCardRef.current, {
+                                                cacheBust: true,
+                                                pixelRatio: 2, // High quality
+                                            });
                                             const link = document.createElement('a');
-                                            link.href = url;
-                                            link.download = `qrcode-lead-${phoneNumber}.png`;
-                                            document.body.appendChild(link);
+                                            link.download = `placa-qr-lead-${phoneNumber || 'contato'}.png`;
+                                            link.href = dataUrl;
                                             link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('Download iniciado!');
-                                        } catch (error) {
-                                            console.error('Erro ao baixar:', error);
-                                            // Fallback for CORS issues
-                                            window.open(qrCodeUrl, '_blank');
-                                            toast.error('Erro ao baixar diretamente. Abrindo em nova aba para salvar manualmente.');
+                                            toast.success('Placa do QR Code salva com sucesso!');
+                                        } catch (err) {
+                                            toast.error('Erro ao gerar imagem da placa.');
+                                            console.error(err);
                                         }
                                     }}
-                                    className="flex-1 bg-white text-gray-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-transform active:scale-95"
+                                    className="flex-1 bg-white text-gray-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-transform active:scale-95 flex items-center justify-center gap-2"
                                 >
-                                    Download PNG
+                                    <Download size={14} /> Download Placa PNG
                                 </button>
                                 <button
                                     onClick={() => setShowQRModal(false)}

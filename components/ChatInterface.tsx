@@ -17,7 +17,8 @@ import { generateCustomerSimulation } from '../services/geminiService';
 import { toast } from 'sonner';
 
 export const ChatInterface: React.FC = () => {
-    const { selectedContactId: globalSelectedContactId, setSelectedContactId: setGlobalSelectedContactId, addMessage } = useAppStore();
+    const { selectedContactId: globalSelectedContactId, setSelectedContactId: setGlobalSelectedContactId, addMessage, settings } = useAppStore();
+    const isPrivacyMode = settings.crm_preferences?.blurSensitive;
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const automation = useAutomation();
 
@@ -186,7 +187,7 @@ export const ChatInterface: React.FC = () => {
                                     className="cursor-pointer group"
                                     onClick={() => setIsContactInfoOpen(true)}
                                 >
-                                    <h3 className="font-bold text-gray-800 text-[15px] group-hover:text-green-600 transition-colors">
+                                    <h3 className={clsx("font-bold text-gray-800 text-[15px] group-hover:text-green-600 transition-colors", isPrivacyMode && "privacy-blur")}>
                                         {contact.name}
                                     </h3>
                                     <div className="flex items-center gap-2">

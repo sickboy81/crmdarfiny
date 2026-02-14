@@ -7,6 +7,11 @@ interface CoverData {
   date: string;
 }
 
+// Função auxiliar para remover acentos se necessário (fallback para Helvetica)
+const removeAccents = (str: string) => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
 export const createPDF = async (
   files: PDFFileItem[],
   coverData?: CoverData
@@ -15,25 +20,29 @@ export const createPDF = async (
 
   // --- CAPA (Se houver) ---
   if (coverData) {
-    const coverPage = mergedPdf.addPage(PageSizes.A4); // A4 [595.28, 841.89]
+    const coverPage = mergedPdf.addPage(PageSizes.A4);
     const { width, height } = coverPage.getSize();
 
-    // Fontes
+    // Helvetica suporta apenas WinAnsi (sem alguns caracteres especiais).
+    // O ideal seria embeddar uma fonte customizada (ex: Roboto), mas para manter simples:
+    // Vamos remover acentos problemáticos ou usar uma fonte padrão mais robusta se disponível.
+    // Como alternativa rápida, vamos sanitizar o texto para WinAnsi.
     const fontBold = await mergedPdf.embedFont(StandardFonts.HelveticaBold);
     const fontRegular = await mergedPdf.embedFont(StandardFonts.Helvetica);
 
-    // Título
+    const safeTitle = removeAccents(coverData.title);
+    const safeGeneratedText = removeAccents(coverData.generatedText);
+
     const titleSize = 28;
-    const titleWidth = fontBold.widthOfTextAtSize(coverData.title, titleSize);
-    coverPage.drawText(coverData.title, {
-      x: (width - titleWidth) / 2, // Centralizado
+    const titleWidth = fontBold.widthOfTextAtSize(safeTitle, titleSize);
+    coverPage.drawText(safeTitle, {
+      x: (width - titleWidth) / 2,
       y: height - 100,
       size: titleSize,
       font: fontBold,
-      color: rgb(0.1, 0.1, 0.3), // Azul escuro corporativo
+      color: rgb(0.1, 0.1, 0.3),
     });
 
-    // Linha divisória
     coverPage.drawLine({
       start: { x: 50, y: height - 120 },
       end: { x: width - 50, y: height - 120 },
@@ -41,12 +50,10 @@ export const createPDF = async (
       color: rgb(0.7, 0.7, 0.7),
     });
 
-    // Texto Gerado (Multi-parágrafo wrap)
     const textSize = 11;
     const lineHeight = 16;
-    const maxWidth = width - 100; // Margens de 50px
+    const maxWidth = width - 100;
 
-    // Função simples de word-wrap (pode ser melhorada, mas funciona bem para texto simples)
     const wrapText = (text: string, font: any, size: number, maxWidth: number) => {
       const words = text.split(' ');
       const lines: string[] = [];
@@ -67,8 +74,7 @@ export const createPDF = async (
     };
 
     let textY = height - 160;
-    // Divide parágrafos (assumindo \n do Gemini)
-    const paragraphs = coverData.generatedText.split('\n').filter((p) => p.trim());
+    const paragraphs = safeGeneratedText.split('\n').filter((p) => p.trim());
 
     paragraphs.forEach((para) => {
       const lines = wrapText(para, fontRegular, textSize, maxWidth);
@@ -82,14 +88,15 @@ export const createPDF = async (
         });
         textY -= lineHeight;
       });
-      textY -= lineHeight; // Espaço extra entre parágrafos
+      textY -= lineHeight;
     });
 
-    // Rodapé
     const footerText = `Gerado em ${coverData.date} • UniPDF Organizador Inteligente`;
+    const safeFooterText = removeAccents(footerText);
     const footerSize = 9;
-    coverPage.drawText(footerText, {
-      x: (width - fontRegular.widthOfTextAtSize(footerText, footerSize)) / 2,
+
+    coverPage.drawText(safeFooterText, {
+      x: (width - fontRegular.widthOfTextAtSize(safeFooterText, footerSize)) / 2,
       y: 30,
       size: footerSize,
       font: fontRegular,
@@ -97,129 +104,82 @@ export const createPDF = async (
     });
   }
 
-  // --- PROCESSAMENTO DE ARQUIVOS ---
+  // --- PROCESSAMENTO DE ARQUIVOS (RASTERIZAÇÃO TOTAL) ---
+  // Importação dinâmica para evitar dependências circulares ou problemas de build
+  const { convertPdfToImages } = await import('../utils/pdfProcessor'); // Reutiliza a função do extrator
+
   for (const item of files) {
     try {
+      let imagesToAdd: string[] = [];
+
       if (item.type === 'image') {
-        // IMAGENS (JPG/PNG)
-        const imageBytes = await item.file.arrayBuffer();
-        let image;
-        if (item.file.type === 'image/jpeg') {
-          image = await mergedPdf.embedJpg(imageBytes);
+        // Se for imagem, lê direto como DataURL
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(item.file);
+        });
+        imagesToAdd = [dataUrl];
+      } else if (item.type === 'pdf') {
+        // Se for PDF, converte TODAS as páginas em imagens
+        console.log(`[UniPDF] Rasterizando PDF: ${item.name}...`);
+        imagesToAdd = await convertPdfToImages(item.file);
+      }
+
+      // Adiciona cada imagem como uma nova página no PDF final
+      for (const imgDataUrl of imagesToAdd) {
+        const fetchRes = await fetch(imgDataUrl);
+        const imgBytes = await fetchRes.arrayBuffer();
+
+        let pdfImage;
+        // Detecta tipo pelo cabeçalho ou extensão mascarada no DataURL
+        if (imgDataUrl.startsWith('data:image/png')) {
+          pdfImage = await mergedPdf.embedPng(imgBytes);
         } else {
-          image = await mergedPdf.embedPng(imageBytes);
+          // Fallback para JPG (maioria)
+          pdfImage = await mergedPdf.embedJpg(imgBytes);
         }
 
         const page = mergedPdf.addPage(PageSizes.A4);
         const { width, height } = page.getSize();
 
-        // Calcular escala para "fit" com margem de 20px
-        const margin = 20;
-        const maxWidth = width - margin * 2;
-        const maxHeight = height - margin * 2;
+        // Calcular escala para "fit" mantendo proporção (com margem opcional)
+        // Usar margem pequena (10px) para garantir que nada corte na impressão
+        const margin = 10;
+        const maxWidth = width - (margin * 2);
+        const maxHeight = height - (margin * 2);
 
-        const imgDims = image.scaleToFit(maxWidth, maxHeight);
+        const imgDims = pdfImage.scaleToFit(maxWidth, maxHeight);
 
-        // Centralizar
+        // Centralizar na página A4
         const x = (width - imgDims.width) / 2;
         const y = (height - imgDims.height) / 2;
 
-        page.drawImage(image, {
+        page.drawImage(pdfImage, {
           x,
           y,
           width: imgDims.width,
           height: imgDims.height,
         });
-      } else if (item.type === 'pdf') {
-        // PDFS — Defesa em Camadas (ordem: mais robusta primeiro)
-        const fileBytes = await item.file.arrayBuffer();
-        const sanitizedBytes = sanitizePDFData(new Uint8Array(fileBytes));
-
-        let srcDoc;
-        try {
-          srcDoc = await PDFDocument.load(sanitizedBytes, { ignoreEncryption: true });
-        } catch (loadError) {
-          console.warn(`[UniPDF] Falha ao carregar ${item.name}`);
-          throw loadError;
-        }
-
-        let pdfMerged = false;
-
-        // TENTATIVA 1: copyPages (cópia direta dos objetos — NÃO decodifica content streams)
-        // É o método mais robusto pois não tenta descomprimir/recomprimir o conteúdo.
-        if (!pdfMerged) {
-          try {
-            const indices = srcDoc.getPageIndices();
-            const copiedPages = await mergedPdf.copyPages(srcDoc, indices);
-            copiedPages.forEach((page) => mergedPdf.addPage(page));
-            pdfMerged = true;
-          } catch (copyError) {
-            console.warn(`[UniPDF] copyPages falhou para ${item.name}, tentando rebuild...`);
-          }
-        }
-
-        // TENTATIVA 2: Rebuild — salva e recarrega o PDF para corrigir estrutura
-        if (!pdfMerged) {
-          try {
-            const rebuiltBytes = await srcDoc.save();
-            const rebuiltDoc = await PDFDocument.load(rebuiltBytes);
-            const indices = rebuiltDoc.getPageIndices();
-            const copiedPages = await mergedPdf.copyPages(rebuiltDoc, indices);
-            copiedPages.forEach((page) => mergedPdf.addPage(page));
-            pdfMerged = true;
-          } catch (rebuildError) {
-            console.warn(`[UniPDF] Rebuild falhou para ${item.name}, tentando embedPdf...`);
-          }
-        }
-
-        // TENTATIVA 3: embedPdf (último recurso — decodifica streams, pode falhar com compressões exóticas)
-        if (!pdfMerged) {
-          try {
-            const srcDoc2 = await PDFDocument.load(sanitizedBytes, { ignoreEncryption: true });
-            const embeddedPages = await mergedPdf.embedPdf(srcDoc2);
-            embeddedPages.forEach((embPage) => {
-              const page = mergedPdf.addPage(PageSizes.A4);
-              const { width, height } = page.getSize();
-              const margin = 20;
-              const maxW = width - margin * 2;
-              const maxH = height - margin * 2;
-              const scale = Math.min(maxW / embPage.width, maxH / embPage.height);
-              const dims = embPage.scale(scale);
-              page.drawPage(embPage, {
-                x: (width - dims.width) / 2,
-                y: (height - dims.height) / 2,
-                width: dims.width,
-                height: dims.height,
-              });
-            });
-            pdfMerged = true;
-          } catch (embedError) {
-            console.error(`[UniPDF] Todas as tentativas falharam para ${item.name}`);
-            throw embedError;
-          }
-        }
       }
+
     } catch (error) {
-      console.error(`[UniPDF] Erro crítico: ${item.name}:`, error);
+      console.error(`[UniPDF] Erro ao processar ${item.name}:`, error);
+      // Cria página de erro visual, mas continua o processo
       const errPage = mergedPdf.addPage(PageSizes.A4);
-      const { width, height } = errPage.getSize();
-      errPage.drawText(`ERRO: Não foi possível processar o arquivo:`, {
+      const { height } = errPage.getSize();
+
+      const safeName = removeAccents(item.name);
+
+      errPage.drawText(`ERRO: Nao foi possivel incluir o arquivo: ${safeName}`, {
         x: 50,
         y: height - 100,
-        size: 14,
+        size: 12,
         color: rgb(0.8, 0, 0),
-      });
-      errPage.drawText(`${item.name}`, { x: 50, y: height - 130, size: 12 });
-      errPage.drawText(`O arquivo pode estar corrompido ou usar compressão não suportada.`, {
-        x: 50,
-        y: height - 160,
-        size: 10,
-        color: rgb(0.4, 0.4, 0.4),
       });
     }
   }
 
-  // Se o PDF estiver vazio (ex: falha em tudo), cria uma página branca
   if (mergedPdf.getPageCount() === 0) {
     mergedPdf.addPage(PageSizes.A4);
   }
@@ -227,49 +187,3 @@ export const createPDF = async (
   const pdfBytes = await mergedPdf.save();
   return pdfBytes;
 };
-
-// Função de Sanitização (Remove lixo antes de %PDF- e depois de %%EOF)
-function sanitizePDFData(data: Uint8Array): Uint8Array {
-  let start = 0;
-  let end = data.length;
-
-  // Procura %PDF- (header)
-  // % = 37, P = 80, D = 68, F = 70, - = 45
-  for (let i = 0; i < data.length - 5; i++) {
-    if (
-      data[i] === 37 &&
-      data[i + 1] === 80 &&
-      data[i + 2] === 68 &&
-      data[i + 3] === 70 &&
-      data[i + 4] === 45
-    ) {
-      start = i;
-      break;
-    }
-  }
-
-  // Procura %%EOF (trailer) de trás pra frente
-  // % = 37, % = 37, E = 69, O = 79, F = 70
-  for (let i = data.length - 5; i >= 0; i--) {
-    if (
-      data[i] === 37 &&
-      data[i + 1] === 37 &&
-      data[i + 2] === 69 &&
-      data[i + 3] === 79 &&
-      data[i + 4] === 70
-    ) {
-      end = i + 5; // Inclui o %%EOF
-      // Pode haver lixo (0x0A, 0x0D) depois do EOF, mas o PDF valido termina aqui.
-      // Para garantir, vamos procurar o ultimo %%EOF válido se houver múltiplos (linearized PDF?)
-      // Mas pegar o último encontrado (primeiro de trás pra frente) é o padrão.
-      break;
-    }
-  }
-
-  if (start > 0 || end < data.length) {
-    console.log(`PDF Sanitizado: cortado de ${start} até ${end} (original: ${data.length})`);
-    return data.slice(start, end);
-  }
-
-  return data;
-}

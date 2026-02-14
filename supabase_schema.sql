@@ -3,7 +3,7 @@ create extension if not exists "uuid-ossp";
 
 -- Contacts Table
 create table if not exists contacts (
-  id text primary key, -- keeping text to support existing IDs like 'msg_123', but uuid is better for new ones
+  id text primary key,
   name text not null,
   phone_number text not null,
   email text,
@@ -13,36 +13,41 @@ create table if not exists contacts (
   pipeline_stage text default 'lead',
   last_seen timestamp with time zone,
   unread_count integer default 0,
+  is_lead boolean default false,
+  source text,
+  property_interest text,
+  real_estate_preferences jsonb default '{}',
+  deal_value numeric,
+  notes text,
+  assigned_to uuid references auth.users(id) on delete set null,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
--- Index for faster search
 create index if not exists contacts_phone_number_idx on contacts(phone_number);
 create index if not exists contacts_pipeline_stage_idx on contacts(pipeline_stage);
 
--- Properties Table (Real Estate)
+-- Properties Table
 create table if not exists properties (
-  id text primary key, -- changed to text to support 'prop-1' mock IDs
+  id text primary key,
   code text,
   title text not null,
   description text,
-  type text, -- 'apartment', 'house', 'land', 'commercial', 'village_house', 'studio'
-  status text default 'available', -- 'available', 'reserved', 'sold', 'rented'
+  type text,
+  status text default 'available',
   price numeric,
   zip_code text,
   address text,
   neighborhood text,
   city text,
-  specs jsonb, -- { area: 0, bedrooms: 0, bathrooms: 0, parking: 0 }
+  specs jsonb,
   features text[] default '{}',
   photos text[] default '{}',
-  owner_id uuid references profiles(id),
+  owner_id uuid,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
--- Index for property search
 create index if not exists properties_code_idx on properties(code);
 create index if not exists properties_type_idx on properties(type);
 create index if not exists properties_status_idx on properties(status);
@@ -51,53 +56,40 @@ create index if not exists properties_status_idx on properties(status);
 create table if not exists campaigns (
   id uuid default uuid_generate_v4() primary key,
   name text not null,
-  status text not null, -- 'draft', 'scheduled', 'running', 'completed', 'paused'
+  status text not null,
   created_at timestamp with time zone default now(),
   scheduled_for timestamp with time zone,
   template_name text,
   stats jsonb default '{"total": 0, "sent": 0, "success": 0, "failed": 0}',
-  audience_snapshot jsonb -- { tags: [], pipelineStage: '', count: 0 }
+  audience_snapshot jsonb
 );
 
 -- Campaign Logs Table
 create table if not exists campaign_logs (
   id uuid default uuid_generate_v4() primary key,
   campaign_id uuid references campaigns(id) on delete cascade,
-  contact_id text references contacts(id), -- text because contact.id is text
+  contact_id text references contacts(id),
   contact_name text,
   contact_phone text,
-  status text, -- 'pending', 'sent', 'failed'
+  status text,
   sent_at timestamp with time zone,
   error text,
   created_at timestamp with time zone default now()
 );
 
--- Messages Table (Chat History) -> Optional, might be heavy
+-- Messages Table
 create table if not exists messages (
   id text primary key,
   contact_id text references contacts(id),
   text text,
-  sender text, -- 'user' or 'contact'
+  sender text,
   timestamp timestamp with time zone default now(),
-  status text, -- 'sent', 'delivered', 'read'
-  type text default 'text' -- 'text', 'image', 'audio', 'note'
+  status text,
+  type text default 'text'
 );
 
 create index if not exists messages_contact_id_idx on messages(contact_id);
 
--- Enable RLS (Row Level Security) - Optional for now ensuring local dev works
-alter table contacts enable row level security;
-alter table campaigns enable row level security;
-alter table campaign_logs enable row level security;
-alter table properties enable row level security;
-alter table messages enable row level security;
-
--- Public access policies (for development simplicity, should be refined for production)
-create policy "Allow public access for now" on contacts for all using (true);
-create policy "Allow public access for now" on campaigns for all using (true);
-create policy "Allow public access for now" on campaign_logs for all using (true);
-create policy "Allow public access for now" on properties for all using (true);
-create policy "Allow public access for now" on messages for all using (true);
 -- Profiles Table
 create table if not exists profiles (
   id uuid references auth.users on delete cascade primary key,
@@ -106,14 +98,64 @@ create table if not exists profiles (
   created_at timestamp with time zone default now()
 );
 
--- Enable RLS
-alter table profiles enable row level security;
+-- Settings Table
+create table if not exists settings (
+  user_id uuid references auth.users on delete cascade primary key,
+  data jsonb default '{}',
+  updated_at timestamp with time zone default now()
+);
 
--- Policies
+-- Social Posts Table
+create table if not exists social_posts (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users on delete cascade,
+  original_idea text not null,
+  platform text not null,
+  content text not null,
+  hashtags text[],
+  media_urls text[],
+  created_at timestamp with time zone default now()
+);
+
+-- RLS Enablement
+alter table contacts enable row level security;
+alter table campaigns enable row level security;
+alter table campaign_logs enable row level security;
+alter table properties enable row level security;
+alter table messages enable row level security;
+alter table profiles enable row level security;
+alter table settings enable row level security;
+alter table social_posts enable row level security;
+
+-- DROP AND RECREATE POLICIES (Idempotent)
+drop policy if exists "Allow public access for now" on contacts;
+create policy "Allow public access for now" on contacts for all using (true);
+
+drop policy if exists "Allow public access for now" on campaigns;
+create policy "Allow public access for now" on campaigns for all using (true);
+
+drop policy if exists "Allow public access for now" on campaign_logs;
+create policy "Allow public access for now" on campaign_logs for all using (true);
+
+drop policy if exists "Allow public access for now" on properties;
+create policy "Allow public access for now" on properties for all using (true);
+
+drop policy if exists "Allow public access for now" on messages;
+create policy "Allow public access for now" on messages for all using (true);
+
+drop policy if exists "Public profiles are viewable by everyone." on profiles;
 create policy "Public profiles are viewable by everyone." on profiles for select using (true);
+
+drop policy if exists "Users can update own profile." on profiles;
 create policy "Users can update own profile." on profiles for update using (auth.uid() = id);
 
--- Function to handle new user signup
+drop policy if exists "Users can manage their own settings." on settings;
+create policy "Users can manage their own settings." on settings for all using (auth.uid() = user_id);
+
+drop policy if exists "Users can manage their own social posts." on social_posts;
+create policy "Users can manage their own social posts." on social_posts for all using (auth.uid() = user_id);
+
+-- TRIGGERS & FUNCTIONS
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -130,25 +172,10 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Trigger to call function on signup
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Settings Table (Unified Store for all configs)
-create table if not exists settings (
-  user_id uuid references auth.users on delete cascade primary key,
-  data jsonb default '{}',
-  updated_at timestamp with time zone default now()
-);
-
--- Enable RLS
-alter table settings enable row level security;
-
--- Policies
-create policy "Users can manage their own settings." on settings for all using (auth.uid() = user_id);
-
--- Updated_at trigger for settings
 create or replace function update_updated_at_column()
 returns trigger as $$
 begin
@@ -157,7 +184,26 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger update_settings_updated_at
+create or replace trigger update_settings_updated_at
     before update on settings
     for each row execute procedure update_updated_at_column();
+
+-- STORAGE BUCKETS
+-- Note: inserting into storage.buckets requires appropriate permissions
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+-- Storage Policies
+-- Allow public access to read
+drop policy if exists "Public Access" on storage.objects;
+create policy "Public Access" on storage.objects for select using (bucket_id = 'avatars');
+
+-- Allow authenticated users to upload
+drop policy if exists "Authenticated users can upload" on storage.objects;
+create policy "Authenticated users can upload" on storage.objects for insert with check (bucket_id = 'avatars');
+
+-- Allow authenticated users to delete own
+drop policy if exists "Users can delete own avatar" on storage.objects;
+create policy "Users can delete own avatar" on storage.objects for delete using (bucket_id = 'avatars');
 

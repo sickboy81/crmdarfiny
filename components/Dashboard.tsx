@@ -27,7 +27,9 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area
 } from 'recharts';
 
 interface DashboardProps {
@@ -37,6 +39,17 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
   const { properties } = useRealEstateStore();
   const { meetings } = useScheduleStore();
+
+  // Dados para o gráfico de evolução de leads (exemplo simulado baseado em datas reais dos contatos se existissem)
+  const leadData = [
+    { name: 'Seg', leads: 4, value: 400 },
+    { name: 'Ter', leads: 3, value: 300 },
+    { name: 'Qua', leads: 8, value: 200 },
+    { name: 'Qui', leads: 6, value: 278 },
+    { name: 'Sex', leads: 12, value: 189 },
+    { name: 'Sáb', leads: 9, value: 239 },
+    { name: 'Dom', leads: 5, value: 349 },
+  ];
 
   const activeContacts = contacts.filter(c => c.pipelineStage !== 'lost');
 
@@ -98,10 +111,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 p-8">
+    <div className="h-full overflow-y-auto bg-[var(--bg-main)] p-8 transition-colors duration-500">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard Imobiliário</h1>
-        <p className="text-gray-500">Visão geral da sua performance de vendas e locação.</p>
+        <h1 className="text-2xl font-bold text-[var(--text-main)]">Dashboard Imobiliário</h1>
+        <p className="text-[var(--text-muted)]">Visão geral da sua performance de vendas e locação.</p>
       </div>
 
       {/* Cards de Estatísticas */}
@@ -109,21 +122,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div key={i} className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-main)] shadow-sm hover:shadow-md transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-xl ${stat.color} bg-opacity-10 text-${stat.color.replace('bg-', '')}`}>
                   <Icon size={24} className={stat.color.replace('bg-', 'text-')} />
                 </div>
                 <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">{stat.change}</span>
               </div>
-              <h3 className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</h3>
-              <p className="text-sm text-gray-400 font-medium">{stat.label}</p>
+              <h3 className="text-3xl font-bold text-[var(--text-main)] mb-1">{stat.value}</h3>
+              <p className="text-sm text-[var(--text-muted)] font-medium">{stat.label}</p>
             </div>
           );
         })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Gráfico de Evolução de Leads */}
+        <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-main)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-2">
+            <TrendingUp size={20} className="text-green-500" />
+            Evolução Semanal de Leads
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={leadData}>
+                <defs>
+                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-main)', color: 'var(--text-main)', borderRadius: '12px' }}
+                  itemStyle={{ color: 'var(--accent-main)' }}
+                />
+                <Area type="monotone" dataKey="leads" stroke="#22c55e" fillOpacity={1} fill="url(#colorLeads)" strokeWidth={3} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {/* Gráfico de Distribuição de Imóveis */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">

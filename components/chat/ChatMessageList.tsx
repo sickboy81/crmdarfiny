@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Message } from '../../types';
-import { Play, Pause, CornerUpRight, Image as ImageIcon, FileText, Download, Lock, StickyNote } from 'lucide-react';
+import { Play, Pause, CornerUpRight, Image as ImageIcon, FileText, Download, Lock, StickyNote, Save } from 'lucide-react';
+import { useAppStore } from '../../stores/useAppStore';
+import { toast } from 'sonner';
 import clsx from 'clsx';
 
 interface ChatMessageListProps {
@@ -14,7 +16,9 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onReply,
   onImageClick
 }) => {
+  const { addImage, addNotification, settings } = useAppStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isPrivacyMode = settings.crm_preferences?.blurSensitive;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,7 +39,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                   <Lock size={12} />
                   Nota Interna Privada
                 </div>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                <p className={clsx("whitespace-pre-wrap leading-relaxed", isPrivacyMode && "privacy-blur")}>{msg.content}</p>
                 <span className="text-[10px] text-yellow-500 self-end mt-1">{msg.timestamp}</span>
               </div>
             </div>
@@ -56,12 +60,10 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               )}
             >
               {/* Reply Label */}
-              {msg.replyTo && (
-                <div className="mb-2 p-2 bg-black/5 rounded-lg border-l-4 border-l-green-600/50 text-xs">
-                  <p className="font-bold text-green-700 mb-0.5">{msg.replyTo.senderName}</p>
-                  <p className="text-gray-600 truncate">{msg.replyTo.content}</p>
-                </div>
-              )}
+              <div className="mb-2 p-2 bg-black/5 rounded-lg border-l-4 border-l-green-600/50 text-xs">
+                <p className={clsx("font-bold text-green-700 mb-0.5", isPrivacyMode && "privacy-blur")}>{msg.replyTo.senderName}</p>
+                <p className={clsx("text-gray-600 truncate", isPrivacyMode && "privacy-blur")}>{msg.replyTo.content}</p>
+              </div>
 
               {/* Quick Reply Button on Hover */}
               <button
@@ -82,6 +84,34 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     alt="Imagem enviada"
                     className="rounded-lg max-h-80 object-cover w-full hover:scale-105 transition-transform duration-300"
                   />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addImage({
+                        id: `chat-${msg.id}`,
+                        url: msg.content,
+                        name: `Chat Image ${msg.timestamp}`,
+                        size: 0,
+                        type: 'image/jpeg',
+                        timestamp: new Date().toLocaleString(),
+                        source: 'chat',
+                        tags: ['WhatsApp']
+                      });
+                      addNotification({
+                        id: `save-${msg.id}`,
+                        title: 'Imagem Salva',
+                        message: 'A imagem foi adicionada à sua galeria.',
+                        timestamp: new Date().toLocaleTimeString(),
+                        type: 'success',
+                        read: false
+                      });
+                      toast.success('Imagem salva na galeria!');
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur rounded-full text-gray-700 hover:text-green-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    title="Salvar na Galeria"
+                  >
+                    <Save size={16} />
+                  </button>
                 </div>
               )}
 
@@ -103,7 +133,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     <FileText size={24} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-gray-800">{msg.content.split('/').pop() || 'Documento.pdf'}</p>
+                    <p className={clsx("text-sm font-semibold truncate text-gray-800", isPrivacyMode && "privacy-blur")}>{msg.content.split('/').pop() || 'Documento.pdf'}</p>
                     <p className="text-[10px] text-gray-500 uppercase">PDF • 1.2 MB</p>
                   </div>
                   <a
@@ -118,7 +148,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               )}
 
               {msg.type === 'text' && (
-                <p className="text-[14px] leading-[19px] whitespace-pre-wrap px-1">{msg.content}</p>
+                <p className={clsx("text-[14px] leading-[19px] whitespace-pre-wrap px-1", isPrivacyMode && "privacy-blur")}>{msg.content}</p>
               )}
 
               {msg.type === 'system' && (

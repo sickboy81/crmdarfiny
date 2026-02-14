@@ -23,6 +23,9 @@ export interface Contact {
   notes?: string;
   pinned?: boolean;
   cardColor?: string; // Hex color or Tailwind class for pipeline card background
+  isLead?: boolean; // Se veio do extrator e ainda não foi "validado"
+  source?: string; // Origem (Ex: Extrator IA, Facebook, Manual)
+  assignedTo?: string; // User ID
 }
 
 export interface Property {
@@ -142,7 +145,45 @@ export enum View {
   UNIPDF = 'unipdf',
   PROPERTIES = 'properties',
   EXTRACTOR = 'extractor',
+  LEAD_HUB = 'lead_hub',
   WIDGETS = 'widgets',
+  EMAIL_MANAGER = 'email_manager',
+  IMAGE_MANAGER = 'image_manager',
+  SOCIAL_POSTS = 'social_posts',
+  LINK_BIO = 'link_bio',
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  category?: 'wa' | 'leads' | 'email' | 'system';
+  read: boolean;
+  link?: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  from?: string; // For incoming emails
+  to: string;
+  subject: string;
+  content: string;
+  timestamp: string;
+  status: 'sent' | 'failed' | 'scheduled' | 'received';
+  attachments?: string[];
+}
+
+export interface StoredImage {
+  id: string;
+  url: string;
+  name: string;
+  size: number;
+  type: string;
+  timestamp: string;
+  source: 'chat' | 'pdf' | 'upload' | 'lead_hub';
+  tags?: string[];
 }
 
 export interface WhatsAppSession {
@@ -182,4 +223,17 @@ export interface Campaign {
     pipelineStage?: string;
     count: number;
   };
+}
+export interface SocialPostVariant {
+  platform: 'facebook' | 'instagram' | 'x' | 'tiktok' | 'linkedin';
+  content: string;
+  hashtags: string[];
+}
+
+export interface SocialPost {
+  id: string;
+  originalIdea: string;
+  variants: SocialPostVariant[];
+  createdAt: string;
+  mediaUrls?: string[];
 }
