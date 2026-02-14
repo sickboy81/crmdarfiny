@@ -4,19 +4,19 @@
             "source": "/bio",
             "has": [
                 {
-                    "type": "query",
-                    "key": "app",
-                    "value": "true"
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": ".*(bot|facebookexternalhit|whatsapp|telegram|slack|twitterbot|pinterest|googlebot|bingbot|crawler).*"
                 }
             ],
-            "destination": "/index.html"
-        },
-        {
-            "source": "/bio",
             "destination": "/api/bio"
         },
         {
-            "source": "/(.*)",
+            "source": "/bio",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/((?!api|assets|favicon|logo).*)",
             "destination": "/index.html"
         }
     ]
