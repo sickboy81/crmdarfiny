@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import { bioService } from '../services/bioService';
+import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 
@@ -101,21 +102,39 @@ export const LinkBio: React.FC = () => {
         loadBio();
     }, [user?.id]);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file || !user?.id) return;
 
         if (file.size > 2 * 1024 * 1024) {
             toast.error('A imagem deve ter no máximo 2MB.');
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setConfig(prev => ({ ...prev, avatarUrl: reader.result as string }));
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/avatar.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            let { error: uploadError } = await supabase.storage
+                .from('bio-assets')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) {
+                console.error('Upload Error:', uploadError);
+                throw uploadError;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('bio-assets')
+                .getPublicUrl(filePath);
+
+            setConfig(prev => ({ ...prev, avatarUrl: publicUrl }));
             toast.success('Imagem carregada com sucesso!');
-        };
-        reader.readAsDataURL(file);
+        } catch (error: any) {
+            console.error('Error uploading image:', error);
+            toast.error('Erro ao fazer upload da imagem.');
+        }
     };
 
     const handleSave = async () => {
