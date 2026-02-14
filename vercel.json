@@ -9,6 +9,21 @@
             "destination": "/api/$1"
         },
         {
+            "source": "/bio",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "app",
+                    "value": "true"
+                }
+            ],
+            "destination": "/index.html"
+        },
+        {
+            "source": "/bio",
+            "destination": "/api/bio"
+        },
+        {
             "source": "/((?!api|assets).*)",
             "destination": "/index.html"
         }
