@@ -2,18 +2,7 @@
     "rewrites": [
         {
             "source": "/bio",
-            "has": [
-                {
-                    "type": "header",
-                    "key": "user-agent",
-                    "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|TelegramBot).*"
-                }
-            ],
             "destination": "/api/bio"
-        },
-        {
-            "source": "/bio",
-            "destination": "/index.html"
         },
         {
             "source": "/((?!api|assets|favicon|logo).*)",
