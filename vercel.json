@@ -5,14 +5,6 @@
             "destination": "/assets/$1"
         },
         {
-            "source": "/api/og",
-            "destination": "/api/og"
-        },
-        {
-            "source": "/api/bio",
-            "destination": "/api/bio"
-        },
-        {
             "source": "/bio",
             "has": [
                 {
@@ -28,7 +20,7 @@
             "destination": "/api/bio"
         },
         {
-            "source": "/((?!api|assets).*)",
+            "source": "/((?!api|assets|bio).*)",
             "destination": "/index.html"
         }
     ]
