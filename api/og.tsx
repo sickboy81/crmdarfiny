@@ -1,158 +1,91 @@
 import { ImageResponse } from '@vercel/og';
+import { createClient } from '@supabase/supabase-js';
 
 export const config = {
     runtime: 'edge',
 };
 
-export default function handler(req: Request) {
+export default async function handler() {
+    let name = 'Darfiny CRM';
+    let bio = 'Consultora e Especialista em Imóveis de Alto Padrão.';
+    let avatar = 'https://ui-avatars.com/api/?name=D&background=22c55e&color=fff';
+
     try {
-        const { searchParams } = new URL(req.url);
+        // Busca os dados direto no Supabase para evitar URLs gigantes
+        const supabaseUrl = process.env.VITE_SUPABASE_URL;
+        const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-        const name = searchParams.get('name') || 'Darfiny CRM';
-        const bio = searchParams.get('bio') || 'Especialista em Imóveis de Alto Padrão.';
-        const avatar = searchParams.get('avatar') || 'https://ui-avatars.com/api/?name=D&background=22c55e&color=fff';
+        if (supabaseUrl && supabaseKey) {
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            const { data: publicBio } = await supabase
+                .from('bio_configs')
+                .select('*')
+                .eq('active', true)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .single();
 
-        return new ImageResponse(
-            (
+            if (publicBio) {
+                name = publicBio.profile_name || name;
+                bio = publicBio.bio || bio;
+                avatar = publicBio.avatar_url || avatar;
+            }
+        }
+    } catch (e) {
+        console.error('OG Image Fetch Error:', e);
+    }
+
+    return new ImageResponse(
+        (
+            <div
+                style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#020617',
+                    padding: '40px',
+                    position: 'relative',
+                }}
+            >
+                {/* Background Accents */}
+                <div style={{ position: 'absolute', top: -100, left: -100, width: 500, height: 500, background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: -100, right: -100, width: 500, height: 500, background: 'rgba(168, 85, 247, 0.1)', borderRadius: '50%' }} />
+
+                {/* Card */}
                 <div
                     style={{
-                        height: '100%',
-                        width: '100%',
                         display: 'flex',
-                        flexDirection: 'column',
+                        flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#020617', // slate-950
-                        padding: '40px',
-                        position: 'relative',
+                        backgroundColor: '#0f172a',
+                        border: '2px solid #1e293b',
+                        borderRadius: '48px',
+                        padding: '60px',
+                        width: '1040px',
+                        gap: '50px',
+                        borderTop: '6px solid #22c55e',
                     }}
                 >
-                    {/* Background Accents (Circles instead of blurs which are not supported) */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '-100px',
-                            left: '-100px',
-                            width: '400px',
-                            height: '400px',
-                            backgroundColor: 'rgba(34, 197, 94, 0.15)', // green
-                            borderRadius: '200px',
-                        }}
-                    />
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '-100px',
-                            right: '-100px',
-                            width: '400px',
-                            height: '400px',
-                            backgroundColor: 'rgba(168, 85, 247, 0.15)', // purple
-                            borderRadius: '200px',
-                        }}
-                    />
+                    {/* Avatar */}
+                    <div style={{ display: 'flex', width: 260, height: 260, borderRadius: 32, overflow: 'hidden', border: '4px solid #22c55e' }}>
+                        <img src={avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
 
-                    {/* Main Content Card */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: '#0f172a', // slate-900 (Solid color, no transparency/blur)
-                            border: '2px solid #1e293b', // slate-800
-                            borderRadius: '40px',
-                            padding: '60px',
-                            width: '1000px',
-                            gap: '50px',
-                            borderTop: '4px solid #22c55e', // Green accent line
-                        }}
-                    >
-                        {/* Avatar Container */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                width: '280px',
-                                height: '280px',
-                                borderRadius: '30px',
-                                overflow: 'hidden',
-                                backgroundColor: '#020617',
-                                border: '4px solid #22c55e',
-                            }}
-                        >
-                            <img
-                                src={avatar}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                }}
-                            />
+                    {/* Info */}
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: 5, background: '#22c55e', marginRight: 10 }} />
+                            <span style={{ fontSize: 20, color: '#22c55e', fontWeight: 700, letterSpacing: 2 }}>DARFINY CRM</span>
                         </div>
-
-                        {/* Info Container */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                flex: 1,
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-                                <div style={{ width: '10px', height: '10px', borderRadius: '5px', backgroundColor: '#22c55e', marginRight: '10px' }} />
-                                <span style={{ fontSize: '20px', color: '#22c55e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px' }}>
-                                    DARFINY CRM
-                                </span>
-                            </div>
-
-                            <div
-                                style={{
-                                    fontSize: '72px',
-                                    fontWeight: 900,
-                                    color: 'white',
-                                    marginBottom: '15px',
-                                    lineHeight: 1,
-                                }}
-                            >
-                                {name}
-                            </div>
-
-                            <div
-                                style={{
-                                    fontSize: '32px',
-                                    color: '#94a3b8', // slate-400
-                                    lineHeight: 1.4,
-                                    fontWeight: 500,
-                                }}
-                            >
-                                {bio}
-                            </div>
-
-                            <div style={{ display: 'flex', marginTop: '40px' }}>
-                                <div
-                                    style={{
-                                        backgroundColor: '#1e293b',
-                                        padding: '12px 30px',
-                                        borderRadius: '15px',
-                                        color: '#f8fafc',
-                                        fontSize: '22px',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    🌐 Acesse meus links
-                                </div>
-                            </div>
-                        </div>
+                        <div style={{ fontSize: 72, fontWeight: 900, color: 'white', marginBottom: 15, lineHeight: 1.1 }}>{name}</div>
+                        <div style={{ fontSize: 32, color: '#94a3b8', lineHeight: 1.4, fontWeight: 500 }}>{bio}</div>
                     </div>
                 </div>
-            ),
-            {
-                width: 1200,
-                height: 630,
-            },
-        );
-    } catch (e: any) {
-        console.error(e.message);
-        return new Response(`Failed to generate the image`, {
-            status: 500,
-        });
-    }
+            </div>
+        ),
+        { width: 1200, height: 630 }
+    );
 }

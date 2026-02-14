@@ -7,7 +7,6 @@ export const config = {
 export default async function handler(req: Request) {
   const url = new URL(req.url);
 
-  // Se já tiver o bypass, não processa o OG
   if (url.searchParams.get('app') === 'true') {
     return new Response(null, { status: 302, headers: { Location: '/index.html' } });
   }
@@ -37,10 +36,11 @@ export default async function handler(req: Request) {
       }
     }
   } catch (e) {
-    console.error('OG Generation Error:', e);
+    console.error('Bio Script Error:', e);
   }
 
-  const ogImageUrl = `https://crm.darfinyavila.com.br/api/og?name=${encodeURIComponent(name)}&bio=${encodeURIComponent(bio)}&avatar=${encodeURIComponent(avatar)}`;
+  // Simplified and direct URL
+  const ogImageUrl = `https://crm.darfinyavila.com.br/api/og?v=${Date.now()}`;
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -48,30 +48,24 @@ export default async function handler(req: Request) {
   <meta charset="UTF-8">
   <title>${name} | Link na Bio</title>
   <meta name="description" content="${bio}">
-  
   <meta property="og:type" content="website">
   <meta property="og:title" content="${name}">
   <meta property="og:description" content="${bio}">
   <meta property="og:image" content="${ogImageUrl}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${name}">
-  <meta name="twitter:description" content="${bio}">
   <meta name="twitter:image" content="${ogImageUrl}">
-
   <script>
-    // Redirect to the real app
     const url = new URL(window.location.href);
     url.searchParams.set('app', 'true');
     window.location.replace(url.toString());
   </script>
 </head>
 <body style="background: #020617; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
-  <img src="${avatar}" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #22c55e; margin-bottom: 20px;">
+  <img src="${avatar}" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #22c55e; margin-bottom: 20px;">
   <h1 style="margin: 0;">${name}</h1>
-  <p style="opacity: 0.7;">Redirecionando...</p>
+  <p style="opacity: 0.7;">Carregando perfil...</p>
 </body>
 </html>`;
 
