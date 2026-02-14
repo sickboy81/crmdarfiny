@@ -7,7 +7,7 @@ export const config = {
 export default async function handler(req) {
     let name = 'Darfiny';
     let bio = 'Especialista em Imóveis de Alto Padrão.';
-    let avatar = 'https://ui-avatars.com/api/?name=D&background=22c55e&color=fff&size=600';
+    let avatar = 'https://ui-avatars.com/api/?name=D&background=25D366&color=fff&size=600';
 
     let ogTitle = '';
     let ogDescription = '';
@@ -61,18 +61,9 @@ export default async function handler(req) {
     <meta name="twitter:title" content="${ogTitle}">
     <meta name="twitter:description" content="${ogDescription}">
     <meta name="twitter:image" content="${ogImage}">
-    <script>
-      var u = new URL(window.location.href);
-      if (!u.searchParams.has("app")) {
-        u.searchParams.set("app", "true");
-        window.location.replace(u.toString());
-      }
-    </script>
 </head>
-<body style="background:#020617;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;margin:0;text-align:center;padding:20px;">
-    <img src="${avatar}" style="width:120px;height:120px;border-radius:50%;border:4px solid #25D366;margin-bottom:20px;object-fit:cover;">
-    <h1 style="margin:0;font-size:24px;">${name}</h1>
-    <p style="opacity:0.6;margin-top:10px;font-size:14px;">Carregando perfil completo...</p>
+<body style="background:#020617;color:white;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;">
+    <p>Visualização da Bio para redes sociais.</p>
 </body>
 </html>`;
 
