@@ -29,7 +29,14 @@ export const bioService = {
 
         if (error) {
             console.error('Error fetching public bio:', error);
-            return null;
+            // Fallback: try to fetch any bio if no specific active one is found
+            const { data: fallbackData } = await supabase
+                .from('bio_configs')
+                .select('*')
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .single();
+            return fallbackData || null;
         }
 
         return data;

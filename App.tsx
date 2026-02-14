@@ -177,12 +177,14 @@ const App: React.FC = () => {
     }
 
     const config = {
-      profileName: publicBio.profile_name || 'Darfiny CRM',
-      bio: publicBio.bio || 'Página em construção',
-      avatarUrl: publicBio.avatar_url || 'https://ui-avatars.com/api/?name=D&background=random',
-      theme: publicBio.theme || { backgroundColor: '#0F172A', buttonColor: '#25D366', textColor: '#FFFFFF', buttonTextColor: '#000000', cardStyle: 'rounded' },
-      links: publicBio.links || [],
-      socials: publicBio.socials || {}
+      profileName: publicBio?.profile_name || 'Darfiny CRM',
+      bio: publicBio?.bio || 'Personalize sua bio no painel de configurações.',
+      avatarUrl: publicBio?.avatar_url || 'https://ui-avatars.com/api/?name=D&background=25D366&color=fff',
+      theme: publicBio?.theme || { backgroundColor: '#0F172A', buttonColor: '#25D366', textColor: '#FFFFFF', buttonTextColor: '#000000', cardStyle: 'rounded' },
+      links: publicBio?.links || [
+        { id: '1', title: 'Falar no WhatsApp', url: '#', active: true }
+      ],
+      socials: publicBio?.socials || {}
     };
 
     const ogImageUrl = `${window.location.origin}/api/og?name=${encodeURIComponent(config.profileName)}&bio=${encodeURIComponent(config.bio)}&avatar=${encodeURIComponent(config.avatarUrl)}`;
