@@ -216,14 +216,30 @@ insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
--- Storage Policies
--- Allow public access to read
-drop policy if exists "Public Access" on storage.objects;
-create policy "Public Access" on storage.objects for select using (bucket_id = 'avatars');
+insert into storage.buckets (id, name, public)
+values ('bio-assets', 'bio-assets', true)
+on conflict (id) do nothing;
 
--- Allow authenticated users to upload
-drop policy if exists "Authenticated users can upload" on storage.objects;
-create policy "Authenticated users can upload" on storage.objects for insert with check (bucket_id = 'avatars');
+-- Storage Policies
+-- Allow public access to read avatars
+drop policy if exists "Public Access Avatars" on storage.objects;
+create policy "Public Access Avatars" on storage.objects for select using (bucket_id = 'avatars');
+
+-- Allow public access to read bio-assets
+drop policy if exists "Public Access Bio Assets" on storage.objects;
+create policy "Public Access Bio Assets" on storage.objects for select using (bucket_id = 'bio-assets');
+
+-- Allow authenticated users to upload avatars
+drop policy if exists "Authenticated users can upload avatars" on storage.objects;
+create policy "Authenticated users can upload avatars" on storage.objects for insert with check (bucket_id = 'avatars');
+
+-- Allow authenticated users to upload bio-assets
+drop policy if exists "Authenticated users can upload bio-assets" on storage.objects;
+create policy "Authenticated users can upload bio-assets" on storage.objects for insert with check (bucket_id = 'bio-assets');
+
+-- Allow authenticated users to update bio-assets (for re-uploading)
+drop policy if exists "Authenticated users can update bio-assets" on storage.objects;
+create policy "Authenticated users can update bio-assets" on storage.objects for update with check (bucket_id = 'bio-assets');
 
 -- Allow authenticated users to delete own
 drop policy if exists "Users can delete own avatar" on storage.objects;
