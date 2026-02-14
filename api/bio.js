@@ -66,8 +66,9 @@ export default async function handler(req) {
         '<script>' +
         'var u = new URL(window.location.href);' +
         'if (!u.searchParams.has("app")) {' +
-        '  u.searchParams.set("app", "true");' +
-        '  window.location.replace(u.toString());' +
+        '  var target = new URL("https://crm.darfinyavila.com.br/bio");' +
+        '  target.searchParams.set("app", "true");' +
+        '  window.location.replace(target.toString());' +
         '}' +
         '</script>' +
         '</head>' +
