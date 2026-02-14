@@ -23,6 +23,7 @@ import {
     Globe
 } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
+import { bioService } from '../services/bioService';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 
@@ -75,11 +76,30 @@ const DEFAULT_CONFIG: LinkBioConfig = {
 };
 
 export const LinkBio: React.FC = () => {
-    const { settings, updateSettings } = useAppStore();
+    const { settings, updateSettings, user } = useAppStore();
     const [config, setConfig] = useState<LinkBioConfig>(settings.linkBio || DEFAULT_CONFIG);
     const [activeTab, setActiveTab] = useState<'content' | 'appearance' | 'share'>('content');
     const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const loadBio = async () => {
+            if (user?.id) {
+                const dbBio = await bioService.getBioConfig(user.id);
+                if (dbBio) {
+                    setConfig({
+                        profileName: dbBio.profile_name,
+                        bio: dbBio.bio,
+                        avatarUrl: dbBio.avatar_url,
+                        theme: dbBio.theme,
+                        links: dbBio.links,
+                        socials: dbBio.socials
+                    });
+                }
+            }
+        };
+        loadBio();
+    }, [user?.id]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -98,9 +118,22 @@ export const LinkBio: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const handleSave = () => {
-        updateSettings({ linkBio: config });
-        toast.success('Configurações da Bio salvas!');
+    const handleSave = async () => {
+        console.log('Attempting to save bio. User ID:', user?.id);
+        if (!user?.id) {
+            toast.error('Usuário não autenticado!');
+            return;
+        }
+
+        try {
+            console.log('Save payload:', config);
+            await bioService.saveBioConfig(user.id, config);
+            updateSettings({ linkBio: config });
+            toast.success('Configurações da Bio salvas no banco de dados!');
+        } catch (error: any) {
+            console.error('Explicit save error:', error);
+            toast.error(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
+        }
     };
 
     const addLink = () => {
@@ -179,7 +212,7 @@ export const LinkBio: React.FC = () => {
                                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Perfil</h3>
                                 <div className="flex items-center gap-4">
                                     <div className="relative group" onClick={() => fileInputRef.current?.click()}>
-                                        <img src={config.avatarUrl} className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-slate-700 object-cover" />
+                                        <img src={config.avatarUrl} alt="Avatar Preview" className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-slate-700 object-cover" />
                                         <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                             <ImageIcon size={18} className="text-white" />
                                         </div>
@@ -386,6 +419,7 @@ export const LinkBio: React.FC = () => {
                         {/* Avatar */}
                         <img
                             src={config.avatarUrl}
+                            alt={config.profileName}
                             className="w-24 h-24 rounded-full border-4 border-white/20 shadow-xl mb-4 object-cover"
                         />
 
@@ -434,7 +468,7 @@ export const LinkBio: React.FC = () => {
                         <div className="mt-auto py-8">
                             <div className="flex items-center gap-2 opacity-30 grayscale" style={{ color: config.theme.textColor }}>
                                 <Zap size={14} fill="currentColor" />
-                                <span className="text-[10px] font-black tracking-widest uppercase">Powered by Darfiny</span>
+                                <span className="text-[10px] font-black tracking-widest uppercase">Egeolabs - 2026</span>
                             </div>
                         </div>
                     </div>

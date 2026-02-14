@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -21,6 +21,7 @@ import { GlobalSearch } from './components/GlobalSearch';
 import { useAppStore } from './stores/useAppStore';
 import { Toaster } from 'sonner';
 import { Instagram, Linkedin, Zap } from 'lucide-react';
+import { bioService } from './services/bioService';
 import clsx from 'clsx';
 import { PropertyCatalog } from './components/properties/PropertyCatalog';
 import { supabase } from './lib/supabase';
@@ -157,16 +158,34 @@ const App: React.FC = () => {
   }, [settings.crm_preferences?.theme]);
 
   const isBioPath = window.location.pathname === '/bio';
+  const [publicBio, setPublicBio] = useState<any>(null);
+
+  useEffect(() => {
+    if (isBioPath) {
+      const loadPublicBio = async () => {
+        const data = await bioService.getPublicBio();
+        if (data) setPublicBio(data);
+      };
+      loadPublicBio();
+    }
+  }, [isBioPath]);
 
   if (isBioPath) {
-    const config = settings.linkBio || {
+    const config = publicBio ? {
+      profileName: publicBio.profile_name,
+      bio: publicBio.bio,
+      avatarUrl: publicBio.avatar_url,
+      theme: publicBio.theme,
+      links: publicBio.links,
+      socials: publicBio.socials
+    } : (settings.linkBio || {
       profileName: 'Darfiny CRM',
       bio: 'Página em construção',
       avatarUrl: 'https://ui-avatars.com/api/?name=D&background=random',
       theme: { backgroundColor: '#0F172A', buttonColor: '#25D366', textColor: '#FFFFFF', buttonTextColor: '#000000', cardStyle: 'rounded' },
       links: [],
       socials: {}
-    };
+    });
 
     return (
       <div className="h-screen w-full overflow-y-auto" style={{ backgroundColor: config.theme.backgroundColor }}>
@@ -206,7 +225,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 opacity-30 grayscale" style={{ color: config.theme.textColor }}>
               <Zap size={16} fill="currentColor" />
-              <span className="text-xs font-black tracking-widest uppercase">Powered by Darfiny</span>
+              <span className="text-xs font-black tracking-widest uppercase">Egeolabs - 2026</span>
             </div>
           </div>
         </div>

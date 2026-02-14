@@ -117,6 +117,21 @@ create table if not exists social_posts (
   created_at timestamp with time zone default now()
 );
 
+-- Bio Configs Table (Standalone for Public Access)
+create table if not exists bio_configs (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users on delete cascade unique,
+  profile_name text,
+  bio text,
+  avatar_url text,
+  theme jsonb,
+  links jsonb,
+  socials jsonb,
+  active boolean default true,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
 -- RLS Enablement
 alter table contacts enable row level security;
 alter table campaigns enable row level security;
@@ -126,6 +141,7 @@ alter table messages enable row level security;
 alter table profiles enable row level security;
 alter table settings enable row level security;
 alter table social_posts enable row level security;
+alter table bio_configs enable row level security;
 
 -- DROP AND RECREATE POLICIES (Idempotent)
 drop policy if exists "Allow public access for now" on contacts;
@@ -154,6 +170,12 @@ create policy "Users can manage their own settings." on settings for all using (
 
 drop policy if exists "Users can manage their own social posts." on social_posts;
 create policy "Users can manage their own social posts." on social_posts for all using (auth.uid() = user_id);
+
+drop policy if exists "Bio configs are publicly viewable" on bio_configs;
+create policy "Bio configs are publicly viewable" on bio_configs for select using (true);
+
+drop policy if exists "Users can manage their own bio configs" on bio_configs;
+create policy "Users can manage their own bio configs" on bio_configs for all using (auth.uid() = user_id);
 
 -- TRIGGERS & FUNCTIONS
 create or replace function public.handle_new_user()
