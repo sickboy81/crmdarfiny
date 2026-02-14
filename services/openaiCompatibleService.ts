@@ -84,8 +84,8 @@ export async function chatCompletion(
   };
 
   if (baseUrl.includes('openrouter.ai')) {
-    headers['HTTP-Referer'] = 'https://vibecode.app';
-    headers['X-Title'] = 'CRM Whatsapp AI';
+    headers['HTTP-Referer'] = 'https://darfiny.com';
+    headers['X-Title'] = 'Darfiny CRM';
   }
 
   const response = await fetch(url, {

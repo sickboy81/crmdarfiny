@@ -1,12 +1,14 @@
+// Auth.tsx edited to remove hardcoded credentials and add password visibility toggle
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogIn, UserPlus, Mail, Lock, Loader2, Landmark } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, Loader2, Landmark, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Auth: React.FC = () => {
     const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('consultoradarfiny@gmail.com');
-    const [password, setPassword] = useState('Eloa.10022023');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,7 +41,7 @@ export const Auth: React.FC = () => {
                             <Landmark className="text-white" size={32} />
                         </div>
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                            ZAPR <span className="text-green-600 font-medium">CRM</span>
+                            Darfiny <span className="text-green-600 font-medium">CRM</span>
                         </h1>
                     </div>
 
@@ -69,13 +71,20 @@ export const Auth: React.FC = () => {
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-green-600 transition-colors" size={20} />
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all text-sm"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-12 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all text-sm"
                                     placeholder="••••••••"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-600 transition-colors focus:outline-none"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
                         </div>
 

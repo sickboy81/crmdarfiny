@@ -169,12 +169,14 @@ export const ContactList: React.FC<ContactListProps> = ({
     e.preventDefault();
     const form = e.currentTarget;
     const name = (form.querySelector('[name="name"]') as HTMLInputElement)?.value?.trim();
-    const countryCode = (form.querySelector('[name="countryCode"]') as HTMLInputElement)?.value?.replace(/\D/g, '') || '55';
     const phoneInput = (form.querySelector('[name="phoneNumber"]') as HTMLInputElement)?.value?.replace(/\D/g, '');
 
     if (!name || !phoneInput) return;
 
-    const fullPhoneNumber = countryCode + phoneInput;
+    let fullPhoneNumber = phoneInput;
+    if (phoneInput.length >= 10 && phoneInput.length <= 11 && !phoneInput.startsWith('55')) {
+      fullPhoneNumber = '55' + phoneInput;
+    }
 
     const newContact: Contact = {
       id: 'c' + Date.now(),
@@ -200,12 +202,14 @@ export const ContactList: React.FC<ContactListProps> = ({
     const form = e.currentTarget;
 
     const name = (form.querySelector('[name="name"]') as HTMLInputElement)?.value?.trim();
-    const countryCode = (form.querySelector('[name="countryCode"]') as HTMLInputElement)?.value?.replace(/\D/g, '') || '55';
     const phoneInput = (form.querySelector('[name="phoneNumber"]') as HTMLInputElement)?.value?.replace(/\D/g, '');
 
     if (!name || !phoneInput) return;
 
-    const fullPhoneNumber = countryCode + phoneInput;
+    let fullPhoneNumber = phoneInput;
+    if (phoneInput.length >= 10 && phoneInput.length <= 11 && !phoneInput.startsWith('55')) {
+      fullPhoneNumber = '55' + phoneInput;
+    }
 
     const updates = {
       name,
@@ -228,17 +232,7 @@ export const ContactList: React.FC<ContactListProps> = ({
   const renderContactForm = (contact?: Contact | null, isEdit = false) => {
     const c = contact ?? null;
 
-    // Tenta extrair DDI e Telefone caso já existam
-    let defaultDDI = '55';
-    let defaultPhone = c?.phoneNumber || '';
-
-    if (c?.phoneNumber && c.phoneNumber.startsWith('55')) {
-      defaultDDI = '55';
-      defaultPhone = c.phoneNumber.slice(2);
-    } else if (c?.phoneNumber && c.phoneNumber.startsWith('+')) {
-      // Lógica simples para outros DDIs se necessário
-      // Por enquanto focamos no 55
-    }
+    const defaultPhone = c?.phoneNumber || '';
 
     return (
       <form onSubmit={isEdit ? handleUpdateContactSubmit : handleAddContactSubmit} className="space-y-4">
@@ -246,30 +240,16 @@ export const ContactList: React.FC<ContactListProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
           <input name="name" defaultValue={c?.name} required className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" placeholder="Nome completo" />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">DDI</label>
-            <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">+</span>
-              <input
-                name="countryCode"
-                defaultValue={defaultDDI}
-                className="w-full p-2.5 pl-5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm text-center"
-                placeholder="55"
-              />
-            </div>
-          </div>
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telefone (com DDD) *</label>
-            <input
-              name="phoneNumber"
-              type="tel"
-              defaultValue={defaultPhone}
-              required
-              className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-              placeholder="21999999999"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Telefone (DDD + Número) *</label>
+          <input
+            name="phoneNumber"
+            type="tel"
+            defaultValue={defaultPhone}
+            required
+            className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+            placeholder="11999999999"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -314,7 +294,7 @@ export const ContactList: React.FC<ContactListProps> = ({
           <button type="button" onClick={closeModals} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
           <button type="submit" className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">{isEdit ? 'Salvar' : 'Criar contato'}</button>
         </div>
-      </form>
+      </form >
     );
   };
 

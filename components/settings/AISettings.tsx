@@ -127,7 +127,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                             type="text"
                             value={botConfig.botName}
                             onChange={(e) => setBotConfig({ ...botConfig, botName: e.target.value })}
-                            placeholder="Ex: Ana, ZaprBot, Atendente..."
+                            placeholder="Ex: Ana, DarfinyBot, Atendente..."
                             className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-900"
                         />
                     </div>
@@ -196,7 +196,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                     <div className="space-y-4 text-sm bg-white/10 p-4 rounded-xl border border-white/10">
                         <div>
                             <strong className="text-purple-300 block mb-1">1. Quem somos:</strong>
-                            "Somos a Zapr, uma consultoria de software."
+                            "Somos a Darfiny, uma consultoria de software."
                         </div>
                         <div>
                             <strong className="text-purple-300 block mb-1">2. O que vendemos:</strong>

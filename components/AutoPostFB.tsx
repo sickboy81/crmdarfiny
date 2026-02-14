@@ -364,16 +364,16 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="p-10 h-full flex flex-col overflow-hidden bg-[#FBFBFD]">
+    <div className="p-10 h-full flex flex-col overflow-y-auto bg-[#FBFBFD]">
       <header className="shrink-0 mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200">
               <Share2 className="text-white" size={24} />
             </div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tighter">FLUID SOCIAL COMPOSER</h1>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tighter">FACEBOOK GROUP AUTO POST</h1>
           </div>
-          <p className="text-gray-400 text-sm font-medium">Refined Facebook automation for premium engagement.</p>
+          <p className="text-gray-400 text-sm font-medium">Automação refinada do Facebook para engajamento premium.</p>
         </div>
 
         {useExtension && (
@@ -407,7 +407,7 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col xl:flex-row gap-8 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row gap-8">
         {/* LEFT COLUMN: EDITOR */}
         <div className="flex-[1.5] min-w-0 bg-white rounded-[32px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col">
           <div className="p-8 pb-4 flex items-center justify-between">
@@ -425,19 +425,19 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
                 placeholder="Desenhe sua narrativa aqui..."
                 aria-label="Corpo da publicação"
                 rows={6}
-                className="w-full text-2xl font-medium text-gray-800 placeholder:text-gray-200 border-none focus:ring-0 resize-none leading-relaxed"
+                className="w-full text-2xl font-medium text-gray-800 placeholder:text-gray-300 border-2 border-slate-300 rounded-xl p-4 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 resize-none leading-relaxed transition-all"
                 disabled={!formEnabled}
               />
-              <div className="flex items-center gap-4 border-t border-gray-50 pt-6">
+              <div className="flex items-center gap-4 border-t border-gray-100 pt-6">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   title="Anexar arquivos locais"
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 border-2 border-slate-200 hover:border-slate-300 rounded-xl text-gray-700 transition-all active:scale-95 font-bold"
                 >
                   <ImageIcon size={18} />
                   <span className="text-xs font-bold uppercase tracking-widest text-[10px]">Upload</span>
                 </button>
-                <div className="h-4 w-[1px] bg-gray-100" />
+                <div className="h-4 w-[1px] bg-gray-200" />
                 <div className="flex-1 flex items-center gap-2">
                   <input
                     type="url"
@@ -446,11 +446,11 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addPhotoUrl())}
                     placeholder="Cole um link de imagem..."
                     title="URL da imagem"
-                    className="flex-1 bg-transparent border-none text-xs focus:ring-0 placeholder:text-gray-300"
+                    className="flex-1 bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-4 focus:ring-blue-100 focus:border-blue-500 placeholder:text-gray-400 transition-all font-medium text-gray-700"
                     disabled={!formEnabled}
                   />
                   {photoUrlInput.trim() && (
-                    <button onClick={addPhotoUrl} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <button onClick={addPhotoUrl} className="p-2 text-blue-600 hover:bg-blue-50 border-2 border-blue-200 hover:border-blue-300 rounded-lg transition-colors">
                       <Plus size={16} />
                     </button>
                   )}
@@ -462,24 +462,24 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
             {(photoFiles.length > 0 || photoUrls.length > 0) && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in zoom-in-95 duration-500">
                 {photoFiles.map((_, i) => (
-                  <div key={`file-${i}`} className="group relative aspect-square rounded-[24px] overflow-hidden bg-gray-100 ring-1 ring-gray-100">
+                  <div key={`file-${i}`} className="group relative aspect-square rounded-[24px] overflow-hidden bg-gray-100 ring-2 ring-slate-200 border-2 border-white shadow-sm">
                     <img src={filePreviewUrls[i]} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button onClick={() => removePhotoFile(i)} title="Remover" className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-red-500 transition-all">
+                      <button onClick={() => removePhotoFile(i)} title="Remover" className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-red-500 transition-all border border-white/30">
                         <Trash2 size={20} />
                       </button>
                     </div>
                   </div>
                 ))}
                 {photoUrls.map((url, i) => (
-                  <div key={`url-${i}`} className="group relative aspect-square rounded-[24px] overflow-hidden bg-gray-100 ring-1 ring-gray-100">
+                  <div key={`url-${i}`} className="group relative aspect-square rounded-[24px] overflow-hidden bg-gray-100 ring-2 ring-slate-200 border-2 border-white shadow-sm">
                     <img src={url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button onClick={() => removePhotoUrl(url)} title="Remover" className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-red-500 transition-all">
+                      <button onClick={() => removePhotoUrl(url)} title="Remover" className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl text-white hover:bg-red-500 transition-all border border-white/30">
                         <Trash2 size={20} />
                       </button>
                     </div>
-                    <div className="absolute top-3 left-3 px-2 py-1 bg-blue-600/90 backdrop-blur rounded-lg text-[8px] font-black text-white uppercase tracking-tighter">REMOTE</div>
+                    <div className="absolute top-3 left-3 px-2 py-1 bg-blue-600/90 backdrop-blur rounded-lg text-[8px] font-black text-white uppercase tracking-tighter border border-white/20">REMOTE</div>
                   </div>
                 ))}
               </div>
@@ -511,7 +511,7 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
                   type="button"
                   onClick={useExtension ? handleExtensionPostAll : handlePostAll}
                   disabled={posting || !message.trim() || (useExtension ? (extensionSelectedCount === 0 || !extensionSession?.logged) : (selectedGroups.length === 0 || !hasToken))}
-                  className="h-20 px-12 bg-white text-blue-600 rounded-[28px] font-black uppercase tracking-[0.1em] text-sm hover:translate-y-[-4px] active:scale-95 transition-all shadow-2xl shadow-blue-900/40 disabled:opacity-50 disabled:translate-y-0"
+                  className="h-20 px-12 bg-white text-blue-600 rounded-[28px] font-black uppercase tracking-[0.1em] text-sm hover:translate-y-[-4px] active:scale-95 transition-all shadow-2xl shadow-blue-900/40 disabled:opacity-50 disabled:translate-y-0 border-4 border-white/20 hover:border-white/40"
                 >
                   {posting ? (<div className="flex items-center gap-2"><Loader2 size={20} className="animate-spin" /> <span>Dispatching</span></div>) : "Launch Campaign"}
                 </button>
@@ -530,11 +530,11 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
                 <button
                   onClick={useExtension ? handleExtensionLoadGroups : handleLoadGroups}
                   title="Sincronizar Grupos"
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  className="p-2 text-blue-600 hover:bg-blue-50 border-2 border-blue-100 hover:border-blue-200 rounded-xl transition-all"
                 >
                   {loadingGroups || extensionLoadingGroups ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 </button>
-                <button onClick={() => setShowBulkImport(!showBulkImport)} title="Importar lista" className="p-2 text-gray-400 hover:text-gray-600 rounded-xl">
+                <button onClick={() => setShowBulkImport(!showBulkImport)} title="Importar lista" className="p-2 text-gray-400 hover:text-gray-600 border-2 border-slate-300 hover:border-slate-400 rounded-xl transition-all">
                   <ExternalLink size={16} />
                 </button>
               </div>
@@ -542,16 +542,16 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
 
             <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
               {showBulkImport && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-[24px] space-y-3 animate-in fade-in slide-in-from-top-2">
+                <div className="mb-6 p-4 bg-gray-50 border-2 border-slate-300 rounded-[24px] space-y-3 animate-in fade-in slide-in-from-top-2">
                   <textarea
                     value={bulkImportText} onChange={(e) => setBulkImportText(e.target.value)}
                     placeholder="IDs ou URLs (JSON aceito)..."
                     title="Entrada em massa"
-                    className="w-full h-32 p-4 bg-white border border-gray-100 rounded-2xl text-xs focus:ring-2 focus:ring-blue-500/10 placeholder:text-gray-300"
+                    className="w-full h-32 p-4 bg-white border-2 border-slate-300 rounded-2xl text-xs focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-300 transition-all font-medium"
                   />
                   <div className="flex gap-2">
-                    <button onClick={handleBulkImport} className="flex-1 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase">Importar</button>
-                    <button onClick={() => setShowBulkImport(false)} className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase">Fechar</button>
+                    <button onClick={handleBulkImport} className="flex-1 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-gray-200 hover:shadow-xl transition-all">Importar</button>
+                    <button onClick={() => setShowBulkImport(false)} className="flex-1 py-2 bg-gray-100 text-gray-600 border border-gray-200 rounded-xl text-[10px] font-black uppercase hover:bg-gray-200 transition-all">Fechar</button>
                   </div>
                 </div>
               )}
@@ -559,12 +559,12 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
               {useExtension ? (
                 <div className="space-y-6">
                   <div className="relative group">
-                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors" />
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <input
                       type="text" placeholder="Search groups..." value={extensionGroupSearch}
                       onChange={(e) => { setExtensionGroupSearch(e.target.value); setExtensionGroupsPage(1); }}
                       title="Filtrar grupos"
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border-none rounded-2xl text-xs focus:ring-2 focus:ring-blue-500/10"
+                      className="w-full pl-10 pr-4 py-3 bg-white border-2 border-slate-300 rounded-2xl text-xs focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-gray-400 font-medium"
                     />
                   </div>
 
@@ -593,10 +593,10 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
                       <li key={g.id}
                         onClick={() => toggleExtensionGroup(g.id)}
                         className={clsx(
-                          "group flex items-center gap-4 p-4 rounded-[20px] border transition-all cursor-pointer select-none",
-                          g.selected ? "bg-blue-50/50 border-blue-100 ring-1 ring-blue-100" : "bg-white border-gray-100 hover:border-gray-300"
+                          "group flex items-center gap-4 p-4 rounded-[20px] border-2 transition-all cursor-pointer select-none",
+                          g.selected ? "bg-blue-50/50 border-blue-300 ring-2 ring-blue-100" : "bg-white border-slate-200 hover:border-slate-300"
                         )}>
-                        <div className={clsx("w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all", g.selected ? "bg-blue-600 border-blue-600 shadow-lg shadow-blue-200" : "border-gray-200")}>
+                        <div className={clsx("w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all", g.selected ? "bg-blue-600 border-blue-600 shadow-lg shadow-blue-200" : "border-slate-300")}>
                           {g.selected && <CheckCircle size={12} className="text-white" />}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -645,8 +645,8 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
           </div>
 
           {/* Live Simulation Card - RESTORED FULL PREVIEW */}
-          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between shrink-0">
               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Live Facebook Preview</h3>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
@@ -656,7 +656,7 @@ export const AutoPostFB: React.FC<AutoPostFBProps> = ({ onNavigate }) => {
             </div>
 
             {/* Facebook Post Simulation */}
-            <div className="p-6 bg-gray-50/50 flex-1">
+            <div className="p-6 bg-gray-50/50 flex-1 overflow-y-auto custom-scrollbar">
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div className="p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold text-xl shadow-sm">F</div>

@@ -66,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
         <div className="bg-green-500 p-2 rounded-lg">
           <Zap size={24} className="text-white" fill="currentColor" />
         </div>
-        <span className="font-bold text-xl hidden lg:block tracking-tight">Zapr CRM</span>
+        <span className="font-bold text-xl hidden lg:block tracking-tight">Darfiny CRM</span>
       </div>
 
       <nav className="flex-1 py-6 flex flex-col gap-2 px-2">

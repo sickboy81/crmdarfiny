@@ -70,7 +70,7 @@ export const useAppStore = create<AppState>()(
           labelText: 'Falar com corretor',
           qrLabelTop: 'Escaneie para falar no',
           qrTitle: 'WHATSAPP',
-          qrTagline: 'Zapr CRM · Automação Inteligente',
+          qrTagline: 'Darfiny CRM · Automação Inteligente',
         }
       },
 

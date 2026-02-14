@@ -12,7 +12,6 @@ interface NewChatModalProps {
 
 export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onChatCreated }) => {
     const { contacts, addContact } = useAppStore();
-    const [countryCode, setCountryCode] = useState('55');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [contactName, setContactName] = useState('');
 
@@ -28,7 +27,11 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onC
 
         // Limpa o número (remove caracteres não numéricos)
         const cleanPhone = phoneNumber.replace(/\D/g, '');
-        const fullPhone = countryCode.replace(/\D/g, '') + cleanPhone;
+
+        let fullPhone = cleanPhone;
+        if (cleanPhone.length >= 10 && cleanPhone.length <= 11 && !cleanPhone.startsWith('55')) {
+            fullPhone = '55' + cleanPhone;
+        }
 
         if (cleanPhone.length < 10) {
             toast.error('Número de telefone inválido (deve incluir DDD)');
@@ -109,27 +112,15 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onC
                             <Phone size={16} className="inline mr-1" />
                             Número do WhatsApp *
                         </label>
-                        <div className="flex gap-2">
-                            <div className="relative w-24">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+</span>
-                                <input
-                                    type="text"
-                                    value={countryCode}
-                                    onChange={(e) => setCountryCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                                    className="w-full pl-6 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-center font-medium"
-                                    placeholder="55"
-                                />
-                            </div>
-                            <input
-                                type="tel"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
-                                placeholder="(21) 99999-9999"
-                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                autoFocus
-                            />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Ex: +55 (21) 99999-9999</p>
+                        <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="(11) 99999-9999"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            autoFocus
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Ex: (11) 99999-9999</p>
                     </div>
 
                     <div>

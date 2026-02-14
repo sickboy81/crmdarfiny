@@ -410,7 +410,7 @@ export const ChatInterface: React.FC = () => {
                     <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
                         <MessageSquare size={48} className="text-gray-200 ml-1" />
                     </div>
-                    <h2 className="text-3xl font-light text-gray-700 mb-2">Vibecode CRM</h2>
+                    <h2 className="text-3xl font-light text-gray-700 mb-2">Darfiny CRM</h2>
                     <p className="max-w-md text-center text-sm leading-relaxed text-gray-500">
                         Conecte-se com seus clientes via WhatsApp, organize seu pipeline e use inteligência artificial para otimizar suas vendas.
                     </p>

@@ -21,7 +21,7 @@ export const LeadCaptureSettings: React.FC = () => {
     // QR Card Text Customization
     const [qrLabelTop, setQrLabelTop] = useState(leadCapture.qrLabelTop || 'Escaneie para falar no');
     const [qrTitle, setQrTitle] = useState(leadCapture.qrTitle || 'WHATSAPP');
-    const [qrTagline, setQrTagline] = useState(leadCapture.qrTagline || 'Zapr CRM · Automação Inteligente');
+    const [qrTagline, setQrTagline] = useState(leadCapture.qrTagline || 'Darfiny CRM · Automação Inteligente');
 
     const generatedCode = `
 <!-- Início Widget WhatsApp CRM -->

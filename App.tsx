@@ -166,7 +166,7 @@ const App: React.FC = () => {
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans">
       <Toaster position="top-right" richColors />
       <Sidebar currentView={currentView} onChangeView={setCurrentView} />
-      <main className="flex-1 h-full overflow-hidden relative bg-white lg:rounded-l-3xl shadow-2xl lg:my-2 lg:mr-2 border border-gray-100">
+      <main className="flex-1 overflow-hidden relative bg-white lg:rounded-l-3xl shadow-2xl lg:my-2 lg:mr-2 border border-gray-100">
         {renderContent()}
         <GlobalSearch />
       </main>
