@@ -88,6 +88,7 @@ export const LinkBio: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'content' | 'appearance' | 'share'>('content');
     const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const ogImageInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const loadBio = async () => {
@@ -143,6 +144,38 @@ export const LinkBio: React.FC = () => {
         } catch (error: any) {
             console.error('Error uploading image:', error);
             toast.error('Erro ao fazer upload da imagem.');
+        }
+    };
+
+    const handleOgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user?.id) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('A imagem deve ter no máximo 2MB.');
+            return;
+        }
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/og_image.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            let { error: uploadError } = await supabase.storage
+                .from('bio-assets')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('bio-assets')
+                .getPublicUrl(filePath);
+
+            setConfig(prev => ({ ...prev, ogImageUrl: publicUrl }));
+            toast.success('Imagem de prévia carregada!');
+        } catch (error: any) {
+            console.error('Error uploading OG image:', error);
+            toast.error('Erro ao fazer upload da imagem de prévia.');
         }
     };
 
@@ -457,13 +490,47 @@ export const LinkBio: React.FC = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">URL da Foto de Prévia (Opcional)</label>
-                                        <input
-                                            value={config.ogImageUrl || ''}
-                                            onChange={e => setConfig({ ...config, ogImageUrl: e.target.value })}
-                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-[10px] dark:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
-                                            placeholder="https://suaimagem.com/foto.jpg"
-                                        />
+                                        <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Foto de Prévia (Opcional)</label>
+                                        <div className="flex gap-3 items-start">
+                                            {config.ogImageUrl && (
+                                                <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-100 dark:border-slate-700 bg-gray-50 flex-shrink-0">
+                                                    <img
+                                                        src={config.ogImageUrl}
+                                                        alt="OG Preview"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <button
+                                                        onClick={() => setConfig({ ...config, ogImageUrl: '' })}
+                                                        className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-lg hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <Trash2 size={10} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div className="flex-1 space-y-2">
+                                                <button
+                                                    onClick={() => ogImageInputRef.current?.click()}
+                                                    className="w-full py-2 px-3 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 border border-dashed border-gray-300 dark:border-slate-600"
+                                                >
+                                                    <ImageIcon size={14} />
+                                                    {config.ogImageUrl ? 'Trocar Imagem' : 'Carregar Imagem'}
+                                                </button>
+                                                <input
+                                                    type="file"
+                                                    ref={ogImageInputRef}
+                                                    onChange={handleOgImageUpload}
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                />
+                                                <input
+                                                    value={config.ogImageUrl || ''}
+                                                    onChange={e => setConfig({ ...config, ogImageUrl: e.target.value })}
+                                                    className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-[9px] dark:text-gray-500 focus:ring-2 focus:ring-blue-500/20"
+                                                    placeholder="Ou cole a URL da imagem aqui..."
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="text-[8px] text-gray-400 mt-1 italic">Tamanho recomendado: 1200x630px para melhores resultados no WhatsApp/Meta.</p>
                                     </div>
                                 </div>
                             </div>
