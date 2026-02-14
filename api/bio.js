@@ -41,7 +41,6 @@ export default async function handler(req) {
         console.error('Bio fetch error:', e);
     }
 
-    // Default OG if not set by DB
     ogTitle = ogTitle || name;
     ogDescription = ogDescription || bio;
     ogImage = ogImage || avatar;
@@ -62,16 +61,24 @@ export default async function handler(req) {
     <meta name="twitter:title" content="${ogTitle}">
     <meta name="twitter:description" content="${ogDescription}">
     <meta name="twitter:image" content="${ogImage}">
+    <script>
+      var u = new URL(window.location.href);
+      if (!u.searchParams.has("app")) {
+        u.searchParams.set("app", "true");
+        window.location.replace(u.toString());
+      }
+    </script>
 </head>
-<body style="background:#020617;color:white;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-    <p>Carregando perfil...</p>
+<body style="background:#020617;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;margin:0;text-align:center;padding:20px;">
+    <img src="${avatar}" style="width:120px;height:120px;border-radius:50%;border:4px solid #25D366;margin-bottom:20px;object-fit:cover;">
+    <h1 style="margin:0;font-size:24px;">${name}</h1>
+    <p style="opacity:0.6;margin-top:10px;font-size:14px;">Carregando perfil completo...</p>
 </body>
 </html>`;
 
     return new Response(html, {
         headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 's-maxage=60, stale-while-revalidate'
+            'Content-Type': 'text/html; charset=utf-8'
         },
     });
 }
