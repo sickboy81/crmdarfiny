@@ -1,73 +1,81 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const config = {
-    runtime: 'edge',
+  runtime: 'edge',
 };
 
 export default async function handler(req: Request) {
-    const supabase = createClient(
-        process.env.VITE_SUPABASE_URL!,
-        process.env.VITE_SUPABASE_ANON_KEY!
-    );
+  const url = new URL(req.url);
 
-    // Fetch the public bio data
-    const { data: publicBio } = await supabase
+  // Se já tiver o bypass, não processa o OG
+  if (url.searchParams.get('app') === 'true') {
+    return new Response(null, { status: 302, headers: { Location: '/index.html' } });
+  }
+
+  let name = 'Darfiny CRM';
+  let bio = 'Consultora e Especialista em Imóveis de Alto Padrão.';
+  let avatar = 'https://ui-avatars.com/api/?name=D&background=22c55e&color=fff';
+
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const { data: publicBio } = await supabase
         .from('bio_configs')
         .select('*')
         .eq('active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .single();
 
-    const name = publicBio?.profile_name || 'Darfiny CRM';
-    const bio = publicBio?.bio || 'Consultora e Especialista em Imóveis.';
-    const avatar = publicBio?.avatar_url || 'https://ui-avatars.com/api/?name=D&background=random';
+      if (publicBio) {
+        name = publicBio.profile_name || name;
+        bio = publicBio.bio || bio;
+        avatar = publicBio.avatar_url || avatar;
+      }
+    }
+  } catch (e) {
+    console.error('OG Generation Error:', e);
+  }
 
-    // Use absolute URL for the OG image generator
-    const ogImageUrl = `https://crm.darfinyavila.com.br/api/og?name=${encodeURIComponent(name)}&bio=${encodeURIComponent(bio)}&avatar=${encodeURIComponent(avatar)}`;
+  const ogImageUrl = `https://crm.darfinyavila.com.br/api/og?name=${encodeURIComponent(name)}&bio=${encodeURIComponent(bio)}&avatar=${encodeURIComponent(avatar)}`;
 
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <title>${name} | Link na Bio</title>
   <meta name="description" content="${bio}">
   
-  <!-- Open Graph / Meta Tags -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="${name}">
   <meta property="og:description" content="${bio}">
   <meta property="og:image" content="${ogImageUrl}">
-  <meta property="og:url" content="${req.url}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${name}">
   <meta name="twitter:description" content="${bio}">
   <meta name="twitter:image" content="${ogImageUrl}">
 
   <script>
-    // Se for um navegador (não crawler), redireciona para a versão app com bypass
+    // Redirect to the real app
     const url = new URL(window.location.href);
     url.searchParams.set('app', 'true');
     window.location.replace(url.toString());
   </script>
-  
-  <style>
-    body { background: #020617; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; margin: 0; }
-    .card { text-align: center; max-width: 400px; padding: 20px; }
-    img { width: 100px; height: 100px; borderRadius: 50%; marginBottom: 20px; border: 2px solid #22c55e; }
-  </style>
 </head>
-<body>
-  <div class="card">
-    <img src="${avatar}" alt="Avatar">
-    <h1>${name}</h1>
-    <p>${bio}</p>
-    <p>Carregando perfil...</p>
-  </div>
+<body style="background: #020617; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
+  <img src="${avatar}" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #22c55e; margin-bottom: 20px;">
+  <h1 style="margin: 0;">${name}</h1>
+  <p style="opacity: 0.7;">Redirecionando...</p>
 </body>
 </html>`;
 
-    return new Response(html, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-    });
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }

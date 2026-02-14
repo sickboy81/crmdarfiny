@@ -5,8 +5,12 @@
             "destination": "/assets/$1"
         },
         {
-            "source": "/api/(.*)",
-            "destination": "/api/$1"
+            "source": "/api/og",
+            "destination": "/api/og.tsx"
+        },
+        {
+            "source": "/api/bio",
+            "destination": "/api/bio.ts"
         },
         {
             "source": "/bio",
