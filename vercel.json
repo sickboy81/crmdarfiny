@@ -1,4 +1,5 @@
 {
+    "cleanUrls": true,
     "rewrites": [
         {
             "source": "/bio",
@@ -16,7 +17,7 @@
             "destination": "/api/bio"
         },
         {
-            "source": "/((?!api).*)",
+            "source": "/((?!api|assets|favicon|logo|.*\\..*).*)",
             "destination": "/index.html"
         }
     ]
