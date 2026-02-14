@@ -171,21 +171,18 @@ const App: React.FC = () => {
   }, [isBioPath]);
 
   if (isBioPath) {
-    const config = publicBio ? {
-      profileName: publicBio.profile_name,
-      bio: publicBio.bio,
-      avatarUrl: publicBio.avatar_url,
-      theme: publicBio.theme,
-      links: publicBio.links,
-      socials: publicBio.socials
-    } : (settings.linkBio || {
-      profileName: 'Darfiny CRM',
-      bio: 'Página em construção',
-      avatarUrl: 'https://ui-avatars.com/api/?name=D&background=random',
-      theme: { backgroundColor: '#0F172A', buttonColor: '#25D366', textColor: '#FFFFFF', buttonTextColor: '#000000', cardStyle: 'rounded' },
-      links: [],
-      socials: {}
-    });
+    if (!publicBio) {
+      return <div className="h-screen w-full bg-[#0F172A]" />; // Placeholder dark background while loading
+    }
+
+    const config = {
+      profileName: publicBio.profile_name || 'Darfiny CRM',
+      bio: publicBio.bio || 'Página em construção',
+      avatarUrl: publicBio.avatar_url || 'https://ui-avatars.com/api/?name=D&background=random',
+      theme: publicBio.theme || { backgroundColor: '#0F172A', buttonColor: '#25D366', textColor: '#FFFFFF', buttonTextColor: '#000000', cardStyle: 'rounded' },
+      links: publicBio.links || [],
+      socials: publicBio.socials || {}
+    };
 
     return (
       <div className="h-screen w-full overflow-y-auto" style={{ backgroundColor: config.theme.backgroundColor }}>
