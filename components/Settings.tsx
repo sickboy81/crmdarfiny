@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {
   BrainCircuit, MessageSquare, Share2, Settings as SettingsIcon,
-  Building2, Zap, QrCode, MousePointer2, User, Bell, Palette,
-  Database, ShieldCheck, Mail, Globe, Clock, Bot
+  Building2, Zap, Palette,
+  Mail, Globe, Bell
 } from 'lucide-react';
 import clsx from 'clsx';
 import { AISettings } from './settings/AISettings';
@@ -12,13 +12,14 @@ import { FacebookSettings } from './settings/FacebookSettings';
 import { GeneralSettings } from './settings/GeneralSettings';
 import { AccountSettings } from './settings/AccountSettings';
 import { AutomationSettings } from './settings/AutomationSettings';
+import { LinkBio } from './LinkBio';
 import { useSettings } from '../hooks/useSettings';
 import { toast } from 'sonner';
 
 type TabKey =
   | 'ai' | 'wa_connection' | 'lead_capture' | 'whatsapp'
   | 'facebook' | 'account' | 'automation' | 'general'
-  | 'email_api' | 'notifications' | 'appearance';
+  | 'email_api' | 'notifications' | 'appearance' | 'link_bio';
 
 interface SettingCategory {
   title: string;
@@ -44,7 +45,7 @@ const CATEGORIES: SettingCategory[] = [
     items: [
       { key: 'ai', label: 'Modelos de IA', icon: BrainCircuit, color: 'text-purple-600 bg-purple-50' },
       { key: 'automation', label: 'Fluxos e Horários', icon: Zap, color: 'text-orange-600 bg-orange-50' },
-      { key: 'lead_capture', label: 'Captura de Leads', icon: MousePointer2, color: 'text-teal-600 bg-teal-50' },
+      { key: 'lead_capture', label: 'Captura de Leads', icon: Globe, color: 'text-teal-600 bg-teal-50' },
     ]
   },
   {
@@ -54,6 +55,7 @@ const CATEGORIES: SettingCategory[] = [
       { key: 'general', label: 'Tags e Documentos', icon: SettingsIcon, color: 'text-slate-600 bg-slate-100' },
       { key: 'notifications', label: 'Notificações', icon: Bell, color: 'text-yellow-600 bg-yellow-50' },
       { key: 'appearance', label: 'Aparência', icon: Palette, color: 'text-pink-600 bg-pink-50' },
+      { key: 'link_bio', label: 'Link na Bio & SEO', icon: Globe, color: 'text-green-600 bg-green-50' },
     ]
   }
 ];
@@ -318,8 +320,8 @@ export const Settings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   { id: 'light', label: 'Claro', icon: <Globe />, color: 'bg-white border-slate-200' },
-                  { id: 'dark', label: 'Escuro', icon: <Bot />, color: 'bg-slate-900 border-slate-800 text-white' },
-                  { id: 'system', label: 'Sistema', icon: <Clock />, color: 'bg-slate-100 border-slate-200' }
+                  { id: 'dark', label: 'Escuro', icon: <Zap />, color: 'bg-slate-900 border-slate-800 text-white' },
+                  { id: 'system', label: 'Sistema', icon: <Bell />, color: 'bg-slate-100 border-slate-200' }
                 ].map((theme) => (
                   <button
                     key={theme.id}
@@ -336,6 +338,23 @@ export const Settings: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        );
+      case 'link_bio':
+        return (
+          <div className="max-w-6xl animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-4 bg-green-50 text-green-600 rounded-2xl">
+                <Globe size={32} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">Link na Bio & SEO</h2>
+                <p className="text-slate-500">Gerencie sua página pública e como ela aparece nas redes sociais.</p>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl h-[800px] shadow-sm overflow-hidden">
+              <LinkBio />
             </div>
           </div>
         );

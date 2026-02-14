@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
         { id: View.EXTRACTOR, label: 'Extrator IA', icon: Zap },
         { id: View.AUTOPOST_FB, label: 'Auto Post', icon: Share2 },
         { id: View.SOCIAL_POSTS, label: 'Marketing Social', icon: Sparkles },
-        { id: View.LINK_BIO, label: 'Link na Bio', icon: Globe },
+        { id: View.LINK_BIO, label: 'Bio & SEO', icon: Globe },
       ]
     },
     {

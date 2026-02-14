@@ -40,6 +40,9 @@ interface LinkBioConfig {
     profileName: string;
     bio: string;
     avatarUrl: string;
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImageUrl?: string;
     theme: {
         backgroundColor: string;
         buttonColor: string;
@@ -61,6 +64,9 @@ const DEFAULT_CONFIG: LinkBioConfig = {
     profileName: 'Seu Nome ou Empresa',
     bio: 'Personalize sua bio aqui. Adicione links importantes e redes sociais.',
     avatarUrl: 'https://ui-avatars.com/api/?name=User&background=random',
+    ogTitle: '',
+    ogDescription: '',
+    ogImageUrl: '',
     theme: {
         backgroundColor: '#0F172A',
         buttonColor: '#25D366',
@@ -92,6 +98,9 @@ export const LinkBio: React.FC = () => {
                         profileName: dbBio.profile_name,
                         bio: dbBio.bio,
                         avatarUrl: dbBio.avatar_url,
+                        ogTitle: dbBio.og_title || '',
+                        ogDescription: dbBio.og_description || '',
+                        ogImageUrl: dbBio.og_image_url || '',
                         theme: dbBio.theme,
                         links: dbBio.links,
                         socials: dbBio.socials
@@ -244,20 +253,26 @@ export const LinkBio: React.FC = () => {
                                             className="hidden"
                                         />
                                     </div>
-                                    <div className="flex-1 space-y-2">
-                                        <input
-                                            value={config.profileName}
-                                            onChange={e => setConfig({ ...config, profileName: e.target.value })}
-                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-green-500/20"
-                                            placeholder="Nome do Perfil"
-                                        />
-                                        <textarea
-                                            value={config.bio}
-                                            onChange={e => setConfig({ ...config, bio: e.target.value })}
-                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-xs dark:text-gray-300 focus:ring-2 focus:ring-green-500/20"
-                                            placeholder="Breve descrição..."
-                                            rows={2}
-                                        />
+                                    <div className="flex-1 space-y-3">
+                                        <div>
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Nome (Aparece na prévia do link)</label>
+                                            <input
+                                                value={config.profileName}
+                                                onChange={e => setConfig({ ...config, profileName: e.target.value })}
+                                                className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-green-500/20"
+                                                placeholder="Nome do Perfil"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Bio (Aparece na prévia do link)</label>
+                                            <textarea
+                                                value={config.bio}
+                                                onChange={e => setConfig({ ...config, bio: e.target.value })}
+                                                className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-xs dark:text-gray-300 focus:ring-2 focus:ring-green-500/20"
+                                                placeholder="Breve descrição..."
+                                                rows={2}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -408,6 +423,48 @@ export const LinkBio: React.FC = () => {
                                     >
                                         {copied ? <Check size={14} /> : 'Copiar'}
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Configuração OpenGraph / SEO */}
+                            <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                                <h4 className="font-bold text-sm dark:text-white flex items-center gap-2">
+                                    <ImageIcon size={16} className="text-blue-500" />
+                                    Configuração de Prévia (OG)
+                                </h4>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    Personalize o que aparece quando você cola seu link no **WhatsApp ou Instagram**. (Deixe em branco para usar seus dados padrão).
+                                </p>
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Título da Prévia</label>
+                                        <input
+                                            value={config.ogTitle || ''}
+                                            onChange={e => setConfig({ ...config, ogTitle: e.target.value })}
+                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold dark:text-white focus:ring-2 focus:ring-blue-500/20"
+                                            placeholder={config.profileName}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Breve Descrição</label>
+                                        <textarea
+                                            value={config.ogDescription || ''}
+                                            onChange={e => setConfig({ ...config, ogDescription: e.target.value })}
+                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-xs dark:text-gray-300 focus:ring-2 focus:ring-blue-500/20"
+                                            placeholder={config.bio}
+                                            rows={2}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">URL da Foto de Prévia (Opcional)</label>
+                                        <input
+                                            value={config.ogImageUrl || ''}
+                                            onChange={e => setConfig({ ...config, ogImageUrl: e.target.value })}
+                                            className="w-full p-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-[10px] dark:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
+                                            placeholder="https://suaimagem.com/foto.jpg"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
