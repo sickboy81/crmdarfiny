@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { View } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -184,8 +185,20 @@ const App: React.FC = () => {
       socials: publicBio.socials || {}
     };
 
+    const ogImageUrl = `${window.location.origin}/api/og?name=${encodeURIComponent(config.profileName)}&bio=${encodeURIComponent(config.bio)}&avatar=${encodeURIComponent(config.avatarUrl)}`;
+
     return (
       <div className="h-screen w-full overflow-y-auto" style={{ backgroundColor: config.theme.backgroundColor }}>
+        <Helmet>
+          <title>{config.profileName} | Link na Bio</title>
+          <meta name="description" content={config.bio} />
+          <meta property="og:title" content={config.profileName} />
+          <meta property="og:description" content={config.bio} />
+          <meta property="og:image" content={ogImageUrl} />
+          <meta property="og:type" content="profile" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:image" content={ogImageUrl} />
+        </Helmet>
         <div className="max-w-[480px] mx-auto min-h-full p-6 pt-12 flex flex-col items-center">
           <img src={config.avatarUrl} alt={config.profileName} className="w-32 h-32 rounded-full border-4 border-white/20 shadow-xl mb-6 object-cover" />
           <div className="text-center space-y-3 mb-12">
