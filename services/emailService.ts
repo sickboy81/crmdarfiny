@@ -26,9 +26,9 @@ export const emailService = {
         }
 
         try {
-            // Call our backend proxy to avoid CORS issues and keep API Key safer (though it's still coming from client for now, 
-            // the proxy handles the actual request to Resend which often fails on CORS from browsers)
-            const response = await fetch('http://localhost:3001/emails/send', {
+            // Call our backend proxy to avoid CORS issues and keep API Key safer
+            const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+            const response = await fetch(`${serverUrl}/emails/send`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
