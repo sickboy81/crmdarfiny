@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { DropZone } from './DropZone';
 import { FileItem } from './FileItem';
-import { GeminiModal } from './GeminiModal';
+import { AIModal } from './AIModal';
+import { CropModal } from './CropModal';
 import { PDFFileItem } from './types';
 import { createPDF } from '../../services/uniPdfService';
-import { generateIntroText } from '../../services/geminiService';
-import { Download, FileStack, X, Plus, AlertCircle, Loader2 } from 'lucide-react';
-import clsx from 'clsx';
+import { generateIntroText } from '../../services/aiService';
+import { Download, FileStack, X, AlertCircle, Loader2 } from 'lucide-react';
 // Use simple id generator
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -15,6 +15,8 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 export const UniPDF: React.FC = () => {
   const [files, setFiles] = useState<PDFFileItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [cropItem, setCropItem] = useState<PDFFileItem | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +40,39 @@ export const UniPDF: React.FC = () => {
       if (file?.previewUrl) URL.revokeObjectURL(file.previewUrl);
       return prev.filter((f) => f.id !== id);
     });
+  };
+
+  const handleCrop = (id: string) => {
+    const item = files.find((f) => f.id === id);
+    if (item && item.type === 'image' && item.previewUrl) {
+      setCropItem(item);
+      setIsCropModalOpen(true);
+    }
+  };
+
+  const handleSaveCrop = async (croppedBlob: Blob) => {
+    if (!cropItem) return;
+
+    const newFile = new File([croppedBlob], cropItem.name, { type: 'image/jpeg' });
+    const newPreviewUrl = URL.createObjectURL(newFile);
+
+    setFiles((prev) =>
+      prev.map((f) => {
+        if (f.id === cropItem.id) {
+          if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+          return {
+            ...f,
+            file: newFile,
+            previewUrl: newPreviewUrl,
+            size: newFile.size,
+          };
+        }
+        return f;
+      })
+    );
+
+    setIsCropModalOpen(false);
+    setCropItem(null);
   };
 
   const moveItem = (index: number, direction: 'up' | 'down') => {
@@ -182,9 +217,9 @@ export const UniPDF: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start animate-in fade-in slide-in-from-bottom-4">
-              {/* Lista de Arquivos */}
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-in fade-in slide-in-from-bottom-4">
+              {/* Lista de Arquivos - Agora com 7 colunas em telas XL para mais espaço horizontal */}
+              <div className="lg:col-span-7 xl:col-span-8 space-y-4">
                 <div className="flex justify-between items-center px-1">
                   <h2 className="font-semibold text-slate-700 flex items-center gap-2">
                     <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs font-bold">
@@ -215,6 +250,7 @@ export const UniPDF: React.FC = () => {
                                   onMoveUp={(i) => moveItem(i, 'up')}
                                   onMoveDown={(i) => moveItem(i, 'down')}
                                   onRemove={handleRemove}
+                                  onCrop={handleCrop}
                                   draggableProps={provided.draggableProps}
                                   dragHandleProps={provided.dragHandleProps}
                                   style={{
@@ -239,8 +275,8 @@ export const UniPDF: React.FC = () => {
                 </div>
               </div>
 
-              {/* Preview / Instructions */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-4">
+              {/* Preview / Instructions - Agora com 5 colunas */}
+              <div className="lg:col-span-5 xl:col-span-4 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 sticky top-4">
                 <div className="flex items-center gap-3 mb-4 text-indigo-600">
                   <div className="p-2 bg-indigo-50 rounded-lg">
                     <FileStack size={24} />
@@ -293,12 +329,25 @@ export const UniPDF: React.FC = () => {
         </div>
       )}
 
-      <GeminiModal
+      <AIModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleGenerateValues}
         isLoading={isProcessing}
       />
+
+      {cropItem && cropItem.previewUrl && (
+        <CropModal
+          isOpen={isCropModalOpen}
+          image={cropItem.previewUrl}
+          onClose={() => {
+            setIsCropModalOpen(false);
+            setCropItem(null);
+          }}
+          onSave={handleSaveCrop}
+        />
+      )}
     </div>
   );
 };
+

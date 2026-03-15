@@ -17,7 +17,7 @@ import {
     Hash,
     MessageSquare
 } from 'lucide-react';
-import { generateSocialPosts } from '../services/geminiService';
+import { generateSocialPosts } from '../services/aiService';
 import { SocialPostVariant } from '../types';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -234,3 +234,4 @@ export const SocialPost: React.FC = () => {
         </div>
     );
 };
+

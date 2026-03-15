@@ -108,7 +108,7 @@ export const ContactExtractor: React.FC = () => {
 
     const performOCR = async (source: File | string, filename: string, isPdfPage = false) => {
         try {
-            const { extractContactsFromImage } = await import('../../services/geminiService');
+            const { extractContactsFromImage } = await import('../../services/aiService');
 
             if (!isPdfPage) toast.loading('IA do Google analisando documento...', { id: 'ocr-loading' });
 
@@ -125,7 +125,7 @@ export const ContactExtractor: React.FC = () => {
 
             if (!results || results.length === 0) {
                 // If structured extraction fails or finds nothing, try literal text as fallback
-                const { processImageWithAI } = await import('../../services/geminiService');
+                const { processImageWithAI } = await import('../../services/aiService');
                 const text = await processImageWithAI(fileToProcess, "Extraia todo o texto literal para busca manual.");
                 if (text) {
                     setInputText(prev => prev + '\n\n' + `--- Texto OCR: ${filename} ---\n` + text);
@@ -521,3 +521,4 @@ export const ContactExtractor: React.FC = () => {
         </div>
     );
 };
+

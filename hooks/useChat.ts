@@ -7,7 +7,7 @@ import {
   generateSmartReply,
   analyzeConversation,
   rewriteMessage,
-} from '../services/geminiService';
+} from '../services/aiService';
 import {
   getWhatsAppConfig,
   sendRealWhatsAppMessage,
@@ -189,3 +189,4 @@ export const useChat = (selectedChatId: string | null) => {
     updateContact,
   };
 };
+

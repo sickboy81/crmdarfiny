@@ -120,7 +120,7 @@ export const extractLeadsFromSpreadsheet = async (file: File): Promise<Extracted
  */
 export const extractLeadsFromPdf = async (file: File): Promise<ExtractedLead[]> => {
     const { convertPdfToImages } = await import('../utils/pdfProcessor');
-    const { extractContactsFromImage } = await import('./geminiService');
+    const { extractContactsFromImage } = await import('./aiService');
 
     const images = await convertPdfToImages(file);
     const allLeads: ExtractedLead[] = [];

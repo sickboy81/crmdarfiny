@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Wand2, BrainCircuit, X, MessageSquarePlus, Check, Loader2 } from 'lucide-react';
 import { Message, AIExtractedLeadData } from '../../types';
-import { extractLeadData, generateMagicReplies } from '../../services/geminiService';
+import { extractLeadData, generateMagicReplies } from '../../services/aiService';
 import { toast } from 'sonner';
 
 interface IAAssistantProps {
@@ -218,3 +218,4 @@ export const IAAssistant: React.FC<IAAssistantProps> = ({
         </div>
     );
 };
+

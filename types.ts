@@ -131,6 +131,8 @@ export interface AIConfig {
   apiKeys: Partial<Record<AIProvider, string>>;
   /** Modelo customizado por provedor (opcional) */
   modelOverrides?: Partial<Record<AIProvider, string>>;
+  /** Modelo específico para extração de extratos (Visão) */
+  bankExtractorModel?: string;
 }
 
 export enum View {
@@ -151,6 +153,8 @@ export enum View {
   IMAGE_MANAGER = 'image_manager',
   SOCIAL_POSTS = 'social_posts',
   LINK_BIO = 'link_bio',
+  AI_WRITER = 'ai_writer',
+  BANK_EXTRACTOR = 'bank_extractor',
 }
 
 export interface Notification {

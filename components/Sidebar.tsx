@@ -18,7 +18,9 @@ import {
   Image as ImageIcon,
   Sparkles,
   ChevronRight,
-  Globe
+  Globe,
+  PenLine,
+  BarChart3,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -85,6 +87,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
         { id: View.EXTRACTOR, label: 'Extrator IA', icon: Zap },
         { id: View.AUTOPOST_FB, label: 'Auto Post', icon: Share2 },
         { id: View.SOCIAL_POSTS, label: 'Marketing Social', icon: Sparkles },
+        { id: View.AI_WRITER, label: 'AI Writer', icon: PenLine },
+        { id: View.BANK_EXTRACTOR, label: 'Apuração de Renda', icon: BarChart3 },
         { id: View.LINK_BIO, label: 'Bio & SEO', icon: Globe },
       ]
     },

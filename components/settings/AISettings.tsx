@@ -14,7 +14,12 @@ const AI_PROVIDER_OPTIONS: { value: AIProvider; label: string; url: string }[] =
 ];
 
 interface AISettingsProps {
-    aiConfig: { provider: AIProvider; apiKeys: Partial<Record<AIProvider, string>>; modelOverrides?: Partial<Record<AIProvider, string>> };
+    aiConfig: {
+        provider: AIProvider;
+        apiKeys: Partial<Record<AIProvider, string>>;
+        modelOverrides?: Partial<Record<AIProvider, string>>;
+        bankExtractorModel?: string;
+    };
     setAiConfig: (config: any) => void;
     botConfig: BotConfig;
     setBotConfig: (config: BotConfig) => void;
@@ -70,21 +75,38 @@ export const AISettings: React.FC<AISettingsProps> = ({
                             </p>
                         </form>
                     </div>
-                    {aiConfig.provider !== 'gemini' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Modelo (opcional)</label>
-                            <input
-                                type="text"
-                                value={aiConfig.modelOverrides?.[aiConfig.provider] ?? (PROVIDER_ENDPOINTS[aiConfig.provider]?.defaultModel || '')}
-                                onChange={(e) => setAiConfig({
-                                    ...aiConfig,
-                                    modelOverrides: { ...aiConfig.modelOverrides, [aiConfig.provider]: e.target.value || undefined },
-                                })}
-                                placeholder={PROVIDER_ENDPOINTS[aiConfig.provider]?.defaultModel}
-                                className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm text-gray-900"
-                            />
-                        </div>
-                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Modelo (opcional)</label>
+                        <input
+                            type="text"
+                            value={aiConfig.modelOverrides?.[aiConfig.provider] ?? (aiConfig.provider === 'gemini' ? 'gemini-1.5-flash' : PROVIDER_ENDPOINTS[aiConfig.provider as Exclude<AIProvider, 'gemini'>]?.defaultModel || '')}
+                            onChange={(e) => setAiConfig({
+                                ...aiConfig,
+                                modelOverrides: { ...aiConfig.modelOverrides, [aiConfig.provider]: e.target.value || undefined },
+                            })}
+                            placeholder={aiConfig.provider === 'gemini' ? 'gemini-1.5-flash' : PROVIDER_ENDPOINTS[aiConfig.provider as Exclude<AIProvider, 'gemini'>]?.defaultModel}
+                            className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm text-gray-900"
+                        />
+                    </div>
+                    <div className="pt-4 border-t border-gray-100">
+                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                            Modelo p/ Extração de Extrato (Visão)
+                            <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded uppercase">Vision</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={aiConfig.bankExtractorModel || ''}
+                            onChange={(e) => setAiConfig({
+                                ...aiConfig,
+                                bankExtractorModel: e.target.value || undefined,
+                            })}
+                            placeholder="Ex: google/gemini-2.0-flash-001"
+                            className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm text-gray-900"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">
+                            Deixe vazio para usar o modelo padrão. Recomendado: <strong>google/gemini-2.0-flash-001</strong>
+                        </p>
+                    </div>
                     <div className="flex gap-3">
                         <button
                             onClick={handleSaveAIProvider}

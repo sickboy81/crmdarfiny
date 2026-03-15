@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { FileText, Image, ArrowUp, ArrowDown, Trash2, GripVertical } from 'lucide-react';
+import { FileText, Image, ArrowUp, ArrowDown, Trash2, GripVertical, Wand2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PDFFileItem } from './types'; // Removed .ts extension
 
@@ -10,6 +10,7 @@ interface FileItemProps extends React.HTMLAttributes<HTMLDivElement> {
   onRemove: (id: string) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
+  onCrop?: (id: string) => void;
   dragHandleProps?: any; // Props for the drag handle
   draggableProps?: any; // Props for the draggable container
 }
@@ -23,6 +24,7 @@ export const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
       onRemove,
       onMoveUp,
       onMoveDown,
+      onCrop,
       dragHandleProps,
       draggableProps,
       ...props
@@ -72,7 +74,7 @@ export const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
               Documento {index + 1}
             </span>
           </div>
-          <h4 className="font-medium text-slate-800 truncate text-sm" title={item.name}>
+          <h4 className="font-medium text-slate-800 text-sm break-all" title={item.name}>
             {item.name}
           </h4>
           <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
@@ -110,6 +112,19 @@ export const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
               <ArrowDown size={16} />
             </button>
           </div>
+          
+          {item.type === 'image' && onCrop && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCrop(item.id);
+              }}
+              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+              title="Recortar imagem"
+            >
+              <Wand2 size={20} />
+            </button>
+          )}
 
           <button
             onClick={() => onRemove(item.id)}

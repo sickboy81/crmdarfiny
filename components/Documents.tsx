@@ -27,7 +27,7 @@ import {
   getContractPDFPreviewUrl,
   type ProposalItem,
 } from '../services/pdfService';
-import { getBotConfig } from '../services/geminiService';
+import { getBotConfig } from '../services/aiService';
 import clsx from 'clsx';
 import { UniPDF } from './unipdf/UniPDF';
 
@@ -471,3 +471,4 @@ export const Documents: React.FC = () => {
     </div>
   );
 };
+

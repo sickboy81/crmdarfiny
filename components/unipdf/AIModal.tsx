@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { X, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import clsx from 'clsx';
 
-interface GeminiModalProps {
+interface AIModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (title: string, description: string) => Promise<void>;
   isLoading: boolean;
 }
 
-export const GeminiModal: React.FC<GeminiModalProps> = ({
+export const AIModal: React.FC<AIModalProps> = ({
   isOpen,
   onClose,
   onConfirm,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { WhatsAppConfig, BotConfig, AIProvider, FacebookConfig } from '../types';
 import { testWhatsAppConnection } from '../services/whatsappService';
 import { testFacebookConnection } from '../services/facebookService';
-import { resetGeminiClient, testAIConnection } from '../services/geminiService';
+import { resetAIClient, testAIConnection } from '../services/aiService';
 import { PROVIDER_ENDPOINTS } from '../services/openaiCompatibleService';
 import { toast } from 'sonner';
 import { useAppStore } from '../stores/useAppStore';
@@ -116,6 +116,7 @@ export const useSettings = () => {
     provider: AIProvider;
     apiKeys: Partial<Record<AIProvider, string>>;
     modelOverrides?: Partial<Record<AIProvider, string>>;
+    bankExtractorModel?: string;
   }>(settings.ai_config || { provider: 'gemini', apiKeys: {} });
 
   const [botConfig, setBotConfig] = useState<BotConfig>(settings.bot_config || {
@@ -251,7 +252,7 @@ export const useSettings = () => {
       apiKeys: { ...aiConfig.apiKeys, [aiConfig.provider]: key }
     };
     updateGlobalSettings({ ai_config: filteredAiConfig });
-    resetGeminiClient();
+    resetAIClient();
     toast.success('Provedor de IA salvo!');
   };
 
@@ -317,4 +318,5 @@ export const useSettings = () => {
     },
   };
 };
+
 

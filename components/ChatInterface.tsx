@@ -13,7 +13,7 @@ import { PIPELINE_STAGES } from '../constants';
 import { useChat } from '../hooks/useChat';
 import { useAppStore } from '../stores/useAppStore';
 import { useAutomation } from '../hooks/useAutomation';
-import { generateCustomerSimulation } from '../services/geminiService';
+import { generateCustomerSimulation } from '../services/aiService';
 import { toast } from 'sonner';
 
 export const ChatInterface: React.FC = () => {
@@ -456,3 +456,4 @@ export const ChatInterface: React.FC = () => {
         </div>
     );
 };
+

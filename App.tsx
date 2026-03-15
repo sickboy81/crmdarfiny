@@ -18,6 +18,8 @@ import { ImageManager } from './components/ImageManager';
 import { Header } from './components/Header';
 import { SocialPost } from './components/SocialPost';
 import { LinkBio } from './components/LinkBio';
+import { AIWriter } from './components/AIWriter';
+import { BankExtractor } from './components/BankExtractor';
 import { GlobalSearch } from './components/GlobalSearch';
 import { useAppStore } from './stores/useAppStore';
 import { Toaster } from 'sonner';
@@ -298,6 +300,10 @@ const App: React.FC = () => {
         return <SocialPost />;
       case View.LINK_BIO:
         return <LinkBio />;
+      case View.AI_WRITER:
+        return <AIWriter />;
+      case View.BANK_EXTRACTOR:
+        return <BankExtractor />;
       case View.SETTINGS:
         return <Settings />;
       default:
