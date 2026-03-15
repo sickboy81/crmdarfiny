@@ -226,6 +226,60 @@ app.post('/send', async (req, res) => {
     }
 });
 
+/**
+ * Proxy to send emails via Resend
+ */
+app.post('/emails/send', async (req, res) => {
+    const { to, subject, content, apiKey, verifiedSender, attachments, scheduled_at } = req.body;
+
+    if (!apiKey) {
+        return res.status(400).json({ error: 'Configuração ausente: API Key do Resend não informada.' });
+    }
+
+    try {
+        const sender = verifiedSender || 'CRM <contato@seudominio.com.br>';
+        
+        console.log(`📤 [EMAIL] Enviando para ${to} via Resend...`);
+
+        const emailPayload = {
+            from: sender,
+            to: [to],
+            subject: subject,
+            html: content.replace(/\n/g, '<br>'),
+        };
+
+        if (attachments && attachments.length > 0) {
+            emailPayload.attachments = attachments;
+        }
+
+        if (scheduled_at) {
+            emailPayload.scheduled_at = scheduled_at;
+        }
+
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('❌ [EMAIL] Erro no Resend:', data);
+            return res.status(response.status).json({ error: data.message || 'Erro ao enviar via Resend' });
+        }
+
+        console.log(`✅ [EMAIL] Enviado com sucesso! ID: ${data.id}`);
+        res.json({ success: true, id: data.id });
+    } catch (error) {
+        console.error('💥 [EMAIL] Erro crítico no envio:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 io.on('connection', (socket) => {
     socket.emit('status', connectionStatus);
     if (qrCodeData) socket.emit('qr', qrCodeData);

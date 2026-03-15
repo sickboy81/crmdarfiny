@@ -176,8 +176,19 @@ export interface EmailMessage {
   subject: string;
   content: string;
   timestamp: string;
-  status: 'sent' | 'failed' | 'scheduled' | 'received';
-  attachments?: string[];
+  status: 'sent' | 'failed' | 'scheduled' | 'received' | 'archived' | 'trash';
+  attachments?: any[]; // Array of attachment objects
+  scheduledAt?: string;
+  isStarred?: boolean;
+  isDraft?: boolean;
+  isSpam?: boolean;
+}
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
 }
 
 export interface StoredImage {

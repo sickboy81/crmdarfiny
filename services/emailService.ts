@@ -1,4 +1,9 @@
-import { toast } from 'sonner';
+// Email Service for Resend Integration
+
+export interface EmailAttachment {
+    filename: string;
+    content: string; // Base64 content
+}
 
 export interface SendEmailParams {
     to: string;
@@ -6,6 +11,8 @@ export interface SendEmailParams {
     content: string;
     apiKey?: string;
     verifiedSender?: string;
+    attachments?: EmailAttachment[];
+    scheduledAt?: string;
 }
 
 /**
@@ -13,39 +20,37 @@ export interface SendEmailParams {
  * For production, this should be called via a backend/edge function to hide the API Key.
  */
 export const emailService = {
-    sendEmail: async ({ to, subject, content, apiKey, verifiedSender }: SendEmailParams) => {
+    sendEmail: async ({ to, subject, content, apiKey, verifiedSender, attachments, scheduledAt }: SendEmailParams) => {
         if (!apiKey) {
-            console.warn('E-mail simulation: No API Key provided. Sending mock email.');
-            return new Promise((resolve) => {
-                setTimeout(() => resolve({ success: true, message: 'Mock sent' }), 1000);
-            });
+            throw new Error('Configuração ausente: API Key do Resend não configurada nas Notificações/Configurações.');
         }
 
         try {
-            // Use provided sender or fall back to a reasonable default
-            const sender = verifiedSender || 'CRM <contato@seudominio.com.br>';
-            
-            // Example using Resend API (standard in modern TS apps)
-            const response = await fetch('https://api.resend.com/emails', {
+            // Call our backend proxy to avoid CORS issues and keep API Key safer (though it's still coming from client for now, 
+            // the proxy handles the actual request to Resend which often fails on CORS from browsers)
+            const response = await fetch('http://localhost:3001/emails/send', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    from: sender,
-                    to: [to],
-                    subject: subject,
-                    html: content.replace(/\n/g, '<br>'),
+                    to,
+                    subject,
+                    content,
+                    apiKey,
+                    verifiedSender,
+                    attachments,
+                    scheduled_at: scheduledAt
                 }),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Erro ao enviar e-mail via Resend');
+                throw new Error(data.error || 'Erro ao enviar e-mail via servidor');
             }
 
-            return { success: true };
+            return { success: true, id: data.id };
         } catch (error: any) {
             console.error('Email sending error:', error);
             throw error;

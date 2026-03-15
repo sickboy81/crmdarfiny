@@ -29,6 +29,7 @@ interface AppState {
     [key: string]: any;
   };
   emails: EmailMessage[];
+  emailTemplates: EmailTemplate[];
   images: StoredImage[];
   notifications: Notification[];
   isSearchOpen: boolean;
@@ -43,7 +44,14 @@ interface AppState {
   addMessage: (chatId: string, message: Message) => void;
   addEmail: (email: EmailMessage) => void;
   setEmails: (emails: EmailMessage[]) => void;
+  updateEmail: (id: string, updates: Partial<EmailMessage>) => void;
+  deleteEmail: (id: string) => void;
   syncEmails: () => Promise<void>;
+  addTemplate: (template: EmailTemplate) => void;
+  updateTemplate: (id: string, updates: Partial<EmailTemplate>) => void;
+  deleteTemplate: (id: string) => void;
+  bulkUpdateEmails: (ids: string[], updates: Partial<EmailMessage>) => void;
+  bulkDeleteEmails: (ids: string[]) => void;
   addImage: (image: StoredImage) => void;
   addNotification: (notification: Notification) => void;
   markNotificationAsRead: (id: string) => void;
@@ -91,6 +99,7 @@ export const useAppStore = create<AppState>()(
         }
       },
       emails: [],
+      emailTemplates: [],
       images: [],
       notifications: [],
       waConnectionStatus: 'disconnected',
@@ -209,6 +218,16 @@ export const useAppStore = create<AppState>()(
 
       setEmails: (emails) => set({ emails }),
 
+      updateEmail: (id, updates) =>
+        set((state) => ({
+          emails: state.emails.map((e) => (e.id === id ? { ...e, ...updates } : e)),
+        })),
+
+      deleteEmail: (id) =>
+        set((state) => ({
+          emails: state.emails.filter((e) => e.id !== id),
+        })),
+
       syncEmails: async () => {
         try {
           const { supabaseService: service } = await import('../services/supabaseService');
@@ -218,6 +237,29 @@ export const useAppStore = create<AppState>()(
           console.error('Error syncing emails:', error);
         }
       },
+
+      addTemplate: (template) =>
+        set((state) => ({ emailTemplates: [template, ...(state.emailTemplates || [])] })),
+
+      updateTemplate: (id, updates) =>
+        set((state) => ({
+          emailTemplates: (state.emailTemplates || []).map((t) => (t.id === id ? { ...t, ...updates } : t)),
+        })),
+
+      deleteTemplate: (id) =>
+        set((state) => ({
+          emailTemplates: (state.emailTemplates || []).filter((t) => t.id !== id),
+        })),
+
+      bulkUpdateEmails: (ids, updates) =>
+        set((state) => ({
+          emails: state.emails.map((e) => (ids.includes(e.id) ? { ...e, ...updates } : e)),
+        })),
+
+      bulkDeleteEmails: (ids) =>
+        set((state) => ({
+          emails: state.emails.filter((e) => !ids.includes(e.id)),
+        })),
 
       addImage: (image) =>
         set((state) => ({
