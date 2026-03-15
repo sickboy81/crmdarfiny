@@ -175,18 +175,21 @@ app.post('/connect', (req, res) => {
  * Webhook for Resend Inbound
  */
 app.post('/webhooks/resend', async (req, res) => {
-    console.log('📩 [WEBHOOK] Recebido do Resend:', JSON.stringify(req.body).substring(0, 200) + '...');
+    console.log('📩 [WEBHOOK] Recebido do Resend:', JSON.stringify(req.body, null, 2));
     
     const payload = req.body;
     // Resend standard inbound payload structure: { from, to, subject, text, html, attachments, etc }
     const { from, to, subject, text, html, attachments } = payload;
     
     if (!from || !to) {
+        console.warn('⚠️ [WEBHOOK] Payload incompleto ignorado.');
         return res.status(400).json({ error: 'Payload inválido' });
     }
 
     try {
         const fromEmail = from.includes('<') ? from.match(/<([^>]+)>/)[1] : from;
+        console.log(`🔍 [WEBHOOK] Processando email de: ${fromEmail}`);
+        
         const contactId = await findContactByEmail(fromEmail);
         
         const emailRecord = {
@@ -204,14 +207,14 @@ app.post('/webhooks/resend', async (req, res) => {
         const { error } = await supabase.from('emails').upsert(emailRecord);
         
         if (error) {
-            console.error('❌ Erro ao salvar email webhook:', error);
+            console.error('❌ [WEBHOOK] Erro ao salvar email no banco:', error);
             return res.status(500).json({ error: error.message });
         }
 
-        console.log(`✅ Email de ${fromEmail} salvo com sucesso via Webhook.`);
+        console.log(`✅ [WEBHOOK] Email de ${fromEmail} salvo com sucesso.`);
         res.status(200).json({ success: true });
     } catch (err) {
-        console.error('💥 Erro crítico no webhook de email:', err);
+        console.error('💥 [WEBHOOK] Erro crítico no processamento:', err);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

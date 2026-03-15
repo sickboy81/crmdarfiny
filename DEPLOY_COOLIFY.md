@@ -42,6 +42,14 @@ Independente de onde hospedar, o Frontend precisa destas variáveis:
 3. Configure esse domínio na variável `VITE_WHATSAPP_SERVER_URL` do seu Frontend e faça o deploy dele.
 4. No sistema, vá em **Configurações > Conexão WhatsApp** e escaneie o QR Code.
 
+## 4. Recebimento de E-mail (Resend Webhook)
+Para que o CRM receba as respostas dos seus e-mails:
+1. No painel do **Resend**, vá em **Webhooks**.
+2. Clique em **Add Webhook**.
+3. **Endpoint URL**: `https://server.darfiny.com.br/webhooks/resend`
+4. **Events**: Selecione `email.received`.
+5. Salve. Agora, qualquer e-mail que chegar no seu domínio verificado será enviado automaticamente para o CRM.
+
 ### Comandos Úteis na VPS:
 Se precisar rodar algo via SSH:
 - `pm2 status` (se estiver usando PM2 fora do Coolify).
