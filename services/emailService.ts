@@ -5,6 +5,7 @@ export interface SendEmailParams {
     subject: string;
     content: string;
     apiKey?: string;
+    verifiedSender?: string;
 }
 
 /**
@@ -12,7 +13,7 @@ export interface SendEmailParams {
  * For production, this should be called via a backend/edge function to hide the API Key.
  */
 export const emailService = {
-    sendEmail: async ({ to, subject, content, apiKey }: SendEmailParams) => {
+    sendEmail: async ({ to, subject, content, apiKey, verifiedSender }: SendEmailParams) => {
         if (!apiKey) {
             console.warn('E-mail simulation: No API Key provided. Sending mock email.');
             return new Promise((resolve) => {
@@ -21,6 +22,9 @@ export const emailService = {
         }
 
         try {
+            // Use provided sender or fall back to a reasonable default
+            const sender = verifiedSender || 'CRM <contato@seudominio.com.br>';
+            
             // Example using Resend API (standard in modern TS apps)
             const response = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
@@ -29,7 +33,7 @@ export const emailService = {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    from: 'CRM <contato@seudominio.com.br>',
+                    from: sender,
                     to: [to],
                     subject: subject,
                     html: content.replace(/\n/g, '<br>'),

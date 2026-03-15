@@ -131,6 +131,44 @@ export const supabaseService = {
         return messagesMap;
     },
 
+    // --- Emails (New) ---
+    async fetchEmails(): Promise<EmailMessage[]> {
+        const { data, error } = await supabase
+            .from('emails')
+            .select('*')
+            .order('timestamp', { ascending: false });
+
+        if (error) throw error;
+        if (!data) return [];
+
+        return data.map(d => ({
+            id: d.id,
+            from: d.from_email,
+            to: d.to_email,
+            subject: d.subject,
+            content: d.content,
+            timestamp: new Date(d.timestamp).toLocaleString('pt-BR'),
+            status: d.status,
+            attachments: d.attachments
+        }));
+    },
+
+    async saveEmail(email: EmailMessage) {
+        const { error } = await supabase
+            .from('emails')
+            .upsert({
+                id: email.id,
+                from_email: email.from || 'me@darfiny.com', // fallback to CRM email if sent by user
+                to_email: email.to,
+                subject: email.subject,
+                content: email.content,
+                status: email.status,
+                timestamp: new Date().toISOString(),
+                attachments: email.attachments || []
+            }, { onConflict: 'id' });
+        if (error) throw error;
+    },
+
     // --- Properties ---
     async syncProperties(properties: Property[]) {
         if (!properties.length) return;

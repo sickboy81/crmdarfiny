@@ -20,6 +20,7 @@ import { SocialPost } from './components/SocialPost';
 import { LinkBio } from './components/LinkBio';
 import { AIWriter } from './components/AIWriter';
 import { BankExtractor } from './components/BankExtractor';
+import { ExternalWhatsAppView } from './components/ExternalWhatsAppView';
 import { GlobalSearch } from './components/GlobalSearch';
 import { useAppStore } from './stores/useAppStore';
 import { Toaster } from 'sonner';
@@ -262,6 +263,8 @@ const App: React.FC = () => {
         return <Dashboard contacts={contacts} />;
       case View.INBOX:
         return <ChatInterface />;
+      case View.EXTERNAL_WHATSAPP:
+        return <ExternalWhatsAppView />;
       case View.CONTACTS:
         return (
           <ContactList

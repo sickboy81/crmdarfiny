@@ -113,11 +113,90 @@ async function connectToWhatsApp() {
     });
 }
 
+/**
+ * Helper to find or create a contact by email
+ */
+async function findContactByEmail(email) {
+    if (!email) return null;
+    
+    // Clean email
+    const cleanEmail = email.toLowerCase().trim();
+    
+    // Try to find existing contact
+    const { data: contact, error } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('email', cleanEmail)
+        .single();
+        
+    if (contact) return contact.id;
+    
+    // If not found, try by name/phone if available in the future, 
+    // but for now create a new "Email Lead"
+    const nameFromEmail = cleanEmail.split('@')[0];
+    const newId = `e-${Date.now()}`;
+    
+    await supabase.from('contacts').insert({
+        id: newId,
+        name: nameFromEmail,
+        email: cleanEmail,
+        source: 'Email',
+        last_seen: new Date().toISOString()
+    });
+    
+    return newId;
+}
+
 // Endpoints
 app.get('/status', (req, res) => res.json({ status: connectionStatus, qr: qrCodeData }));
 app.post('/connect', (req, res) => {
     if (connectionStatus === 'disconnected') connectToWhatsApp();
     res.json({ message: 'Iniciando...' });
+});
+
+/**
+ * Webhook for Resend Inbound
+ */
+app.post('/webhooks/resend', async (req, res) => {
+    console.log('📩 [WEBHOOK] Recebido do Resend:', JSON.stringify(req.body).substring(0, 200) + '...');
+    
+    const payload = req.body;
+    // Resend standard inbound payload structure: { from, to, subject, text, html, attachments, etc }
+    const { from, to, subject, text, html, attachments } = payload;
+    
+    if (!from || !to) {
+        return res.status(400).json({ error: 'Payload inválido' });
+    }
+
+    try {
+        const fromEmail = from.includes('<') ? from.match(/<([^>]+)>/)[1] : from;
+        const contactId = await findContactByEmail(fromEmail);
+        
+        const emailRecord = {
+            id: payload.id || `res-${Date.now()}`,
+            from_email: fromEmail,
+            to_email: Array.isArray(to) ? to[0] : to,
+            subject: subject || '(Sem assunto)',
+            content: html || text || '',
+            status: 'received',
+            timestamp: new Date().toISOString(),
+            attachments: attachments || [],
+            contact_id: contactId
+        };
+
+        const { error } = await supabase.from('emails').upsert(emailRecord);
+        
+        if (error) {
+            console.error('❌ Erro ao salvar email webhook:', error);
+            return res.status(500).json({ error: error.message });
+        }
+
+        console.log(`✅ Email de ${fromEmail} salvo com sucesso via Webhook.`);
+        res.status(200).json({ success: true });
+    } catch (err) {
+        console.error('💥 Erro crítico no webhook de email:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 app.post('/disconnect', async (req, res) => {
     if (sock) await sock.logout();

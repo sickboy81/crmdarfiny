@@ -155,6 +155,7 @@ export enum View {
   LINK_BIO = 'link_bio',
   AI_WRITER = 'ai_writer',
   BANK_EXTRACTOR = 'bank_extractor',
+  EXTERNAL_WHATSAPP = 'external_whatsapp',
 }
 
 export interface Notification {

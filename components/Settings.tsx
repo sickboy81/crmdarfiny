@@ -185,16 +185,30 @@ export const Settings: React.FC = () => {
                   type="password"
                   className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder="re_..."
-                  value={(configs as any).emailConfig?.apiKey || ''}
+                  value={configs.emailConfig?.apiKey || ''}
                   onChange={(e) => {
-                    const newConfig = { ...(configs as any).emailConfig, apiKey: e.target.value };
-                    sets.setPreferences({ ...configs.preferences, email_config: newConfig } as any);
+                    sets.setEmailConfig({ ...configs.emailConfig, apiKey: e.target.value });
                   }}
                 />
                 <p className="text-[10px] text-slate-400 mt-2 italic">Obtenha sua chave em resend.com. Este CRM usa a API do Resend para envios seguros.</p>
               </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">E-mail de Envio Verificado</label>
+                <input
+                  type="email"
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="ex: contato@seudominio.com.br"
+                  value={configs.emailConfig?.verifiedSender || ''}
+                  onChange={(e) => {
+                    sets.setEmailConfig({ ...configs.emailConfig, verifiedSender: e.target.value });
+                  }}
+                />
+                <p className="text-[10px] text-slate-400 mt-2 italic">O e-mail ou domínio deve estar verificado no painel do Resend.</p>
+              </div>
+
               <button
-                onClick={() => toast.success('Configurações de e-mail salvas!')}
+                onClick={actions.handleSaveEmailConfig}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-100"
               >
                 SALVAR CONFIGURAÇÕES

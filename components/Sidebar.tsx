@@ -69,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
       items: [
         { id: View.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
         { id: View.PIPELINE, label: 'Pipeline', icon: KanbanSquare },
-        { id: View.INBOX, label: 'WhatsApp', icon: MessageSquare, badge: totalUnreadCount },
+        { id: View.EXTERNAL_WHATSAPP, label: 'WhatsApp', icon: MessageSquare, badge: totalUnreadCount },
         { id: View.CONTACTS, label: 'Contatos', icon: Users },
       ]
     },

@@ -256,6 +256,15 @@ export const useSettings = () => {
     toast.success('Provedor de IA salvo!');
   };
 
+  const handleSaveEmailConfig = () => {
+    if (!emailConfig.apiKey) {
+      toast.error('Informe a API Key do Resend.');
+      return;
+    }
+    updateGlobalSettings({ email_config: emailConfig });
+    toast.success('Configurações de e-mail salvas!');
+  };
+
   const handleTestAPI = async () => {
     const key = (aiConfig.apiKeys[aiConfig.provider] || '').trim();
     if (!key) {
@@ -286,12 +295,13 @@ export const useSettings = () => {
   };
 
   return {
-    configs: { waConfig, aiConfig, botConfig, fbConfig, crmTags, documentCompanyName, preferences, companyProfile, businessHours, autoMessages, userProfile },
+    configs: { waConfig, aiConfig, botConfig, fbConfig, emailConfig, crmTags, documentCompanyName, preferences, companyProfile, businessHours, autoMessages, userProfile },
     sets: {
       setWaConfig,
       setAiConfig,
       setBotConfig,
       setFbConfig,
+      setEmailConfig,
       setCrmTags: (tags: string[]) => {
         setCrmTags(tags);
         updateGlobalSettings({ crm_tags: tags });
@@ -306,7 +316,7 @@ export const useSettings = () => {
       setAutoMessages,
       setUserProfile,
     },
-    actions: { handleSaveWa, handleSaveAIProvider, handleTestAPI, handleSaveBot, handleSaveCompanyProfile, handleSaveAutomation, handleSaveUserProfile },
+    actions: { handleSaveWa, handleSaveAIProvider, handleSaveEmailConfig, handleTestAPI, handleSaveBot, handleSaveCompanyProfile, handleSaveAutomation, handleSaveUserProfile },
     statuses: {
       status,
       setStatus,

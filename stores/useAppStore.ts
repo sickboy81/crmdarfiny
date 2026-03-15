@@ -42,6 +42,8 @@ interface AppState {
   addContact: (contact: Contact) => void;
   addMessage: (chatId: string, message: Message) => void;
   addEmail: (email: EmailMessage) => void;
+  setEmails: (emails: EmailMessage[]) => void;
+  syncEmails: () => Promise<void>;
   addImage: (image: StoredImage) => void;
   addNotification: (notification: Notification) => void;
   markNotificationAsRead: (id: string) => void;
@@ -204,6 +206,18 @@ export const useAppStore = create<AppState>()(
 
           return newState;
         }),
+
+      setEmails: (emails) => set({ emails }),
+
+      syncEmails: async () => {
+        try {
+          const { supabaseService: service } = await import('../services/supabaseService');
+          const emails = await service.fetchEmails();
+          set({ emails });
+        } catch (error) {
+          console.error('Error syncing emails:', error);
+        }
+      },
 
       addImage: (image) =>
         set((state) => ({

@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 
 export const EmailManager: React.FC = () => {
-    const { emails, addEmail, addNotification, settings } = useAppStore();
+    const { emails, addEmail, syncEmails, addNotification, settings } = useAppStore();
     const [isCompositionOpen, setIsCompositionOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
@@ -18,6 +18,10 @@ export const EmailManager: React.FC = () => {
     const [subject, setSubject] = useState('');
     const [content, setContent] = useState('');
 
+    React.useEffect(() => {
+        syncEmails();
+    }, [syncEmails]);
+
     const handleSendEmail = async () => {
         if (!to || !subject || !content) {
             toast.error('Preencha todos os campos obrigatórios.');
@@ -27,9 +31,11 @@ export const EmailManager: React.FC = () => {
         setIsSending(true);
         try {
             const { emailService } = await import('../services/emailService');
-            const apiKey = (settings as any).email_config?.apiKey;
+            const emailConfig = (settings as any).email_config;
+            const apiKey = emailConfig?.apiKey;
+            const verifiedSender = emailConfig?.verifiedSender;
 
-            await emailService.sendEmail({ to, subject, content, apiKey });
+            await emailService.sendEmail({ to, subject, content, apiKey, verifiedSender });
 
             const newEmail: EmailMessage = {
                 id: Date.now().toString(),
@@ -41,6 +47,15 @@ export const EmailManager: React.FC = () => {
             };
 
             addEmail(newEmail);
+            
+            // Salvar no Supabase
+            try {
+                const { supabaseService: service } = await import('../services/supabaseService');
+                await service.saveEmail(newEmail);
+            } catch (saveError) {
+                console.error('Error saving sent email to Supabase:', saveError);
+            }
+
             addNotification({
                 id: `email-${newEmail.id}`,
                 title: 'E-mail Enviado',
@@ -142,11 +157,11 @@ export const EmailManager: React.FC = () => {
                             <div className="w-2 h-2 bg-green-500 rounded-full" />
                         </div>
                         <button
-                            onClick={handleSimulateIncoming}
+                            onClick={syncEmails}
                             className="flex items-center gap-2 text-[10px] font-bold text-green-600 hover:text-green-700"
                         >
                             <RefreshCw size={12} />
-                            SIMULAR RECEBIMENTO
+                            SINCRONIZAR AGORA
                         </button>
                     </div>
                 </div>

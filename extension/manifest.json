@@ -54,7 +54,11 @@
         "*://web.whatsapp.com/*"
       ],
       "js": [
-        "scripts/content-whatsapp.js"
+        "scripts/content-whatsapp.js",
+        "scripts/sidebar.js"
+      ],
+      "css": [
+        "styles/sidebar.css"
       ],
       "run_at": "document_idle"
     },
