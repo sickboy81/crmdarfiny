@@ -177,7 +177,7 @@ app.post('/connect', (req, res) => {
 app.get('/test-webhook', (req, res) => {
     res.json({ 
         message: 'Servidor alcançável! Use esta URL no Resend.',
-        url: 'https://server.darfiny.com.br/webhooks/resend',
+        url: 'https://server.darfinyavila.com.br/webhooks/resend',
         status: connectionStatus,
         time: new Date().toISOString()
     });

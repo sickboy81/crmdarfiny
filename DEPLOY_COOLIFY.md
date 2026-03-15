@@ -46,7 +46,7 @@ Independente de onde hospedar, o Frontend precisa destas variáveis:
 Para que o CRM receba as respostas dos seus e-mails:
 1. No painel do **Resend**, vá em **Webhooks**.
 2. Clique em **Add Webhook**.
-3. **Endpoint URL**: `https://server.darfiny.com.br/webhooks/resend`
+3. **Endpoint URL**: `https://server.darfinyavila.com.br/webhooks/resend`
 4. **Events**: Selecione `email.received`.
 5. Salve. Agora, qualquer e-mail que chegar no seu domínio verificado será enviado automaticamente para o CRM.
 
