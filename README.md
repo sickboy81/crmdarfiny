@@ -8,13 +8,10 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1Iggr5Ae_GJr_2_g8H2KlbBfmLaIOAh-r
 
-## Run Locally
+## Deployment Architecture
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **Backend (API & WhatsApp):** Hosted on **Coolify** (VPS AlexHost).
+  - Port: 3001
+  - Persistence: `/app/auth_info_baileys` (WhatsApp sessions)
+- **Frontend (UI):** Hosted on **Vercel**.
+- **Database:** Hosted on **Supabase**.

@@ -22,7 +22,7 @@ No painel do Coolify, adicione:
 
 ## 2. Frontend (Vite)
 
-Você pode hospedar o frontend no mesmo Coolify (como uma aplicação estática) ou na Vercel/Netlify.
+O frontend está atualmente hospedado na **Vercel**.
 
 ### Variáveis de Ambiente Necessárias:
 Independente de onde hospedar, o Frontend precisa destas variáveis:
