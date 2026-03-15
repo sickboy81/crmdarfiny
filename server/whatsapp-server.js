@@ -189,12 +189,12 @@ app.get('/test-webhook', (req, res) => {
 app.post('/webhooks/resend', async (req, res) => {
     console.log('📩 [WEBHOOK] Recebido do Resend:', JSON.stringify(req.body, null, 2));
     
-    const payload = req.body;
-    // Resend standard inbound payload structure: { from, to, subject, text, html, attachments, etc }
+    // Resend webhooks costumam enviar o objeto de email dentro de 'data'
+    const payload = req.body.data || req.body;
     const { from, to, subject, text, html, attachments } = payload;
     
     if (!from || !to) {
-        console.warn('⚠️ [WEBHOOK] Payload incompleto ignorado.');
+        console.warn('⚠️ [WEBHOOK] Payload incompleto ignorado. "from" ou "to" ausentes.');
         return res.status(400).json({ error: 'Payload inválido' });
     }
 
@@ -205,13 +205,13 @@ app.post('/webhooks/resend', async (req, res) => {
         const contactId = await findContactByEmail(fromEmail);
         
         const emailRecord = {
-            id: payload.id || `res-${Date.now()}`,
+            id: payload.id || payload.email_id || `res-${Date.now()}`,
             from_email: fromEmail,
             to_email: Array.isArray(to) ? to[0] : to,
             subject: subject || '(Sem assunto)',
             content: html || text || '',
             status: 'received',
-            timestamp: new Date().toISOString(),
+            timestamp: payload.created_at || new Date().toISOString(),
             attachments: attachments || [],
             contact_id: contactId
         };
