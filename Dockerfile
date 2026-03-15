@@ -14,8 +14,8 @@ WORKDIR /app
 # Copiar arquivos de dependências
 COPY package*.json ./
 
-# Instalar dependências (apenas produção para economizar espaço)
-RUN npm install
+# Instalar dependências (usando legacy-peer-deps para compatibilidade com React 19)
+RUN npm install --legacy-peer-deps
 
 # Copiar o restante do código (incluindo a pasta server)
 COPY . .
