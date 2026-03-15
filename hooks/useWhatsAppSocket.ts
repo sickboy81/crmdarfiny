@@ -9,8 +9,11 @@ export const useWhatsAppSocket = () => {
         const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
 
         const socket = io(serverUrl, {
-            transports: ['polling', 'websocket'],
-            path: '/socket.io/'
+            transports: ['websocket', 'polling'], // Tenta WebSocket primeiro
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            timeout: 20000,
+            autoConnect: true
         });
 
         socket.on('status', (status: any) => {
