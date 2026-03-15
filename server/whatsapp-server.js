@@ -15,27 +15,27 @@ const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Configuração Supabase (Usando Anon Key por enquanto, pois as políticas permitem)
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+// Configuração Supabase
+// Tenta pegar com VITE_ (padrão frontend) ou sem prefixo (comum no backend)
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+console.log('--- Debug de Ambiente ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'Configurado ✅' : 'Ausente ❌');
+console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? 'Configurado ✅' : 'Ausente ❌');
+console.log('-------------------------');
 
 if (!supabaseUrl || !supabaseKey) {
-    console.error('❌ ERRO: Variáveis de ambiente do Supabase não encontradas!');
-    console.error('Certifique-se de que VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas.');
+    console.error('❌ ERRO CRÍTICO: Variáveis de ambiente do Supabase não encontradas!');
+    console.error('Certifique-se de que os nomes estão EXATAMENTE como VITE_SUPABASE_URL ou SUPABASE_URL.');
     if (process.env.NODE_ENV === 'production') {
-        console.error('No Coolify, adicione estas variáveis no painel da aplicação.');
+        process.exit(1); // Força reinicialização no Coolify para podermos ver o erro
     }
 }
 
-const supabase = (supabaseUrl && supabaseKey) 
-    ? createClient(supabaseUrl, supabaseKey)
-    : null;
-
-if (supabase) {
-    console.log('✅ Supabase conectado com sucesso!');
-} else {
-    console.warn('⚠️ O servidor iniciou sem conexão com o Supabase. Algumas funcionalidades podem falhar.');
-}
+const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('✅ Supabase inicializado.');
 
 app.use(cors());
 app.use(express.json());
