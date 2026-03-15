@@ -18,7 +18,24 @@ const io = new Server(server, {
 // Configuração Supabase (Usando Anon Key por enquanto, pois as políticas permitem)
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ ERRO: Variáveis de ambiente do Supabase não encontradas!');
+    console.error('Certifique-se de que VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas.');
+    if (process.env.NODE_ENV === 'production') {
+        console.error('No Coolify, adicione estas variáveis no painel da aplicação.');
+    }
+}
+
+const supabase = (supabaseUrl && supabaseKey) 
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
+
+if (supabase) {
+    console.log('✅ Supabase conectado com sucesso!');
+} else {
+    console.warn('⚠️ O servidor iniciou sem conexão com o Supabase. Algumas funcionalidades podem falhar.');
+}
 
 app.use(cors());
 app.use(express.json());

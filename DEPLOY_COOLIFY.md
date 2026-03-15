@@ -17,6 +17,10 @@ No Coolify, crie uma nova **Application** apontando para o seu repositório do G
 ### Variáveis de Ambiente (Secrets):
 No painel do Coolify, adicione:
 - `PORT`: 3001
+- `VITE_SUPABASE_URL`: Sua URL do Supabase (**Obrigatório**)
+- `VITE_SUPABASE_ANON_KEY`: Sua chave anon do Supabase (**Obrigatório**)
+- `GEMINI_API_KEY`: Sua chave da API do Gemini (Para o Extrator IA)
+- `RESEND_API_KEY`: Sua chave da API do Resend (Para o E-mail Manager)
 
 ---
 
