@@ -136,32 +136,38 @@ async function connectToWhatsApp() {
 async function findContactByEmail(email) {
     if (!email) return null;
     
-    // Clean email
     const cleanEmail = email.toLowerCase().trim();
     
-    // Try to find existing contact
-    const { data: contact, error } = await supabase
-        .from('contacts')
-        .select('id')
-        .eq('email', cleanEmail)
-        .single();
+    try {
+        const { data: contact, error } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('email', cleanEmail)
+            .maybeSingle(); // Use maybeSingle to avoid 406 errors if not found
+            
+        if (contact) return contact.id;
         
-    if (contact) return contact.id;
-    
-    // If not found, try by name/phone if available in the future, 
-    // but for now create a new "Email Lead"
-    const nameFromEmail = cleanEmail.split('@')[0];
-    const newId = `e-${Date.now()}`;
-    
-    await supabase.from('contacts').insert({
-        id: newId,
-        name: nameFromEmail,
-        email: cleanEmail,
-        source: 'Email',
-        last_seen: new Date().toISOString()
-    });
-    
-    return newId;
+        const nameFromEmail = cleanEmail.split('@')[0];
+        const newId = `e-${Date.now()}`;
+        
+        const { error: insertError } = await supabase.from('contacts').insert({
+            id: newId,
+            name: nameFromEmail,
+            email: cleanEmail,
+            source: 'Email',
+            last_seen: new Date().toISOString()
+        });
+
+        if (insertError) {
+            console.error('❌ [DB] Erro ao criar contato por email:', insertError);
+            throw insertError;
+        }
+        
+        return newId;
+    } catch (err) {
+        console.error('❌ [DB] Falha crítica no findContactByEmail:', err);
+        throw err;
+    }
 }
 
 // Endpoints
@@ -220,14 +226,23 @@ app.post('/webhooks/resend', async (req, res) => {
         
         if (error) {
             console.error('❌ [WEBHOOK] Erro ao salvar email no banco:', error);
-            return res.status(500).json({ error: error.message });
+            // Retorna o erro real para o Resend mostrar no Dashboard
+            return res.status(500).json({ 
+                error: 'Erro ao salvar no banco', 
+                details: error,
+                message: error.message 
+            });
         }
 
         console.log(`✅ [WEBHOOK] Email de ${fromEmail} salvo com sucesso.`);
         res.status(200).json({ success: true });
     } catch (err) {
         console.error('💥 [WEBHOOK] Erro crítico no processamento:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            message: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 app.post('/disconnect', async (req, res) => {
