@@ -285,11 +285,19 @@ app.post('/emails/send', async (req, res) => {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('❌ [EMAIL] Erro no Resend:', data);
-            return res.status(response.status).json({ error: data.message || 'Erro ao enviar via Resend' });
+            console.error('❌ [EMAIL] Falha no Resend:', {
+                status: response.status,
+                data,
+                sender: emailPayload.from,
+                to: emailPayload.to
+            });
+            return res.status(response.status).json({ 
+                error: data.message || 'Erro ao enviar via Resend',
+                details: data
+            });
         }
 
-        console.log(`✅ [EMAIL] Enviado com sucesso! ID: ${data.id}`);
+        console.log(`✅ [EMAIL] Sucesso! ID: ${data.id} | De: ${emailPayload.from} | Para: ${emailPayload.to}`);
         res.json({ success: true, id: data.id });
     } catch (error) {
         console.error('💥 [EMAIL] Erro crítico no envio:', error);
