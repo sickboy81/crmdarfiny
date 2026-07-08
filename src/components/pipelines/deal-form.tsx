@@ -239,7 +239,7 @@ export function DealForm({
     }
     setSaving(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       title: title.trim(),
       value: parseFloat(value) || 0,
       currency,
@@ -249,8 +249,8 @@ export function DealForm({
       assigned_to: assignedTo || null,
       notes: notes.trim() || null,
       expected_close_date: expectedCloseDate || null,
-      color,
     };
+    if (color) payload.color = color;
 
     if (deal) {
       const { error } = await supabase
