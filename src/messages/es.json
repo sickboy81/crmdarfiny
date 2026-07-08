@@ -241,7 +241,10 @@
     "stageQualified": "Calificado",
     "stageProposalSent": "Propuesta Enviada",
     "stageNegotiation": "Negociación",
-    "stageWon": "Ganado"
+    "stageWon": "Ganado",
+    "boardBackground": "Fondo del tablero",
+    "backgroundSolid": "Color solido",
+    "backgroundGradient": "Degradado"
   },
   "settings": {
     "title": "Configuración",
@@ -1469,7 +1472,24 @@
     "reopen": "Reabrir",
     "expectedCloseDate": "Fecha prevista de cierre",
     "won": "Ganado",
-    "lost": "Perdido"
+    "lost": "Perdido",
+    "copy": "Copiar negocio",
+    "copySuccess": "Negocio copiado",
+    "copyError": "Error al copiar negocio",
+    "archive": "Archivar",
+    "archiveSuccess": "Negocio archivado",
+    "unarchive": "Desarchivar",
+    "unarchiveSuccess": "Negocio desarchivado",
+    "description": "Descripcion",
+    "descriptionPlaceholder": "Agregar una descripcion...",
+    "coverImage": "Imagen de portada",
+    "coverRemove": "Eliminar portada",
+    "moveToPipeline": "Mover a otro funil",
+    "moveSuccess": "Negocio movido",
+    "moveError": "Error al mover negocio",
+    "template": "Plantilla",
+    "fromTemplate": "Usar plantilla",
+    "noTemplates": "Sin plantillas disponibles"
   },
   "pipelineBoard": {
     "dragDealHere": "Arrastra un negocio aquí",
@@ -1565,6 +1585,32 @@
   "activityFeed": {
     "title": "Actividad reciente",
     "empty": "Aún no hay actividad — conversasiones, cambios en negocios y automatizaciones aparecerán aquí."
+  },
+  "boardFilters": {
+    "search": "Buscar negocios...",
+    "filterByLabel": "Filtrar por etiqueta",
+    "filterByMember": "Filtrar por miembro",
+    "clearFilters": "Limpiar filtros",
+    "noResults": "Sin resultados",
+    "showArchived": "Mostrar archivados",
+    "hideArchived": "Ocultar archivados"
+  },
+  "dealTemplates": {
+    "title": "Plantillas de Negocio",
+    "createTemplate": "Crear plantilla",
+    "editTemplate": "Editar plantilla",
+    "deleteTemplate": "Eliminar plantilla",
+    "templateName": "Nombre de la plantilla",
+    "templateNamePlaceholder": "ej: Negocio Estandar",
+    "templateTitle": "Titulo del negocio",
+    "templateDescription": "Descripcion",
+    "templateValue": "Valor predeterminado",
+    "templateChecklist": "Items de verificacion",
+    "addChecklistItem": "Agregar item",
+    "templateLabels": "Etiquetas",
+    "addLabel": "Agregar etiqueta",
+    "saveTemplate": "Guardar plantilla",
+    "deleteConfirm": "Eliminar esta plantilla?"
   },
   "empty": {
     "noData": "No hay datos disponibles",

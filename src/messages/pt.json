@@ -241,7 +241,10 @@
     "stageQualified": "Qualificado",
     "stageProposalSent": "Proposta Enviada",
     "stageNegotiation": "Negociação",
-    "stageWon": "Ganho"
+    "stageWon": "Ganho",
+    "boardBackground": "Fundo do board",
+    "backgroundSolid": "Cor solida",
+    "backgroundGradient": "Degradê"
   },
   "settings": {
     "title": "Configurações",
@@ -1473,7 +1476,24 @@
     "reopen": "Reabrir",
     "expectedCloseDate": "Data prevista de fechamento",
     "won": "Ganho",
-    "lost": "Perdido"
+    "lost": "Perdido",
+    "copy": "Copiar deal",
+    "copySuccess": "Deal copiado",
+    "copyError": "Erro ao copiar deal",
+    "archive": "Arquivar",
+    "archiveSuccess": "Deal arquivado",
+    "unarchive": "Desarquivar",
+    "unarchiveSuccess": "Deal desarquivado",
+    "description": "Descrição",
+    "descriptionPlaceholder": "Adicione uma descrição...",
+    "coverImage": "Imagem de capa",
+    "coverRemove": "Remover capa",
+    "moveToPipeline": "Mover para outro funil",
+    "moveSuccess": "Deal movido",
+    "moveError": "Erro ao mover deal",
+    "template": "Modelo",
+    "fromTemplate": "Usar modelo",
+    "noTemplates": "Nenhum modelo disponível"
   },
   "pipelineBoard": {
     "dragDealHere": "Arraste um deal aqui",
@@ -1569,6 +1589,32 @@
   "activityFeed": {
     "title": "Atividade recente",
     "empty": "Nenhuma atividade ainda — conversas, mudanças em negócios e automações aparecerão aqui."
+  },
+  "boardFilters": {
+    "search": "Buscar deals...",
+    "filterByLabel": "Filtrar por label",
+    "filterByMember": "Filtrar por membro",
+    "clearFilters": "Limpar filtros",
+    "noResults": "Nenhum deal encontrado",
+    "showArchived": "Mostrar arquivados",
+    "hideArchived": "Ocultar arquivados"
+  },
+  "dealTemplates": {
+    "title": "Modelos de Deal",
+    "createTemplate": "Criar modelo",
+    "editTemplate": "Editar modelo",
+    "deleteTemplate": "Excluir modelo",
+    "templateName": "Nome do modelo",
+    "templateNamePlaceholder": "Ex: Deal Padrão",
+    "templateTitle": "Título do deal",
+    "templateDescription": "Descrição",
+    "templateValue": "Valor padrão",
+    "templateChecklist": "Itens do checklist",
+    "addChecklistItem": "Adicionar item",
+    "templateLabels": "Labels",
+    "addLabel": "Adicionar label",
+    "saveTemplate": "Salvar modelo",
+    "deleteConfirm": "Excluir este modelo?"
   },
   "empty": {
     "noData": "Nenhum dado disponível",

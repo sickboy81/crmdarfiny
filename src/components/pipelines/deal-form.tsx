@@ -14,6 +14,8 @@ import type {
   DealChecklist,
   DealActivity,
   DealStatus,
+  DealTemplate,
+  Pipeline,
   PipelineStage,
   Profile,
 } from "@/types";
@@ -37,6 +39,7 @@ import {
   ListTodo,
   Activity,
   Paperclip,
+  Image,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DealLabels } from "./deal-labels";
@@ -98,6 +101,11 @@ export function DealForm({
   const [checklists, setChecklists] = useState<DealChecklist[]>([]);
   const [activities, setActivities] = useState<DealActivity[]>([]);
   const [attachments, setAttachments] = useState<{ id: string; deal_id: string; file_name: string; file_url: string; file_type: string | null; file_size: number | null; created_at: string }[]>([]);
+
+  const [description, setDescription] = useState("");
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [allPipelines, setAllPipelines] = useState<Pipeline[]>([]);
+  const [templates, setTemplates] = useState<DealTemplate[]>([]);
 
   const loadDealDetails = useCallback(async () => {
     if (!deal) return;
@@ -170,6 +178,8 @@ export function DealForm({
       setExpectedCloseDate(deal.expected_close_date ?? "");
       setNotes(deal.notes ?? "");
       setColor(deal.color ?? null);
+      setDescription(deal.description ?? "");
+      setCoverUrl(deal.cover_url ?? null);
       loadDealDetails();
     } else {
       setTitle("");
@@ -181,6 +191,8 @@ export function DealForm({
       setExpectedCloseDate("");
       setNotes("");
       setColor(null);
+      setDescription("");
+      setCoverUrl(null);
       setLabels([]);
       setChecklists([]);
       setActivities([]);
@@ -193,13 +205,17 @@ export function DealForm({
     if (!open) return;
     let cancelled = false;
     (async () => {
-      const [c, p] = await Promise.all([
+      const [c, p, plData, tData] = await Promise.all([
         supabase.from("contacts").select("*").order("name"),
         supabase.from("profiles").select("*").order("full_name"),
+        supabase.from("pipelines").select("*").order("name"),
+        supabase.from("deal_templates").select("*").order("name"),
       ]);
       if (cancelled) return;
       setContacts((c.data ?? []) as Contact[]);
       setProfiles((p.data ?? []) as Profile[]);
+      setAllPipelines((plData.data ?? []) as Pipeline[]);
+      setTemplates((tData.data ?? []) as DealTemplate[]);
     })();
     return () => {
       cancelled = true;
@@ -251,6 +267,8 @@ export function DealForm({
       expected_close_date: expectedCloseDate || null,
     };
     if (color) payload.color = color;
+    if (description.trim()) payload.description = description.trim();
+    if (coverUrl) payload.cover_url = coverUrl;
 
     if (deal) {
       const { error } = await supabase
@@ -369,6 +387,31 @@ export function DealForm({
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === "details" && (
               <div className="space-y-4">
+                {/* Template selector */}
+                {!deal && templates.length > 0 && (
+                  <div className="grid gap-2">
+                    <Label className="text-muted-foreground">{t("fromTemplate")}</Label>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const tpl = templates.find((t) => t.id === e.target.value);
+                        if (tpl) {
+                          setTitle(tpl.title);
+                          setValue(String(tpl.value ?? ""));
+                          if (tpl.description) setDescription(tpl.description);
+                          if (tpl.currency) setCurrency(tpl.currency);
+                        }
+                      }}
+                      className="h-9 w-full rounded-lg border border-border bg-muted px-2.5 text-sm text-foreground outline-none focus:border-primary"
+                    >
+                      <option value="">{t("fromTemplate")}</option>
+                      {templates.map((tpl) => (
+                        <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 {/* Labels */}
                 {deal && (
                   <DealLabels
@@ -386,6 +429,63 @@ export function DealForm({
                     currentColor={color}
                     onColorChange={setColor}
                   />
+                </div>
+
+                {/* Description */}
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground">{t("description")}</Label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t("descriptionPlaceholder")}
+                    className="min-h-[80px] border-border bg-muted text-foreground"
+                  />
+                </div>
+
+                {/* Cover Image */}
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground">{t("coverImage")}</Label>
+                  {coverUrl ? (
+                    <div className="relative overflow-hidden rounded-lg border border-border">
+                      <img src={coverUrl} alt="" className="h-32 w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCoverUrl(null)}
+                        className="absolute top-1 right-1 rounded bg-background/80 p-1 text-muted-foreground hover:bg-background"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = "image/*";
+                        input.onchange = async (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (!file || !accountId) return;
+                          const ext = file.name.split(".").pop() ?? "jpg";
+                          const path = `account-${accountId}/deals/covers/${Date.now()}-${ext}`;
+                          const db = createClient();
+                          const { error } = await db.storage
+                            .from("deal-attachments")
+                            .upload(path, file, { contentType: file.type });
+                          if (!error) {
+                            const { data } = db.storage
+                              .from("deal-attachments")
+                              .getPublicUrl(path);
+                            setCoverUrl(data.publicUrl);
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border py-6 text-xs text-muted-foreground hover:border-primary/40 hover:bg-muted/50"
+                    >
+                      <Image className="mr-1.5 h-4 w-4" />
+                      {t("coverImage")}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-2">
@@ -478,6 +578,40 @@ export function DealForm({
                     ))}
                   </select>
                 </div>
+
+                {/* Move to another pipeline */}
+                {deal && allPipelines.length > 1 && (
+                  <div className="grid gap-2">
+                    <Label className="text-muted-foreground">{t("moveToPipeline")}</Label>
+                    <select
+                      value={pipelineId}
+                      onChange={async (e) => {
+                        const newPipelineId = e.target.value;
+                        if (newPipelineId === pipelineId) return;
+                        const { data: newStages } = await supabase
+                          .from("pipeline_stages")
+                          .select("id")
+                          .eq("pipeline_id", newPipelineId)
+                          .order("position")
+                          .limit(1);
+                        if (newStages?.[0]) {
+                          await supabase
+                            .from("deals")
+                            .update({ pipeline_id: newPipelineId, stage_id: newStages[0].id })
+                            .eq("id", deal.id);
+                          toast.success(t("moveSuccess"));
+                          onOpenChange(false);
+                          onSaved();
+                        }
+                      }}
+                      className="h-9 w-full rounded-lg border border-border bg-muted px-2.5 text-sm text-foreground outline-none focus:border-primary"
+                    >
+                      {allPipelines.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="grid gap-2">
                   <Label className="text-muted-foreground">{t("owner")}</Label>

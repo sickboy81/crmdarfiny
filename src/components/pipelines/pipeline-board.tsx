@@ -17,7 +17,7 @@ import {
 import type { Deal, PipelineStage } from "@/types";
 import { DealCard } from "./deal-card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronDown, Loader2, X } from "lucide-react";
+import { Plus, ChevronDown, Loader2, X, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/currency";
@@ -31,8 +31,23 @@ interface PipelineBoardProps {
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
   onColorChange?: (dealId: string, color: string | null) => void;
+  onArchive?: (dealId: string) => void;
+  onUnarchive?: (dealId: string) => void;
+  onCopy?: (deal: Deal) => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
+  filterLabel?: string;
+  onFilterLabelChange?: (id: string) => void;
+  filterMember?: string;
+  onFilterMemberChange?: (id: string) => void;
+  showArchived?: boolean;
+  onShowArchivedChange?: (v: boolean) => void;
+  allLabels?: [string, { name: string; color: string }][];
+  allMembers?: [string, string][];
   pipelineId?: string;
   onDealsChanged?: () => void;
+  boardBackground?: string | null;
+  onBoardBackgroundChange?: (bg: string | null) => void;
 }
 
 export function PipelineBoard({
@@ -42,11 +57,27 @@ export function PipelineBoard({
   onAddDeal,
   onEditDeal,
   onColorChange,
+  onArchive,
+  onUnarchive,
+  onCopy,
+  searchQuery,
+  onSearchChange,
+  filterLabel,
+  onFilterLabelChange,
+  filterMember,
+  onFilterMemberChange,
+  showArchived,
+  onShowArchivedChange,
+  allLabels,
+  allMembers,
   pipelineId,
   onDealsChanged,
+  boardBackground,
+  onBoardBackgroundChange,
 }: PipelineBoardProps) {
   const { defaultCurrency, accountId } = useAuth();
   const tb = useTranslations("pipelineBoard");
+  const tf = useTranslations("boardFilters");
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(new Set());
 
@@ -113,7 +144,55 @@ export function PipelineBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="board-scroll flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-xl p-2 lg:snap-none">
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 px-2 pb-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={searchQuery ?? ""}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            placeholder={tf("search")}
+            className="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+        <select
+          value={filterLabel ?? ""}
+          onChange={(e) => onFilterLabelChange?.(e.target.value)}
+          className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        >
+          <option value="">{tf("filterByLabel")}</option>
+          {(allLabels ?? []).map(([id, l]) => (
+            <option key={id} value={id}>{l.name}</option>
+          ))}
+        </select>
+        <select
+          value={filterMember ?? ""}
+          onChange={(e) => onFilterMemberChange?.(e.target.value)}
+          className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        >
+          <option value="">{tf("filterByMember")}</option>
+          {(allMembers ?? []).map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
+          ))}
+        </select>
+        {(searchQuery || filterLabel || filterMember) && (
+          <button
+            onClick={() => { onSearchChange?.(""); onFilterLabelChange?.(""); onFilterMemberChange?.(""); }}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
+          >
+            {tf("clearFilters")}
+          </button>
+        )}
+        <button
+          onClick={() => onShowArchivedChange?.(!showArchived)}
+          className={`rounded-lg border px-3 py-2 text-sm ${showArchived ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:bg-muted"}`}
+        >
+          {showArchived ? tf("hideArchived") : tf("showArchived")}
+        </button>
+      </div>
+      <div className="board-scroll flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-xl p-2 lg:snap-none"
+        style={boardBackground ? { background: boardBackground } : undefined}
+      >
         {sortedStages.map((stage) => {
           const stageDeals = dealsByStage.get(stage.id) ?? [];
           const totalValue = stageDeals.reduce(
@@ -133,6 +212,9 @@ export function PipelineBoard({
               onAddDeal={onAddDeal}
               onEditDeal={onEditDeal}
               onColorChange={onColorChange}
+              onArchive={onArchive}
+              onUnarchive={onUnarchive}
+              onCopy={onCopy}
               pipelineId={pipelineId}
               accountId={accountId ?? undefined}
               onDealsChanged={onDealsChanged}
@@ -200,6 +282,9 @@ function StageColumn({
   onAddDeal,
   onEditDeal,
   onColorChange,
+  onArchive,
+  onUnarchive,
+  onCopy,
   pipelineId,
   accountId,
   onDealsChanged,
@@ -213,6 +298,9 @@ function StageColumn({
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
   onColorChange?: (dealId: string, color: string | null) => void;
+  onArchive?: (dealId: string) => void;
+  onUnarchive?: (dealId: string) => void;
+  onCopy?: (deal: Deal) => void;
   pipelineId?: string;
   accountId?: string;
   onDealsChanged?: () => void;
@@ -326,6 +414,9 @@ function StageColumn({
               stage={stage}
               onEdit={onEditDeal}
               onColorChange={onColorChange}
+              onArchive={onArchive}
+              onUnarchive={onUnarchive}
+              onCopy={onCopy}
             />
           ))
         )}
@@ -388,11 +479,17 @@ function DraggableDealCard({
   stage,
   onEdit,
   onColorChange,
+  onArchive,
+  onUnarchive,
+  onCopy,
 }: {
   deal: Deal;
   stage: PipelineStage;
   onEdit: (deal: Deal) => void;
   onColorChange?: (dealId: string, color: string | null) => void;
+  onArchive?: (dealId: string) => void;
+  onUnarchive?: (dealId: string) => void;
+  onCopy?: (deal: Deal) => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: deal.id,
@@ -405,7 +502,7 @@ function DraggableDealCard({
       {...attributes}
       style={{ opacity: isDragging ? 0.4 : 1, touchAction: "none" }}
     >
-      <DealCard deal={deal} stage={stage} onEdit={onEdit} onColorChange={onColorChange} />
+      <DealCard deal={deal} stage={stage} onEdit={onEdit} onColorChange={onColorChange} onArchive={onArchive} onUnarchive={onUnarchive} onCopy={onCopy} />
     </div>
   );
 }

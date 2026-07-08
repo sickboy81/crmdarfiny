@@ -303,6 +303,7 @@ export interface Pipeline {
   id: string;
   user_id: string;
   name: string;
+  board_background?: string | null;
   created_at: string;
 }
 
@@ -336,6 +337,9 @@ export interface Deal {
   expected_close_date?: string;
   status?: DealStatus;
   color?: string | null;
+  description?: string | null;
+  cover_url?: string | null;
+  archived?: boolean;
   created_at: string;
   updated_at?: string;
   contact?: Contact;
@@ -345,6 +349,21 @@ export interface Deal {
   checklists?: DealChecklist[];
   activity_count?: number;
   attachment_count?: number;
+}
+
+export interface DealTemplate {
+  id: string;
+  account_id: string;
+  user_id: string;
+  name: string;
+  title: string;
+  description?: string | null;
+  value?: number;
+  currency?: string;
+  checklist_items?: string[];
+  label_names?: string[];
+  label_colors?: string[];
+  created_at: string;
 }
 
 export interface DealLabel {

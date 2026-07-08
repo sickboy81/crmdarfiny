@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Deal, PipelineStage } from "@/types";
 import { useTranslations } from "next-intl";
-import { Calendar, Check, X, CheckSquare, MessageSquare, Palette, Paperclip } from "lucide-react";
+import { Calendar, Check, X, CheckSquare, MessageSquare, Palette, Paperclip, MoreHorizontal, Archive, Copy } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { CardColorPicker } from "./card-color-picker";
 
@@ -12,6 +12,9 @@ interface DealCardProps {
   stage: PipelineStage | null;
   onEdit: (deal: Deal) => void;
   onColorChange?: (dealId: string, color: string | null) => void;
+  onArchive?: (dealId: string) => void;
+  onUnarchive?: (dealId: string) => void;
+  onCopy?: (deal: Deal) => void;
   isOverlay?: boolean;
 }
 
@@ -31,12 +34,14 @@ function getInitials(name?: string, fallback?: string) {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: DealCardProps) {
+export function DealCard({ deal, stage, onEdit, onColorChange, onArchive, onUnarchive, onCopy, isOverlay }: DealCardProps) {
   const ts = useTranslations("settings");
   const td = useTranslations("deals");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [cardColor, setCardColor] = useState(deal.color ?? null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const contactName = deal.contact?.name || deal.contact?.phone || "";
   const assigneeName = deal.assignee?.full_name || "";
@@ -69,6 +74,18 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showColorPicker]);
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!showMenu) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
+
   function handleColorChange(color: string | null) {
     setCardColor(color);
     setShowColorPicker(false);
@@ -77,6 +94,16 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
 
   return (
     <div className="relative">
+      {/* Cover image */}
+      {deal.cover_url && (
+        <div className="overflow-hidden rounded-t-lg">
+          <img
+            src={deal.cover_url}
+            alt=""
+            className="h-24 w-full object-cover"
+          />
+        </div>
+      )}
       <div
         role="button"
         tabIndex={0}
@@ -118,6 +145,15 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
             {deal.title}
           </h4>
         </div>
+
+        {/* Description preview */}
+        {deal.description && (
+          <div className="px-2.5 pb-1">
+            <p className="line-clamp-2 text-[11px] text-muted-foreground">
+              {deal.description}
+            </p>
+          </div>
+        )}
 
         {/* Badges row */}
         {hasBadges && (
@@ -173,6 +209,42 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
           </div>
         )}
 
+        {/* Actions (visible on hover) */}
+        {(onArchive || onCopy) && (
+          <div className="flex items-center gap-1 px-2.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onCopy && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onCopy(deal); }}
+                className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted"
+                title="Copiar"
+              >
+                Copiar
+              </button>
+            )}
+            {onArchive && !deal.archived && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onArchive(deal.id); }}
+                className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted"
+                title="Arquivar"
+              >
+                Arquivar
+              </button>
+            )}
+            {onUnarchive && deal.archived && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onUnarchive(deal.id); }}
+                className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted"
+                title="Desarquivar"
+              >
+                Desarquivar
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Footer: color btn + value + members */}
         <div className="flex items-center justify-between border-t border-border/50 px-2.5 py-1.5">
           <div className="flex items-center gap-2">
@@ -188,6 +260,65 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
             >
               <Palette className="h-3.5 w-3.5" />
             </button>
+            {/* Actions menu */}
+            {(onArchive || onUnarchive || onCopy) && (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(!showMenu);
+                  }}
+                  className="rounded p-0.5 text-muted-foreground/50 opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100"
+                  title="Ações"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+                {showMenu && (
+                  <div className="absolute bottom-full left-0 z-50 mb-1 w-40 rounded-lg border border-border bg-popover py-1 shadow-lg">
+                    {deal.archived && onUnarchive && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onUnarchive(deal.id);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-popover-foreground hover:bg-muted"
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                        {td("unarchive")}
+                      </button>
+                    )}
+                    {!deal.archived && onArchive && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onArchive(deal.id);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-popover-foreground hover:bg-muted"
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                        {td("archive")}
+                      </button>
+                    )}
+                    {onCopy && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onCopy(deal);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-popover-foreground hover:bg-muted"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        {td("copy")}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <span className="text-xs font-semibold text-primary">
               {formatCurrency(deal.value, deal.currency)}
             </span>

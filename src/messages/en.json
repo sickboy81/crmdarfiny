@@ -241,7 +241,10 @@
     "stageQualified": "Qualified",
     "stageProposalSent": "Proposal Sent",
     "stageNegotiation": "Negotiation",
-    "stageWon": "Won"
+    "stageWon": "Won",
+    "boardBackground": "Board background",
+    "backgroundSolid": "Solid color",
+    "backgroundGradient": "Gradient"
   },
   "settings": {
     "title": "Settings",
@@ -1471,7 +1474,24 @@
     "reopen": "Reopen",
     "expectedCloseDate": "Expected Close Date",
     "Won": "Won",
-    "Lost": "Lost"
+    "Lost": "Lost",
+    "copy": "Copy deal",
+    "copySuccess": "Deal copied",
+    "copyError": "Failed to copy deal",
+    "archive": "Archive",
+    "archiveSuccess": "Deal archived",
+    "unarchive": "Unarchive",
+    "unarchiveSuccess": "Deal unarchived",
+    "description": "Description",
+    "descriptionPlaceholder": "Add a description...",
+    "coverImage": "Cover image",
+    "coverRemove": "Remove cover",
+    "moveToPipeline": "Move to another pipeline",
+    "moveSuccess": "Deal moved",
+    "moveError": "Failed to move deal",
+    "template": "Template",
+    "fromTemplate": "Use template",
+    "noTemplates": "No templates available"
   },
   "pipelineBoard": {
     "dragDealHere": "Drop a deal here",
@@ -1567,6 +1587,32 @@
   "activityFeed": {
     "title": "Recent activity",
     "empty": "No activity yet — conversations, deal changes, and automations will show up here."
+  },
+  "boardFilters": {
+    "search": "Search deals...",
+    "filterByLabel": "Filter by label",
+    "filterByMember": "Filter by member",
+    "clearFilters": "Clear filters",
+    "noResults": "No deals found",
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived"
+  },
+  "dealTemplates": {
+    "title": "Deal Templates",
+    "createTemplate": "Create template",
+    "editTemplate": "Edit template",
+    "deleteTemplate": "Delete template",
+    "templateName": "Template name",
+    "templateNamePlaceholder": "e.g. Standard Deal",
+    "templateTitle": "Deal title",
+    "templateDescription": "Description",
+    "templateValue": "Default value",
+    "templateChecklist": "Checklist items",
+    "addChecklistItem": "Add item",
+    "templateLabels": "Labels",
+    "addLabel": "Add label",
+    "saveTemplate": "Save template",
+    "deleteConfirm": "Delete this template?"
   },
   "empty": {
     "noData": "No data available",

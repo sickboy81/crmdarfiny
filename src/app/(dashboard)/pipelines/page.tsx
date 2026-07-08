@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import type { Pipeline, PipelineStage, Deal } from "@/types";
@@ -70,6 +70,12 @@ export default function PipelinesPage() {
   const [dealFormOpen, setDealFormOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterLabel, setFilterLabel] = useState<string>("");
+  const [filterMember, setFilterMember] = useState<string>("");
+  const [showArchived, setShowArchived] = useState(false);
 
   // Guard against double-seeding (React StrictMode double-effect in dev).
   const seedAttempted = useRef(false);
@@ -297,6 +303,115 @@ export default function PipelinesPage() {
     );
   }, []);
 
+  // Collect all unique labels and members for filter dropdowns
+  const allLabels = useMemo(() => {
+    const map = new Map<string, { name: string; color: string }>();
+    for (const deal of deals) {
+      for (const label of deal.labels ?? []) {
+        map.set(label.id, { name: label.name, color: label.color });
+      }
+    }
+    return Array.from(map.entries());
+  }, [deals]);
+
+  const allMembers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const deal of deals) {
+      if (deal.assigned_to && deal.assignee?.full_name) {
+        map.set(deal.assigned_to, deal.assignee.full_name);
+      }
+    }
+    return Array.from(map.entries());
+  }, [deals]);
+
+  // Apply filters
+  const filteredDeals = useMemo(() => {
+    let result = deals.filter((d) => (d.archived ?? false) === showArchived);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.title.toLowerCase().includes(q) ||
+          d.contact?.name?.toLowerCase().includes(q) ||
+          d.notes?.toLowerCase().includes(q),
+      );
+    }
+    if (filterLabel) {
+      result = result.filter((d) =>
+        (d.labels ?? []).some((l) => l.id === filterLabel),
+      );
+    }
+    if (filterMember) {
+      result = result.filter((d) => d.assigned_to === filterMember);
+    }
+    return result;
+  }, [deals, searchQuery, filterLabel, filterMember, showArchived]);
+
+  const handleArchive = useCallback(async (dealId: string) => {
+    const { error } = await supabase
+      .from("deals")
+      .update({ archived: true })
+      .eq("id", dealId);
+    if (error) {
+      toast.error(t("failedToMove"));
+      return;
+    }
+    setDeals((prev) => prev.filter((d) => d.id !== dealId));
+    toast.success(t("archiveSuccess"));
+  }, [supabase, t]);
+
+  const handleUnarchive = useCallback(async (dealId: string) => {
+    const { error } = await supabase
+      .from("deals")
+      .update({ archived: false })
+      .eq("id", dealId);
+    if (error) {
+      toast.error(t("failedToMove"));
+      return;
+    }
+    setDeals((prev) => prev.filter((d) => d.id !== dealId));
+    toast.success(t("unarchiveSuccess"));
+  }, [supabase, t]);
+
+  const handleCopy = useCallback(async (deal: Deal) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user || !accountId) return;
+    const { error } = await supabase.from("deals").insert({
+      title: `${deal.title} (cópia)`,
+      pipeline_id: deal.pipeline_id,
+      stage_id: deal.stage_id,
+      user_id: user.id,
+      account_id: accountId,
+      contact_id: deal.contact_id,
+      value: deal.value,
+      currency: deal.currency,
+      notes: deal.notes,
+      status: "open",
+    });
+    if (error) {
+      toast.error(t("copyError"));
+      return;
+    }
+    toast.success(t("copySuccess"));
+    refreshDeals();
+  }, [supabase, accountId, refreshDeals, t]);
+
+  const handleBoardBackground = useCallback(async (bg: string | null) => {
+    if (!selectedPipelineId) return;
+    const { error } = await supabase
+      .from("pipelines")
+      .update({ board_background: bg })
+      .eq("id", selectedPipelineId);
+    if (!error) {
+      setPipelines((prev) =>
+        prev.map((p) =>
+          p.id === selectedPipelineId ? { ...p, board_background: bg } : p,
+        ),
+      );
+    }
+  }, [supabase, selectedPipelineId]);
+
   async function handleCreatePipeline() {
     const name = newPipelineName.trim();
     if (!name) return;
@@ -465,13 +580,28 @@ export default function PipelinesPage() {
           <PipelineAnalytics stages={stages} deals={deals} />
           <PipelineBoard
             stages={stages}
-            deals={deals}
+            deals={filteredDeals}
             onDealMoved={handleDealMoved}
             onAddDeal={handleAddDeal}
             onEditDeal={handleEditDeal}
             onColorChange={handleColorChange}
+            onArchive={handleArchive}
+            onUnarchive={handleUnarchive}
+            onCopy={handleCopy}
             pipelineId={selectedPipelineId}
             onDealsChanged={refreshDeals}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterLabel={filterLabel}
+            onFilterLabelChange={setFilterLabel}
+            filterMember={filterMember}
+            onFilterMemberChange={setFilterMember}
+            showArchived={showArchived}
+            onShowArchivedChange={setShowArchived}
+            allLabels={allLabels}
+            allMembers={allMembers}
+            boardBackground={selectedPipeline?.board_background ?? null}
+            onBoardBackgroundChange={handleBoardBackground}
           />
         </>
       )}
