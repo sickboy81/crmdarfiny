@@ -836,58 +836,10 @@ export function LinkBioEditor() {
                       {config.bio}
                     </p>
                   )}
-                  <div className="w-full space-y-3 mt-6">
-                    {config.links
-                      .filter((l) => l.active)
-                      .map((link) => {
-                        let bg = config.theme.cardStyle === 'glass' ? 'transparent' : config.theme.buttonColor
-                        let borderStyle = 'none'
-                        if (config.theme.buttonStyle === 'outline') {
-                          bg = 'transparent'
-                          borderStyle = `2px solid ${config.theme.buttonColor}`
-                        } else if (config.theme.buttonStyle === 'soft') {
-                          bg = `${config.theme.buttonColor}25` // ~15% opacity hex
-                        }
-
-                        const borderRadius =
-                          config.theme.cardStyle === 'flat' ? '0' : '16px'
-                        const extraStyle: React.CSSProperties =
-                          config.theme.cardStyle === 'glass'
-                            ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }
-                            : config.theme.cardStyle === 'shadow'
-                              ? { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }
-                              : {}
-
-                        const animationClass = 
-                          config.theme.buttonAnimation === 'scale' ? 'hover:scale-[1.04] active:scale-[0.98]' :
-                          config.theme.buttonAnimation === 'pulse' ? 'hover:animate-pulse' :
-                          config.theme.buttonAnimation === 'wiggle' ? 'hover:animate-bounce' : ''
-
-                        return (
-                          <a
-                            key={link.id}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`block text-center py-3 px-4 text-sm font-bold transition-all duration-200 ${animationClass}`}
-                            style={{
-                              background: bg,
-                              border: borderStyle,
-                              color: config.theme.buttonTextColor,
-                              borderRadius,
-                              textDecoration: 'none',
-                              ...extraStyle
-                            }}
-                          >
-                            {link.title}
-                          </a>
-                        )
-                      })}
-                  </div>
 
                   {/* Social Media Preview Icons */}
                   {Object.values(config.socials).some(Boolean) && (
-                    <div className="flex gap-4 mt-8 justify-center items-center">
+                    <div className="flex gap-4 mt-4 justify-center items-center">
                       {config.socials.instagram && (
                         <a
                           href={getSocialUrl('instagram', config.socials.instagram)}
@@ -946,6 +898,55 @@ export function LinkBioEditor() {
                       )}
                     </div>
                   )}
+
+                  <div className="w-full space-y-3 mt-6">
+                    {config.links
+                      .filter((l) => l.active)
+                      .map((link) => {
+                        let bg = config.theme.cardStyle === 'glass' ? 'transparent' : config.theme.buttonColor
+                        let borderStyle = 'none'
+                        if (config.theme.buttonStyle === 'outline') {
+                          bg = 'transparent'
+                          borderStyle = `2px solid ${config.theme.buttonColor}`
+                        } else if (config.theme.buttonStyle === 'soft') {
+                          bg = `${config.theme.buttonColor}25` // ~15% opacity hex
+                        }
+
+                        const borderRadius =
+                          config.theme.cardStyle === 'flat' ? '0' : '16px'
+                        const extraStyle: React.CSSProperties =
+                          config.theme.cardStyle === 'glass'
+                            ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }
+                            : config.theme.cardStyle === 'shadow'
+                              ? { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }
+                              : {}
+
+                        const animationClass = 
+                          config.theme.buttonAnimation === 'scale' ? 'hover:scale-[1.04] active:scale-[0.98]' :
+                          config.theme.buttonAnimation === 'pulse' ? 'hover:animate-pulse' :
+                          config.theme.buttonAnimation === 'wiggle' ? 'hover:animate-bounce' : ''
+
+                        return (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`block text-center py-3 px-4 text-sm font-bold transition-all duration-200 ${animationClass}`}
+                            style={{
+                              background: bg,
+                              border: borderStyle,
+                              color: config.theme.buttonTextColor,
+                              borderRadius,
+                              textDecoration: 'none',
+                              ...extraStyle
+                            }}
+                          >
+                            {link.title}
+                          </a>
+                        )
+                      })}
+                  </div>
                 </div>
               )
             })()}

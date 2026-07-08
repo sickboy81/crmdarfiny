@@ -145,7 +145,7 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
 
   const socialsHtml =
     socialItems.length > 0
-      ? `<div style="display:flex;gap:24px;margin-top:48px;">${socialItems.join('')}</div>`
+      ? `<div style="display:flex;gap:24px;margin-top:24px;margin-bottom:8px;">${socialItems.join('')}</div>`
       : ''
 
   const bgStyle = theme.backgroundType === 'gradient'
@@ -217,7 +217,7 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            margin-top: 48px;
+            margin-top: 32px;
         }
         .link-btn {
             display:block;
@@ -273,14 +273,14 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
         <img class="avatar" src="${avatar}" alt="${name}">
         <h1 class="name">${name}</h1>
         <p class="bio-text">${bio}</p>
+        ${socialsHtml}
         <div class="links">
             ${linksHtml}
         </div>
         <div class="footer">
-            ${socialsHtml}
             <div class="credits">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                <span>WACRM</span>
+                <span>EGEOLABS</span>
             </div>
         </div>
     </div>
