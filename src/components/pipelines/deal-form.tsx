@@ -205,7 +205,7 @@ export function DealForm({
   }, [open, contactId, supabase]);
 
   async function handleSave() {
-    if (!title.trim() || !contactId || !stageId) {
+    if (!title.trim() || !stageId) {
       toast.error(t("titleRequired"));
       return;
     }

@@ -53,7 +53,7 @@ export function CardColorPicker({
           key={c.value ?? "default"}
           onClick={() => handleColorChange(c.value)}
           disabled={saving}
-          className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-110 disabled:opacity-50 ${
+          className={`relative flex h-5 w-5 items-center justify-center rounded-full transition-transform hover:scale-125 disabled:opacity-50 ${
             currentColor === c.value
               ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
               : ""
