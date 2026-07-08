@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Deal, PipelineStage } from "@/types";
 import { useTranslations } from "next-intl";
-import { Calendar, Check, X, CheckSquare, MessageSquare, Palette } from "lucide-react";
+import { Calendar, Check, X, CheckSquare, MessageSquare, Palette, Paperclip } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { CardColorPicker } from "./card-color-picker";
 
@@ -44,6 +44,7 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
   const labels = deal.labels ?? [];
   const checklists = deal.checklists ?? [];
   const activityCount = deal.activity_count ?? 0;
+  const attachmentCount = deal.attachment_count ?? 0;
 
   let totalItems = 0;
   let checkedItems = 0;
@@ -54,7 +55,7 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
   }
 
   const dueInfo = deal.expected_close_date ? formatShortDate(deal.expected_close_date) : null;
-  const hasBadges = dueInfo || totalItems > 0 || activityCount > 0 || deal.status === "won" || deal.status === "lost";
+  const hasBadges = dueInfo || totalItems > 0 || activityCount > 0 || attachmentCount > 0 || deal.status === "won" || deal.status === "lost";
 
   // Close color picker on outside click
   useEffect(() => {
@@ -154,6 +155,12 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
               <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground">
                 <MessageSquare className="h-3 w-3" />
                 {activityCount}
+              </span>
+            )}
+            {attachmentCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                <Paperclip className="h-3 w-3" />
+                {attachmentCount}
               </span>
             )}
           </div>

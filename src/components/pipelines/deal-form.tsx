@@ -36,14 +36,16 @@ import {
   Loader2,
   ListTodo,
   Activity,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DealLabels } from "./deal-labels";
 import { DealChecklists } from "./deal-checklist";
 import { DealActivityTimeline } from "./deal-activity";
 import { CardColorPicker } from "./card-color-picker";
+import { DealAttachments } from "./deal-attachments";
 
-type Tab = "details" | "checklist" | "activity";
+type Tab = "details" | "checklist" | "activity" | "attachments";
 
 interface DealFormProps {
   open: boolean;
@@ -95,11 +97,12 @@ export function DealForm({
   const [labels, setLabels] = useState<DealLabel[]>([]);
   const [checklists, setChecklists] = useState<DealChecklist[]>([]);
   const [activities, setActivities] = useState<DealActivity[]>([]);
+  const [attachments, setAttachments] = useState<{ id: string; deal_id: string; file_name: string; file_url: string; file_type: string | null; file_size: number | null; created_at: string }[]>([]);
 
   const loadDealDetails = useCallback(async () => {
     if (!deal) return;
     const db = createClient();
-    const [labelsRes, checklistsRes, activitiesRes] = await Promise.all([
+    const [labelsRes, checklistsRes, activitiesRes, attachmentsRes] = await Promise.all([
       db
         .from("deal_labels")
         .select("*")
@@ -116,10 +119,16 @@ export function DealForm({
         .eq("deal_id", deal.id)
         .order("created_at", { ascending: false })
         .limit(50),
+      db
+        .from("deal_attachments")
+        .select("*")
+        .eq("deal_id", deal.id)
+        .order("created_at", { ascending: false }),
     ]);
     setLabels((labelsRes.data ?? []) as DealLabel[]);
     setChecklists((checklistsRes.data ?? []) as DealChecklist[]);
     setActivities((activitiesRes.data ?? []) as DealActivity[]);
+    setAttachments((attachmentsRes.data ?? []) as typeof attachments);
   }, [deal]);
 
   // Reset the form fields every time the sheet opens or its input
@@ -301,6 +310,7 @@ export function DealForm({
     { key: "details", label: t("tabDetails"), icon: <DollarSign className="h-3.5 w-3.5" /> },
     { key: "checklist", label: t("tabChecklist"), icon: <ListTodo className="h-3.5 w-3.5" /> },
     { key: "activity", label: t("tabActivity"), icon: <Activity className="h-3.5 w-3.5" /> },
+    { key: "attachments", label: t("tabAttachments"), icon: <Paperclip className="h-3.5 w-3.5" /> },
   ];
 
   return (
@@ -542,6 +552,14 @@ export function DealForm({
                 dealId={deal.id}
                 activities={activities}
                 onRefresh={loadDealDetails}
+              />
+            )}
+
+            {activeTab === "attachments" && deal && (
+              <DealAttachments
+                dealId={deal.id}
+                attachments={attachments}
+                onAttachmentsChange={loadDealDetails}
               />
             )}
           </div>

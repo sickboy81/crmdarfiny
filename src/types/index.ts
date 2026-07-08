@@ -344,6 +344,7 @@ export interface Deal {
   labels?: DealLabel[];
   checklists?: DealChecklist[];
   activity_count?: number;
+  attachment_count?: number;
 }
 
 export interface DealLabel {

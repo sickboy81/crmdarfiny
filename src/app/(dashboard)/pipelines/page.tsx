@@ -110,11 +110,12 @@ export default function PipelinesPage() {
 
       const dealIds = dealsList.map((d) => d.id);
 
-      // Batch-fetch labels, checklists+items, and activity counts
-      const [labelsRes, checklistsRes, activitiesRes] = await Promise.all([
+      // Batch-fetch labels, checklists+items, activity counts, and attachment counts
+      const [labelsRes, checklistsRes, activitiesRes, attachmentsRes] = await Promise.all([
         supabase.from("deal_labels").select("*").in("deal_id", dealIds).order("position"),
         supabase.from("deal_checklists").select("*, items:deal_checklist_items(*)").in("deal_id", dealIds).order("position"),
         supabase.from("deal_activities").select("deal_id").in("deal_id", dealIds),
+        supabase.from("deal_attachments").select("deal_id").in("deal_id", dealIds),
       ]);
 
       const labelsMap = new Map<string, typeof dealsList[0]["labels"]>();
@@ -136,11 +137,17 @@ export default function PipelinesPage() {
         activityCountMap.set(a.deal_id, (activityCountMap.get(a.deal_id) ?? 0) + 1);
       }
 
+      const attachmentCountMap = new Map<string, number>();
+      for (const a of attachmentsRes.data ?? []) {
+        attachmentCountMap.set(a.deal_id, (attachmentCountMap.get(a.deal_id) ?? 0) + 1);
+      }
+
       return dealsList.map((d) => ({
         ...d,
         labels: labelsMap.get(d.id) ?? [],
         checklists: checklistsMap.get(d.id) ?? [],
         activity_count: activityCountMap.get(d.id) ?? 0,
+        attachment_count: attachmentCountMap.get(d.id) ?? 0,
       }));
     },
     [supabase],

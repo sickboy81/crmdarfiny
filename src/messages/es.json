@@ -1462,6 +1462,7 @@
     "tabDetails": "Detalles",
     "tabChecklist": "Lista de verificación",
     "tabActivity": "Actividad",
+    "tabAttachments": "Archivos adjuntos",
     "color": "Color de tarjeta",
     "markWon": "Ganado",
     "markLost": "Perdido",
@@ -1506,6 +1507,15 @@
     "user": "Usuario",
     "commentPlaceholder": "Agregar comentario...",
     "commentError": "Error al enviar comentario"
+  },
+  "dealAttachments": {
+    "dropzone": "Arrastra archivos aqui o haz clic para seleccionar",
+    "fileLimit": "Imagenes, PDF, documentos (max 20 MB)",
+    "uploading": "Enviando...",
+    "uploadError": "Error al enviar archivo",
+    "deleteError": "Error al eliminar archivo",
+    "download": "Descargar",
+    "delete": "Eliminar"
   },
   "pipelineAnalytics": {
     "totalDeals": "Total de Negocios",
