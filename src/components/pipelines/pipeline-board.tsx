@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -17,9 +17,11 @@ import {
 import type { Deal, PipelineStage } from "@/types";
 import { DealCard } from "./deal-card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/currency";
+import { toast } from "sonner";
 
 interface PipelineBoardProps {
   stages: PipelineStage[];
@@ -27,6 +29,8 @@ interface PipelineBoardProps {
   onDealMoved: (dealId: string, newStageId: string) => void;
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
+  pipelineId?: string;
+  onDealsChanged?: () => void;
 }
 
 export function PipelineBoard({
@@ -35,9 +39,12 @@ export function PipelineBoard({
   onDealMoved,
   onAddDeal,
   onEditDeal,
+  pipelineId,
+  onDealsChanged,
 }: PipelineBoardProps) {
-  const { defaultCurrency } = useAuth();
+  const { defaultCurrency, accountId } = useAuth();
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
+  const [collapsedStages, setCollapsedStages] = useState<Set<string>>(new Set());
 
   const sortedStages = useMemo(
     () => [...stages].sort((a, b) => a.position - b.position),
@@ -55,10 +62,7 @@ export function PipelineBoard({
   }, [sortedStages, deals]);
 
   const sensors = useSensors(
-    // 5px activation distance avoids clicks being interpreted as drags.
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    // Keyboard drag support: focus a card, Space to pick up, arrows to move,
-    // Space to drop, Escape to cancel.
     useSensor(KeyboardSensor),
   );
 
@@ -88,6 +92,15 @@ export function PipelineBoard({
     setActiveDealId(null);
   }
 
+  const toggleCollapse = useCallback((stageId: string) => {
+    setCollapsedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(stageId)) next.delete(stageId);
+      else next.add(stageId);
+      return next;
+    });
+  }, []);
+
   return (
     <DndContext
       sensors={sensors}
@@ -96,19 +109,14 @@ export function PipelineBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      {/* snap-x + snap-mandatory on mobile so swipes land the next
-          stage cleanly at the viewport edge instead of mid-column.
-          Disabled on lg+ where snapping would interfere with the
-          natural layout. The board can still overflow horizontally on
-          lg+ once a pipeline has many stages (columns keep a 260px
-          min-width), so a thin scrollbar stays visible on desktop. */}
-      <div className="pipeline-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 lg:snap-none">
+      <div className="pipeline-board pipeline-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-xl p-4 pb-4 lg:snap-none">
         {sortedStages.map((stage) => {
           const stageDeals = dealsByStage.get(stage.id) ?? [];
           const totalValue = stageDeals.reduce(
             (s, d) => s + Number(d.value || 0),
             0,
           );
+          const collapsed = collapsedStages.has(stage.id);
           return (
             <StageColumn
               key={stage.id}
@@ -116,8 +124,13 @@ export function PipelineBoard({
               deals={stageDeals}
               totalValue={totalValue}
               currency={defaultCurrency}
+              collapsed={collapsed}
+              onToggleCollapse={() => toggleCollapse(stage.id)}
               onAddDeal={onAddDeal}
               onEditDeal={onEditDeal}
+              pipelineId={pipelineId}
+              accountId={accountId ?? undefined}
+              onDealsChanged={onDealsChanged}
             />
           );
         })}
@@ -144,14 +157,12 @@ export function PipelineBoard({
       </DragOverlay>
 
       <style jsx>{`
+        .pipeline-board {
+          background: hsl(222, 47%, 8%);
+        }
         .pipeline-scroll {
           scroll-behavior: smooth;
         }
-        /* On touch devices the peek/snap layout already signals there's
-           more to swipe, so the scrollbar is hidden for a clean look.
-           On desktop (mouse) the board can overflow with many stages
-           and there is no peek hint, so keep a thin, themed scrollbar
-           visible to make the overflow discoverable and usable. */
         @media (hover: none), (pointer: coarse) {
           .pipeline-scroll::-webkit-scrollbar {
             height: 0;
@@ -164,7 +175,7 @@ export function PipelineBoard({
         @media (hover: hover) and (pointer: fine) {
           .pipeline-scroll {
             scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            scrollbar-color: hsl(222, 30%, 20%) transparent;
           }
           .pipeline-scroll::-webkit-scrollbar {
             height: 8px;
@@ -173,11 +184,11 @@ export function PipelineBoard({
             background: transparent;
           }
           .pipeline-scroll::-webkit-scrollbar-thumb {
-            background-color: var(--border);
+            background-color: hsl(222, 30%, 20%);
             border-radius: 9999px;
           }
           .pipeline-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: var(--muted-foreground);
+            background-color: hsl(222, 20%, 30%);
           }
         }
       `}</style>
@@ -190,40 +201,112 @@ function StageColumn({
   deals,
   totalValue,
   currency,
+  collapsed,
+  onToggleCollapse,
   onAddDeal,
   onEditDeal,
+  pipelineId,
+  accountId,
+  onDealsChanged,
 }: {
   stage: PipelineStage;
   deals: Deal[];
   totalValue: number;
   currency: string;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
-}) {
+  pipelineId?: string;
+  accountId?: string;
+    onDealsChanged?: () => void;
+  }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickAddTitle, setQuickAddTitle] = useState("");
+  const [quickAdding, setQuickAdding] = useState(false);
+
+  const handleQuickAdd = useCallback(async () => {
+    if (!quickAddTitle.trim() || !pipelineId || !accountId) return;
+    setQuickAdding(true);
+    try {
+      const db = createClient();
+      const { data: { session } } = await db.auth.getSession();
+      const user = session?.user;
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await db.from("deals").insert({
+        title: quickAddTitle.trim(),
+        pipeline_id: pipelineId,
+        stage_id: stage.id,
+        user_id: user.id,
+        account_id: accountId,
+        status: "open",
+        value: 0,
+      });
+      if (error) throw error;
+      setQuickAddTitle("");
+      setShowQuickAdd(false);
+      onDealsChanged?.();
+      toast.success("Deal criado");
+    } catch {
+      toast.error("Erro ao criar deal");
+    } finally {
+      setQuickAdding(false);
+    }
+  }, [quickAddTitle, pipelineId, accountId, stage.id, onDealsChanged]);
+
+  // Collapsed view — vertical bar
+  if (collapsed) {
+    return (
+      <button
+        onClick={onToggleCollapse}
+        className="flex w-12 shrink-0 snap-start flex-col items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] py-4 transition-colors hover:bg-white/[0.06] lg:w-12"
+      >
+        <div
+          className="h-3 w-3 rounded-full"
+          style={{ backgroundColor: stage.color }}
+        />
+        <span
+          className="writing-mode-vertical text-[11px] font-medium text-white/50"
+          style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+        >
+          {stage.name}
+        </span>
+        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/60">
+          {deals.length}
+        </span>
+        <ChevronRight className="h-3 w-3 rotate-180 text-white/30" />
+      </button>
+    );
+  }
 
   return (
-    // On mobile each column is `w-[85vw]` (with a reasonable min/max)
-    // so the next column's edge peeks in — a "there's more here" hint.
-    // snap-start lands each column cleanly when swiping. On lg+ we
-    // restore the flex-1 share-the-row behavior. The droppable ref is
-    // on the inner messages region below — intentionally NOT here, so
-    // a drag over the column header doesn't highlight the whole column.
-    <div className="flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-border bg-card/60 p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none">
-      {/* 3px colored top border — sits above the column's padding */}
+    <div className="flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-white/5 bg-white/[0.03] p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none">
+      {/* 3px colored top bar */}
       <div
         className="-mx-4 -mt-4 h-[3px] rounded-t-xl"
         style={{ backgroundColor: stage.color }}
       />
+
       <div className="flex items-center justify-between pt-3">
-        <h3 className="truncate text-sm font-semibold text-foreground">
+        <h3 className="truncate text-sm font-semibold text-white/90">
           {stage.name}
         </h3>
-        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-          {deals.length}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/60">
+            {deals.length}
+          </span>
+          <button
+            onClick={onToggleCollapse}
+            className="rounded p-0.5 text-white/30 hover:bg-white/10 hover:text-white/60"
+            title="Recolher coluna"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="mt-0.5 text-xs text-white/40">
         {formatCurrency(totalValue, currency)}
       </p>
 
@@ -231,13 +314,13 @@ function StageColumn({
         ref={setNodeRef}
         className={`mt-3 flex flex-1 flex-col gap-2 rounded-lg transition-all ${
           isOver
-            ? "bg-primary/5 outline outline-2 outline-dashed outline-primary outline-offset-2"
+            ? "bg-primary/10 outline outline-2 outline-dashed outline-primary outline-offset-2"
             : ""
         }`}
       >
-        {deals.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-border py-10 text-xs text-muted-foreground">
-            Drop a deal here
+        {deals.length === 0 && !showQuickAdd ? (
+          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-white/10 py-10 text-xs text-white/30">
+            Arraste um deal aqui
           </div>
         ) : (
           deals.map((deal) => (
@@ -251,15 +334,39 @@ function StageColumn({
         )}
       </div>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onAddDeal(stage.id)}
-        className="mt-3 w-full justify-start border border-dashed border-border bg-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
-      >
-        <Plus className="mr-1 h-3 w-3" />
-        Add Deal
-      </Button>
+      {/* Quick Add */}
+      {showQuickAdd ? (
+        <div className="mt-3 flex items-center gap-1.5">
+          <input
+            value={quickAddTitle}
+            onChange={(e) => setQuickAddTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleQuickAdd();
+              if (e.key === "Escape") { setShowQuickAdd(false); setQuickAddTitle(""); }
+            }}
+            placeholder="Título do deal..."
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-primary focus:outline-none"
+            autoFocus
+          />
+          <button
+            onClick={handleQuickAdd}
+            disabled={!quickAddTitle.trim() || quickAdding}
+            className="rounded-lg bg-primary px-3 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {quickAdding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowQuickAdd(true)}
+          className="mt-3 w-full justify-start border border-dashed border-white/10 bg-transparent text-white/40 hover:border-white/20 hover:bg-white/5 hover:text-white/70"
+        >
+          <Plus className="mr-1 h-3 w-3" />
+          Adicionar deal
+        </Button>
+      )}
     </div>
   );
 }

@@ -340,6 +340,9 @@ export interface Deal {
   contact?: Contact;
   stage?: PipelineStage;
   assignee?: Profile;
+  labels?: DealLabel[];
+  checklists?: DealChecklist[];
+  activity_count?: number;
 }
 
 export interface DealLabel {
