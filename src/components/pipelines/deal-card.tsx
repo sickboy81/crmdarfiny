@@ -77,12 +77,19 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
 
   return (
     <div className="relative">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={(e) => {
           if (isOverlay || showColorPicker) return;
           e.stopPropagation();
           onEdit(deal);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            if (!isOverlay && !showColorPicker) onEdit(deal);
+          }
         }}
         className={`deal-card group w-full cursor-pointer rounded-lg border bg-card text-left shadow-sm transition-all ${
           isOverlay
@@ -204,7 +211,7 @@ export function DealCard({ deal, stage, onEdit, onColorChange, isOverlay }: Deal
             )}
           </div>
         </div>
-      </button>
+      </div>
 
       {/* Color picker popover */}
       {showColorPicker && (
