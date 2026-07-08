@@ -15,6 +15,10 @@ import {
   Users,
   MessageCircle,
   Briefcase,
+  Instagram,
+  Facebook,
+  Twitter,
+  Linkedin,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +31,26 @@ import type { LinkBioConfig, BioLink } from '@/lib/link-bio/types'
 import { DEFAULT_BIO_CONFIG } from '@/lib/link-bio/types'
 
 type Tab = 'content' | 'appearance' | 'share'
+
+export function getSocialUrl(platform: string, usernameOrUrl: string) {
+  if (!usernameOrUrl) return ''
+  const trimmed = usernameOrUrl.trim()
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed
+  }
+  switch (platform) {
+    case 'instagram':
+      return `https://instagram.com/${trimmed}`
+    case 'facebook':
+      return `https://facebook.com/${trimmed}`
+    case 'twitter':
+      return `https://twitter.com/${trimmed}`
+    case 'linkedin':
+      return `https://linkedin.com/in/${trimmed}`
+    default:
+      return trimmed
+  }
+}
 
 export function LinkBioEditor() {
   const { user, accountId } = useAuth()
@@ -507,20 +531,25 @@ export function LinkBioEditor() {
       </div>
 
       {/* Live Preview */}
-      <div className="flex-1 hidden lg:block">
-        <div className="sticky top-4">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+      <div className="flex-1 hidden lg:flex justify-center items-start">
+        <div className="sticky top-4 flex flex-col items-center">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
             Live Preview
           </h3>
-          <div
-            className="rounded-xl border overflow-hidden shadow-2xl"
-            style={{ background: config.theme.backgroundColor }}
-          >
-            <div className="max-w-[320px] mx-auto p-6 flex flex-col items-center">
+          {/* Smartphone Bezel */}
+          <div className="relative mx-auto w-[320px] h-[640px] rounded-[40px] border-[12px] border-zinc-950 dark:border-zinc-800 shadow-2xl overflow-hidden flex flex-col bg-black">
+            {/* Notch */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-zinc-955 dark:bg-zinc-850 rounded-b-2xl z-20" />
+            
+            {/* Screen Content */}
+            <div
+              className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center w-full select-none [&::-webkit-scrollbar]:w-0"
+              style={{ background: config.theme.backgroundColor, fontFamily: config.theme.fontFamily }}
+            >
               <img
                 src={config.avatarUrl}
                 alt=""
-                className="w-20 h-20 rounded-full border-2 border-white/20 object-cover mb-4"
+                className="w-20 h-20 rounded-full border-2 border-white/20 object-cover mb-4 mt-4"
               />
               <h2
                 className="text-lg font-bold text-center"
@@ -553,21 +582,75 @@ export function LinkBioEditor() {
                           ? { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }
                           : {}
                     return (
-                      <div
+                      <a
                         key={link.id}
-                        className="text-center py-3 px-4 text-sm font-bold"
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-center py-3 px-4 text-sm font-bold transition-transform hover:scale-[1.02]"
                         style={{
                           background: bg,
                           color: config.theme.buttonTextColor,
                           borderRadius,
+                          textDecoration: 'none',
                           ...extraStyle
                         }}
                       >
                         {link.title}
-                      </div>
+                      </a>
                     )
                   })}
               </div>
+
+              {/* Social Media Preview Icons */}
+              {Object.values(config.socials).some(Boolean) && (
+                <div className="flex gap-4 mt-8 justify-center items-center">
+                  {config.socials.instagram && (
+                    <a
+                      href={getSocialUrl('instagram', config.socials.instagram)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: config.theme.textColor }}
+                      className="opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      <Instagram size={20} />
+                    </a>
+                  )}
+                  {config.socials.linkedin && (
+                    <a
+                      href={getSocialUrl('linkedin', config.socials.linkedin)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: config.theme.textColor }}
+                      className="opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      <Linkedin size={20} />
+                    </a>
+                  )}
+                  {config.socials.facebook && (
+                    <a
+                      href={getSocialUrl('facebook', config.socials.facebook)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: config.theme.textColor }}
+                      className="opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      <Facebook size={20} />
+                    </a>
+                  )}
+                  {config.socials.twitter && (
+                    <a
+                      href={getSocialUrl('twitter', config.socials.twitter)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: config.theme.textColor }}
+                      className="opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      <Twitter size={20} />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
