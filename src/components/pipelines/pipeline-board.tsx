@@ -30,6 +30,7 @@ interface PipelineBoardProps {
   onDealMoved: (dealId: string, newStageId: string) => void;
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
+  onColorChange?: (dealId: string, color: string | null) => void;
   pipelineId?: string;
   onDealsChanged?: () => void;
 }
@@ -40,6 +41,7 @@ export function PipelineBoard({
   onDealMoved,
   onAddDeal,
   onEditDeal,
+  onColorChange,
   pipelineId,
   onDealsChanged,
 }: PipelineBoardProps) {
@@ -130,6 +132,7 @@ export function PipelineBoard({
               onToggleCollapse={() => toggleCollapse(stage.id)}
               onAddDeal={onAddDeal}
               onEditDeal={onEditDeal}
+              onColorChange={onColorChange}
               pipelineId={pipelineId}
               accountId={accountId ?? undefined}
               onDealsChanged={onDealsChanged}
@@ -196,6 +199,7 @@ function StageColumn({
   onToggleCollapse,
   onAddDeal,
   onEditDeal,
+  onColorChange,
   pipelineId,
   accountId,
   onDealsChanged,
@@ -208,6 +212,7 @@ function StageColumn({
   onToggleCollapse: () => void;
   onAddDeal: (stageId: string) => void;
   onEditDeal: (deal: Deal) => void;
+  onColorChange?: (dealId: string, color: string | null) => void;
   pipelineId?: string;
   accountId?: string;
   onDealsChanged?: () => void;
@@ -320,6 +325,7 @@ function StageColumn({
               deal={deal}
               stage={stage}
               onEdit={onEditDeal}
+              onColorChange={onColorChange}
             />
           ))
         )}
@@ -381,10 +387,12 @@ function DraggableDealCard({
   deal,
   stage,
   onEdit,
+  onColorChange,
 }: {
   deal: Deal;
   stage: PipelineStage;
   onEdit: (deal: Deal) => void;
+  onColorChange?: (dealId: string, color: string | null) => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: deal.id,
@@ -397,7 +405,7 @@ function DraggableDealCard({
       {...attributes}
       style={{ opacity: isDragging ? 0.4 : 1, touchAction: "none" }}
     >
-      <DealCard deal={deal} stage={stage} onEdit={onEdit} />
+      <DealCard deal={deal} stage={stage} onEdit={onEdit} onColorChange={onColorChange} />
     </div>
   );
 }

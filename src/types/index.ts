@@ -335,6 +335,7 @@ export interface Deal {
   notes?: string;
   expected_close_date?: string;
   status?: DealStatus;
+  color?: string | null;
   created_at: string;
   updated_at?: string;
   contact?: Contact;

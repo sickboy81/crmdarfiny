@@ -284,6 +284,12 @@ export default function PipelinesPage() {
     setDealFormOpen(true);
   }, []);
 
+  const handleColorChange = useCallback((dealId: string, color: string | null) => {
+    setDeals((prev) =>
+      prev.map((d) => (d.id === dealId ? { ...d, color } : d))
+    );
+  }, []);
+
   async function handleCreatePipeline() {
     const name = newPipelineName.trim();
     if (!name) return;
@@ -456,6 +462,7 @@ export default function PipelinesPage() {
             onDealMoved={handleDealMoved}
             onAddDeal={handleAddDeal}
             onEditDeal={handleEditDeal}
+            onColorChange={handleColorChange}
             pipelineId={selectedPipelineId}
             onDealsChanged={refreshDeals}
           />

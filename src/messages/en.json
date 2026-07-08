@@ -1464,6 +1464,7 @@
     "tabDetails": "Details",
     "tabChecklist": "Checklist",
     "tabActivity": "Activity",
+    "color": "Card color",
     "markWon": "Won",
     "markLost": "Lost",
     "reopen": "Reopen",

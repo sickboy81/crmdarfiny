@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { DealLabels } from "./deal-labels";
 import { DealChecklists } from "./deal-checklist";
 import { DealActivityTimeline } from "./deal-activity";
+import { CardColorPicker } from "./card-color-picker";
 
 type Tab = "details" | "checklist" | "activity";
 
@@ -78,6 +79,7 @@ export function DealForm({
   const [assignedTo, setAssignedTo] = useState("");
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [color, setColor] = useState<string | null>(null);
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -139,6 +141,7 @@ export function DealForm({
       setAssignedTo(deal.assigned_to ?? "");
       setExpectedCloseDate(deal.expected_close_date ?? "");
       setNotes(deal.notes ?? "");
+      setColor(deal.color ?? null);
       loadDealDetails();
     } else {
       setTitle("");
@@ -149,6 +152,7 @@ export function DealForm({
       setAssignedTo("");
       setExpectedCloseDate("");
       setNotes("");
+      setColor(null);
       setLabels([]);
       setChecklists([]);
       setActivities([]);
@@ -217,6 +221,7 @@ export function DealForm({
       assigned_to: assignedTo || null,
       notes: notes.trim() || null,
       expected_close_date: expectedCloseDate || null,
+      color,
     };
 
     if (deal) {
@@ -343,6 +348,16 @@ export function DealForm({
                     onLabelsChange={loadDealDetails}
                   />
                 )}
+
+                {/* Card Color */}
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground">{t("color") || "Cor do card"}</Label>
+                  <CardColorPicker
+                    dealId={deal?.id || ""}
+                    currentColor={color}
+                    onColorChange={setColor}
+                  />
+                </div>
 
                 <div className="grid gap-2">
                   <Label className="text-muted-foreground">{t("dealTitle")}</Label>
