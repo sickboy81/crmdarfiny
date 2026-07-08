@@ -15,11 +15,17 @@ export interface LinkBioConfig {
   ogImageUrl: string
   theme: {
     backgroundColor: string
+    backgroundType?: 'solid' | 'gradient'
+    backgroundColor2?: string
+    gradientDirection?: string
     buttonColor: string
     textColor: string
     buttonTextColor: string
     fontFamily: string
     cardStyle: 'flat' | 'rounded' | 'glass' | 'shadow'
+    avatarStyle?: 'circle' | 'rounded' | 'square'
+    buttonStyle?: 'solid' | 'outline' | 'soft'
+    buttonAnimation?: 'none' | 'wiggle' | 'pulse' | 'scale'
   }
   links: BioLink[]
   socials: {
@@ -39,11 +45,17 @@ export const DEFAULT_BIO_CONFIG: LinkBioConfig = {
   ogImageUrl: '',
   theme: {
     backgroundColor: '#0F172A',
+    backgroundType: 'solid',
+    backgroundColor2: '#1E293B',
+    gradientDirection: 'to bottom',
     buttonColor: '#25D366',
     textColor: '#FFFFFF',
     buttonTextColor: '#000000',
     fontFamily: 'sans-serif',
     cardStyle: 'rounded',
+    avatarStyle: 'circle',
+    buttonStyle: 'solid',
+    buttonAnimation: 'none',
   },
   links: [
     { id: '1', title: 'WhatsApp', url: 'https://wa.me/5511999999999', active: true },

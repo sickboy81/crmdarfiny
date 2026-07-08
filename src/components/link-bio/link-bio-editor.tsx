@@ -48,6 +48,111 @@ export function getSocialUrl(platform: string, usernameOrUrl: string) {
   }
 }
 
+const PRESET_THEMES = [
+  {
+    name: 'Dark Midnight',
+    theme: {
+      backgroundColor: '#0F172A',
+      backgroundType: 'solid' as const,
+      backgroundColor2: '#1E293B',
+      gradientDirection: 'to bottom',
+      buttonColor: '#25D366',
+      textColor: '#FFFFFF',
+      buttonTextColor: '#000000',
+      cardStyle: 'rounded' as const,
+      fontFamily: 'sans-serif',
+      avatarStyle: 'circle' as const,
+      buttonStyle: 'solid' as const,
+      buttonAnimation: 'none' as const,
+    }
+  },
+  {
+    name: 'Light Minimalist',
+    theme: {
+      backgroundColor: '#F8FAFC',
+      backgroundType: 'solid' as const,
+      backgroundColor2: '#E2E8F0',
+      gradientDirection: 'to bottom',
+      buttonColor: '#0F172A',
+      textColor: '#0F172A',
+      buttonTextColor: '#FFFFFF',
+      cardStyle: 'shadow' as const,
+      fontFamily: 'sans-serif',
+      avatarStyle: 'circle' as const,
+      buttonStyle: 'solid' as const,
+      buttonAnimation: 'scale' as const,
+    }
+  },
+  {
+    name: 'Glassmorphism Ocean',
+    theme: {
+      backgroundColor: '#0c4a6e',
+      backgroundType: 'gradient' as const,
+      backgroundColor2: '#082f49',
+      gradientDirection: 'to bottom',
+      buttonColor: 'rgba(255,255,255,0.1)',
+      textColor: '#FFFFFF',
+      buttonTextColor: '#FFFFFF',
+      cardStyle: 'glass' as const,
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      avatarStyle: 'circle' as const,
+      buttonStyle: 'solid' as const,
+      buttonAnimation: 'scale' as const,
+    }
+  },
+  {
+    name: 'Sunset Warm',
+    theme: {
+      backgroundColor: '#7c2d12',
+      backgroundType: 'gradient' as const,
+      backgroundColor2: '#431407',
+      gradientDirection: 'to bottom right',
+      buttonColor: '#ea580c',
+      textColor: '#FFEDD5',
+      buttonTextColor: '#FFFFFF',
+      cardStyle: 'rounded' as const,
+      fontFamily: 'sans-serif',
+      avatarStyle: 'rounded' as const,
+      buttonStyle: 'solid' as const,
+      buttonAnimation: 'scale' as const,
+    }
+  },
+  {
+    name: 'Forest Nature',
+    theme: {
+      backgroundColor: '#064e3b',
+      backgroundType: 'gradient' as const,
+      backgroundColor2: '#022c22',
+      gradientDirection: 'to bottom',
+      buttonColor: '#10b981',
+      textColor: '#ECFDF5',
+      buttonTextColor: '#FFFFFF',
+      cardStyle: 'rounded' as const,
+      fontFamily: 'sans-serif',
+      avatarStyle: 'circle' as const,
+      buttonStyle: 'solid' as const,
+      buttonAnimation: 'wiggle' as const,
+    }
+  },
+  {
+    name: 'Cyberpunk Neon',
+    theme: {
+      backgroundColor: '#000000',
+      backgroundType: 'solid' as const,
+      backgroundColor2: '#111111',
+      gradientDirection: 'to bottom',
+      buttonColor: '#ff007f',
+      textColor: '#00ffff',
+      buttonTextColor: '#000000',
+      cardStyle: 'flat' as const,
+      fontFamily: 'monospace',
+      avatarStyle: 'square' as const,
+      buttonStyle: 'outline' as const,
+      buttonAnimation: 'pulse' as const,
+    }
+  }
+]
+
 export function LinkBioEditor() {
   const { user, accountId } = useAuth()
   const [config, setConfig] = useState<LinkBioConfig>(DEFAULT_BIO_CONFIG)
@@ -361,16 +466,99 @@ export function LinkBioEditor() {
         {/* Appearance Tab */}
         {activeTab === 'appearance' && (
           <div className="space-y-6">
+            {/* Theme Presets */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Theme Presets
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {PRESET_THEMES.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => setConfig({ ...config, theme: preset.theme })}
+                    className="p-2 rounded-lg border text-[10px] font-bold text-center hover:border-primary/50 transition-all bg-background border-muted truncate"
+                    title={preset.name}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Background Style */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Background Style
+              </h3>
+              <div className="flex gap-2">
+                {(['solid', 'gradient'] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setConfig({ ...config, theme: { ...config.theme, backgroundType: type } })}
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold capitalize transition-all ${
+                      (config.theme.backgroundType || 'solid') === type
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-muted'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              {config.theme.backgroundType === 'gradient' && (
+                <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-xl border">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground">End Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.theme.backgroundColor2 || '#1E293B'}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            theme: { ...config.theme, backgroundColor2: e.target.value },
+                          })
+                        }
+                        className="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer"
+                      />
+                      <span className="text-[10px] font-mono uppercase">
+                        {config.theme.backgroundColor2 || '#1E293B'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground">Direction</label>
+                    <select
+                      value={config.theme.gradientDirection || 'to bottom'}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          theme: { ...config.theme, gradientDirection: e.target.value },
+                        })
+                      }
+                      className="w-full px-2 py-1 text-xs border rounded-md bg-background h-8"
+                    >
+                      <option value="to bottom">To Bottom</option>
+                      <option value="to top">To Top</option>
+                      <option value="to right">To Right</option>
+                      <option value="to bottom right">Diagonal</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Colors */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Color Scheme
+                Color Palette
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { key: 'backgroundColor' as const, label: 'Background' },
-                  { key: 'buttonColor' as const, label: 'Buttons' },
-                  { key: 'textColor' as const, label: 'Text' },
+                  { key: 'backgroundColor' as const, label: config.theme.backgroundType === 'gradient' ? 'Start Color' : 'Background' },
+                  { key: 'textColor' as const, label: 'Text Color' },
+                  { key: 'buttonColor' as const, label: 'Button Color' },
                   { key: 'buttonTextColor' as const, label: 'Button Text' },
                 ].map(({ key, label }) => (
                   <div key={key} className="space-y-2">
@@ -396,10 +584,54 @@ export function LinkBioEditor() {
               </div>
             </div>
 
-            {/* Card Style */}
+            {/* Avatar shape */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Card Style
+                Avatar Shape
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {(['circle', 'rounded', 'square'] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setConfig({ ...config, theme: { ...config.theme, avatarStyle: style } })}
+                    className={`py-2 rounded-xl border text-xs font-bold capitalize transition-all ${
+                      (config.theme.avatarStyle || 'circle') === style
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-muted'
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Button Style */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Button Fill
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {(['solid', 'outline', 'soft'] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setConfig({ ...config, theme: { ...config.theme, buttonStyle: style } })}
+                    className={`py-2 rounded-xl border text-xs font-bold capitalize transition-all ${
+                      (config.theme.buttonStyle || 'solid') === style
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-muted'
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Style / roundedness */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Card Border & Material
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {(['flat', 'rounded', 'glass', 'shadow'] as const).map((style) => (
@@ -413,6 +645,33 @@ export function LinkBioEditor() {
                     }`}
                   >
                     {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Button Hover Animation */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Hover Interaction
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'none' as const, label: 'None' },
+                  { key: 'scale' as const, label: 'Scale Up' },
+                  { key: 'pulse' as const, label: 'Pulse' },
+                  { key: 'wiggle' as const, label: 'Wiggle' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setConfig({ ...config, theme: { ...config.theme, buttonAnimation: key } })}
+                    className={`py-2 rounded-xl border text-xs font-bold capitalize transition-all ${
+                      (config.theme.buttonAnimation || 'none') === key
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-muted'
+                    }`}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>
@@ -538,65 +797,94 @@ export function LinkBioEditor() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-zinc-955 dark:bg-zinc-850 rounded-b-2xl z-20" />
             
             {/* Screen Content */}
-            <div
-              className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center w-full select-none [&::-webkit-scrollbar]:w-0"
-              style={{ background: config.theme.backgroundColor, fontFamily: config.theme.fontFamily }}
-            >
-              <img
-                src={config.avatarUrl}
-                alt=""
-                className="w-20 h-20 rounded-full border-2 border-white/20 object-cover mb-4 mt-4"
-              />
-              <h2
-                className="text-lg font-bold text-center"
-                style={{ color: config.theme.textColor }}
-              >
-                {config.profileName}
-              </h2>
-              {config.bio && (
-                <p
-                  className="text-xs text-center mt-2 opacity-80"
-                  style={{ color: config.theme.textColor }}
+            {(() => {
+              const bgStyle: React.CSSProperties = {
+                fontFamily: config.theme.fontFamily,
+              }
+              if (config.theme.backgroundType === 'gradient') {
+                bgStyle.background = `linear-gradient(${config.theme.gradientDirection || 'to bottom'}, ${config.theme.backgroundColor}, ${config.theme.backgroundColor2 || '#1E293B'})`
+              } else {
+                bgStyle.backgroundColor = config.theme.backgroundColor
+              }
+
+              let avatarRadius = '50%'
+              if (config.theme.avatarStyle === 'rounded') avatarRadius = '16px'
+              if (config.theme.avatarStyle === 'square') avatarRadius = '0px'
+
+              return (
+                <div
+                  className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center w-full select-none [&::-webkit-scrollbar]:w-0"
+                  style={bgStyle}
                 >
-                  {config.bio}
-                </p>
-              )}
-              <div className="w-full space-y-3 mt-6">
-                {config.links
-                  .filter((l) => l.active)
-                  .map((link) => {
-                    const bg =
-                      config.theme.cardStyle === 'glass'
-                        ? 'transparent'
-                        : config.theme.buttonColor
-                    const borderRadius =
-                      config.theme.cardStyle === 'flat' ? '0' : '16px'
-                    const extraStyle: React.CSSProperties =
-                      config.theme.cardStyle === 'glass'
-                        ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }
-                        : config.theme.cardStyle === 'shadow'
-                          ? { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }
-                          : {}
-                    return (
-                      <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block text-center py-3 px-4 text-sm font-bold transition-transform hover:scale-[1.02]"
-                        style={{
-                          background: bg,
-                          color: config.theme.buttonTextColor,
-                          borderRadius,
-                          textDecoration: 'none',
-                          ...extraStyle
-                        }}
-                      >
-                        {link.title}
-                      </a>
-                    )
-                  })}
-              </div>
+                  <img
+                    src={config.avatarUrl}
+                    alt=""
+                    className="w-20 h-20 border-2 border-white/20 object-cover mb-4 mt-4"
+                    style={{ borderRadius: avatarRadius }}
+                  />
+                  <h2
+                    className="text-lg font-bold text-center"
+                    style={{ color: config.theme.textColor }}
+                  >
+                    {config.profileName}
+                  </h2>
+                  {config.bio && (
+                    <p
+                      className="text-xs text-center mt-2 opacity-80"
+                      style={{ color: config.theme.textColor }}
+                    >
+                      {config.bio}
+                    </p>
+                  )}
+                  <div className="w-full space-y-3 mt-6">
+                    {config.links
+                      .filter((l) => l.active)
+                      .map((link) => {
+                        let bg = config.theme.cardStyle === 'glass' ? 'transparent' : config.theme.buttonColor
+                        let borderStyle = 'none'
+                        if (config.theme.buttonStyle === 'outline') {
+                          bg = 'transparent'
+                          borderStyle = `2px solid ${config.theme.buttonColor}`
+                        } else if (config.theme.buttonStyle === 'soft') {
+                          bg = `${config.theme.buttonColor}25` // ~15% opacity hex
+                        }
+
+                        const borderRadius =
+                          config.theme.cardStyle === 'flat' ? '0' : '16px'
+                        const extraStyle: React.CSSProperties =
+                          config.theme.cardStyle === 'glass'
+                            ? { backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }
+                            : config.theme.cardStyle === 'shadow'
+                              ? { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }
+                              : {}
+
+                        const animationClass = 
+                          config.theme.buttonAnimation === 'scale' ? 'hover:scale-[1.04] active:scale-[0.98]' :
+                          config.theme.buttonAnimation === 'pulse' ? 'hover:animate-pulse' :
+                          config.theme.buttonAnimation === 'wiggle' ? 'hover:animate-bounce' : ''
+
+                        return (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`block text-center py-3 px-4 text-sm font-bold transition-all duration-200 ${animationClass}`}
+                            style={{
+                              background: bg,
+                              border: borderStyle,
+                              color: config.theme.buttonTextColor,
+                              borderRadius,
+                              textDecoration: 'none',
+                              ...extraStyle
+                            }}
+                          >
+                            {link.title}
+                          </a>
+                        )
+                      })}
+                  </div>
+              )})()}
 
               {/* Social Media Preview Icons */}
               {Object.values(config.socials).some(Boolean) && (

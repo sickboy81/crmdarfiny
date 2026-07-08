@@ -10,13 +10,32 @@ export async function GET() {
   let ogDescription = ''
   let ogImage = ''
 
-  let theme = {
+  let theme: {
+    backgroundColor: string
+    backgroundType?: 'solid' | 'gradient'
+    backgroundColor2?: string
+    gradientDirection?: string
+    buttonColor: string
+    textColor: string
+    buttonTextColor: string
+    fontFamily: string
+    cardStyle: string
+    avatarStyle?: string
+    buttonStyle?: string
+    buttonAnimation?: string
+  } = {
     backgroundColor: '#0F172A',
+    backgroundType: 'solid',
+    backgroundColor2: '#1E293B',
+    gradientDirection: 'to bottom',
     buttonColor: '#25D366',
     textColor: '#FFFFFF',
     buttonTextColor: '#000000',
     fontFamily: 'sans-serif',
     cardStyle: 'rounded',
+    avatarStyle: 'circle',
+    buttonStyle: 'solid',
+    buttonAnimation: 'none',
   }
   let links: Array<{ id: string; title: string; url: string; active: boolean }> = []
   let socials: Record<string, string> = {}
@@ -69,11 +88,19 @@ export async function GET() {
 
   const linksHtml = activeLinks
     .map((link) => {
-      const bg =
-        theme.cardStyle === 'glass' ? 'transparent' : theme.buttonColor || '#25D366'
-      return `<a href="${link.url}" target="_blank" rel="noopener noreferrer"
-        style="display:block;width:100%;padding:16px 24px;text-align:center;font-size:18px;font-weight:900;letter-spacing:-0.3px;text-decoration:none;transition:transform 0.15s;border-radius:${borderRadius};background:${bg};color:${theme.buttonTextColor || '#000'};${cardExtra}"
-        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'"
+      let bg = theme.cardStyle === 'glass' ? 'transparent' : theme.buttonColor || '#25D366'
+      let border = 'none'
+      if (theme.buttonStyle === 'outline') {
+        bg = 'transparent'
+        border = `2px solid ${theme.buttonColor || '#25D366'}`
+      } else if (theme.buttonStyle === 'soft') {
+        bg = `${theme.buttonColor || '#25D366'}25`
+      }
+
+      const animClass = theme.buttonAnimation && theme.buttonAnimation !== 'none' ? `btn-anim-${theme.buttonAnimation}` : ''
+
+      return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="link-btn ${animClass}"
+        style="border-radius:${borderRadius};background:${bg};border:${border};color:${theme.buttonTextColor || '#000'};${cardExtra}"
     >${link.title}</a>`
     })
     .join('')
@@ -121,6 +148,12 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
       ? `<div style="display:flex;gap:24px;margin-top:48px;">${socialItems.join('')}</div>`
       : ''
 
+  const bgStyle = theme.backgroundType === 'gradient'
+    ? `background: linear-gradient(${theme.gradientDirection || 'to bottom'}, ${theme.backgroundColor}, ${theme.backgroundColor2 || '#1E293B'});`
+    : `background: ${theme.backgroundColor};`
+
+  const avatarRadius = theme.avatarStyle === 'rounded' ? '24px' : theme.avatarStyle === 'square' ? '0px' : '50%'
+
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -141,7 +174,7 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: ${theme.backgroundColor};
+            ${bgStyle}
             font-family: ${theme.fontFamily || 'system-ui, -apple-system, sans-serif'};
             min-height: 100vh;
             display: flex;
@@ -158,7 +191,7 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
         .avatar {
             width: 128px;
             height: 128px;
-            border-radius: 50%;
+            border-radius: ${avatarRadius};
             border: 4px solid rgba(255,255,255,0.2);
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
             object-fit: cover;
@@ -185,6 +218,34 @@ function getSocialUrl(platform: string, usernameOrUrl: string) {
             flex-direction: column;
             gap: 16px;
             margin-top: 48px;
+        }
+        .link-btn {
+            display:block;
+            width:100%;
+            padding:16px 24px;
+            text-align:center;
+            font-size:18px;
+            font-weight:900;
+            letter-spacing:-0.3px;
+            text-decoration:none;
+            transition: all 0.2s ease;
+        }
+        .btn-anim-scale:hover {
+            transform: scale(1.04);
+        }
+        .btn-anim-pulse:hover {
+            animation: pulse 1.5s infinite;
+        }
+        .btn-anim-wiggle:hover {
+            animation: wiggle 0.5s ease infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .7; transform: scale(0.98); }
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
         }
         .footer {
             margin-top: auto;
