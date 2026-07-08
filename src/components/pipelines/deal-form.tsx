@@ -115,7 +115,7 @@ export function DealForm({
         .order("position"),
       db
         .from("deal_activities")
-        .select("*, user:profiles(full_name)")
+        .select("*")
         .eq("deal_id", deal.id)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -127,7 +127,26 @@ export function DealForm({
     ]);
     setLabels((labelsRes.data ?? []) as DealLabel[]);
     setChecklists((checklistsRes.data ?? []) as DealChecklist[]);
-    setActivities((activitiesRes.data ?? []) as DealActivity[]);
+
+    // Fetch profiles for activity user_ids
+    const activitiesData = (activitiesRes.data ?? []) as DealActivity[];
+    const userIds = [...new Set(activitiesData.map((a) => a.user_id).filter(Boolean))] as string[];
+    let profilesMap = new Map<string, string>();
+    if (userIds.length > 0) {
+      const profilesRes = await db
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+      for (const p of profilesRes.data ?? []) {
+        profilesMap.set(p.id, p.full_name);
+      }
+    }
+    const activitiesWithNames = activitiesData.map((a) => ({
+      ...a,
+      user: a.user_id ? { full_name: profilesMap.get(a.user_id) } : undefined,
+    }));
+    setActivities(activitiesWithNames as DealActivity[]);
+
     setAttachments((attachmentsRes.data ?? []) as typeof attachments);
   }, [deal]);
 
