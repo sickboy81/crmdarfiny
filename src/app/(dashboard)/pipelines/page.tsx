@@ -105,7 +105,43 @@ export default function PipelinesPage() {
         .select("*, contact:contacts(*), assignee:profiles!deals_assigned_to_fkey(*)")
         .eq("pipeline_id", pipelineId)
         .order("created_at", { ascending: false });
-      return (data ?? []) as Deal[];
+      const dealsList = (data ?? []) as Deal[];
+      if (dealsList.length === 0) return dealsList;
+
+      const dealIds = dealsList.map((d) => d.id);
+
+      // Batch-fetch labels, checklists+items, and activity counts
+      const [labelsRes, checklistsRes, activitiesRes] = await Promise.all([
+        supabase.from("deal_labels").select("*").in("deal_id", dealIds).order("position"),
+        supabase.from("deal_checklists").select("*, items:deal_checklist_items(*)").in("deal_id", dealIds).order("position"),
+        supabase.from("deal_activities").select("deal_id").in("deal_id", dealIds),
+      ]);
+
+      const labelsMap = new Map<string, typeof dealsList[0]["labels"]>();
+      for (const l of labelsRes.data ?? []) {
+        const arr = labelsMap.get(l.deal_id) ?? [];
+        arr.push(l);
+        labelsMap.set(l.deal_id, arr);
+      }
+
+      const checklistsMap = new Map<string, typeof dealsList[0]["checklists"]>();
+      for (const c of checklistsRes.data ?? []) {
+        const arr = checklistsMap.get(c.deal_id) ?? [];
+        arr.push(c);
+        checklistsMap.set(c.deal_id, arr);
+      }
+
+      const activityCountMap = new Map<string, number>();
+      for (const a of activitiesRes.data ?? []) {
+        activityCountMap.set(a.deal_id, (activityCountMap.get(a.deal_id) ?? 0) + 1);
+      }
+
+      return dealsList.map((d) => ({
+        ...d,
+        labels: labelsMap.get(d.id) ?? [],
+        checklists: checklistsMap.get(d.id) ?? [],
+        activity_count: activityCountMap.get(d.id) ?? 0,
+      }));
     },
     [supabase],
   );
@@ -420,6 +456,8 @@ export default function PipelinesPage() {
             onDealMoved={handleDealMoved}
             onAddDeal={handleAddDeal}
             onEditDeal={handleEditDeal}
+            pipelineId={selectedPipelineId}
+            onDealsChanged={refreshDeals}
           />
         </>
       )}
