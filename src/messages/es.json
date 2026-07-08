@@ -1458,7 +1458,61 @@
     "tabActivity": "Actividad",
     "markWon": "Ganado",
     "markLost": "Perdido",
-    "reopen": "Reabrir"
+    "reopen": "Reabrir",
+    "expectedCloseDate": "Fecha prevista de cierre",
+    "won": "Ganado",
+    "lost": "Perdido"
+  },
+  "pipelineBoard": {
+    "dragDealHere": "Arrastra un negocio aquí",
+    "quickAddPlaceholder": "Título del negocio...",
+    "addDeal": "Agregar negocio",
+    "collapseColumn": "Recolgar columna",
+    "dealCreated": "Negocio creado",
+    "dealCreateError": "Error al crear negocio"
+  },
+  "dealLabels": {
+    "label": "Etiqueta",
+    "createLabel": "Etiqueta creada",
+    "createLabelError": "Error al crear etiqueta",
+    "deleteLabelError": "Error al eliminar etiqueta",
+    "namePlaceholder": "Nombre de la etiqueta...",
+    "create": "Crear",
+    "cancel": "Cancelar"
+  },
+  "dealChecklist": {
+    "checklistCreated": "Lista creada",
+    "checklistCreateError": "Error al crear lista",
+    "checklistDeleteError": "Error al eliminar lista",
+    "itemUpdateError": "Error al actualizar item",
+    "itemAddError": "Error al agregar item",
+    "itemDeleteError": "Error al eliminar item",
+    "newItemPlaceholder": "Nuevo item...",
+    "namePlaceholder": "Nombre de la lista...",
+    "addChecklist": "Agregar lista",
+    "create": "Crear",
+    "cancel": "Cancelar"
+  },
+  "dealActivity": {
+    "noActivity": "Sin actividad aún",
+    "system": "Sistema",
+    "user": "Usuario",
+    "commentPlaceholder": "Agregar comentario...",
+    "commentError": "Error al enviar comentario"
+  },
+  "pipelineAnalytics": {
+    "totalDeals": "Total de Negocios",
+    "totalDealsTooltip": "Cantidad de todos los negocios en este funil que no estan marcados como Perdidos. Los negocios ganados aun se incluyen.",
+    "pipelineValue": "Valor del Funil",
+    "pipelineValueTooltip": "Suma de los valores de todos los negocios en este funil, excluyendo negocios marcados como Perdidos.",
+    "avgDealSize": "Tamano Promedio",
+    "avgDealSizeTooltip": "Valor del Funil dividido por Total de Negocios — el valor promedio de un solo negocio no perdido.",
+    "weightedValue": "Valor Ponderado",
+    "weightedValueTooltip": "Ingresos esperados: valor de cada negocio abierto × su probabilidad de etapa. Primera etapa ≈ 10%, las etapas progresan hasta 90%, Ganado = 100%. Los negocios perdidos se excluyen.",
+    "wonThisMonth": "Ganados este Mes",
+    "wonThisMonthTooltip": "Negocios marcados como Ganados desde el primer dia del mes actual.",
+    "lostThisMonth": "Perdidos este Mes",
+    "lostThisMonthTooltip": "Negocios marcados como Perdidos desde el primer dia del mes actual."
   },
   "pipelineSettings": {
     "title": "Configuración del funil",

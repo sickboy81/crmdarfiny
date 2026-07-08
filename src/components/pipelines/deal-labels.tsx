@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DealLabel } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { X, Plus, Palette } from "lucide-react";
 
@@ -26,6 +27,7 @@ interface DealLabelsProps {
 }
 
 export function DealLabels({ dealId, labels, onLabelsChange }: DealLabelsProps) {
+  const t = useTranslations("dealLabels");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(LABEL_COLORS[0]);
@@ -44,9 +46,9 @@ export function DealLabels({ dealId, labels, onLabelsChange }: DealLabelsProps) 
       setNewName("");
       setCreating(false);
       onLabelsChange();
-      toast.success("Label criada");
+      toast.success(t("createLabel"));
     } catch {
-      toast.error("Erro ao criar label");
+      toast.error(t("createLabelError"));
     }
   }
 
@@ -112,8 +114,8 @@ export function DealLabels({ dealId, labels, onLabelsChange }: DealLabelsProps) 
             ))}
           </div>
           <div className="flex gap-1">
-            <button onClick={handleCreate} className="rounded bg-primary px-2 py-1 text-[11px] text-primary-foreground hover:bg-primary/90">Criar</button>
-            <button onClick={() => { setCreating(false); setNewName(""); }} className="rounded px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted">Cancelar</button>
+            <button onClick={handleCreate} className="rounded bg-primary px-2 py-1 text-[11px] text-primary-foreground hover:bg-primary/90">{t("create")}</button>
+            <button onClick={() => { setCreating(false); setNewName(""); }} className="rounded px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted">{t("cancel")}</button>
           </div>
         </div>
       )}

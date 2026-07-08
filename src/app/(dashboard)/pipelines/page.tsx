@@ -262,7 +262,7 @@ export default function PipelinesPage() {
         .update({ stage_id: newStageId })
         .eq("id", dealId);
       if (error) {
-        toast.error("Failed to move deal");
+        toast.error(t("failedToMove"));
         refreshDeals();
       }
     },
@@ -311,7 +311,7 @@ export default function PipelinesPage() {
       .single();
 
     if (error || !pipeline) {
-      toast.error("Failed to create pipeline");
+      toast.error(t("failedToCreate"));
       setCreating(false);
       return;
     }
@@ -329,7 +329,7 @@ export default function PipelinesPage() {
     setSelectedPipelineId(pipeline.id);
     await refreshPipelines();
     setCreating(false);
-    toast.success("Pipeline created");
+    toast.success(t("pipelineCreated"));
   }
 
   const selectedPipeline = pipelines.find((p) => p.id === selectedPipelineId);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DealActivity } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { MessageSquare, Bot, Send } from "lucide-react";
 
@@ -26,6 +27,7 @@ function timeAgo(dateStr: string) {
 
 export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActivityProps) {
   const { user } = useAuth();
+  const t = useTranslations("dealActivity");
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -44,7 +46,7 @@ export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActi
       setComment("");
       onRefresh();
     } catch {
-      toast.error("Erro ao enviar comentário");
+      toast.error(t("commentError"));
     } finally {
       setSending(false);
     }
@@ -57,7 +59,7 @@ export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActi
         {activities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <MessageSquare className="h-6 w-6 mb-2 opacity-40" />
-            <p className="text-xs">Nenhuma atividade ainda</p>
+            <p className="text-xs">{t("noActivity")}</p>
           </div>
         ) : (
           activities.map((activity) => (
@@ -74,7 +76,7 @@ export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActi
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-medium text-foreground">
-                    {activity.activity_type === "system" ? "Sistema" : (activity.user?.full_name ?? "Usuário")}
+                    {activity.activity_type === "system" ? t("system") : (activity.user?.full_name ?? t("user"))}
                   </span>
                   <span className="text-[10px] text-muted-foreground">{timeAgo(activity.created_at)}</span>
                 </div>
@@ -94,7 +96,7 @@ export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActi
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendComment(); } }}
-            placeholder="Adicionar comentário..."
+            placeholder={t("commentPlaceholder")}
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs"
           />
           <button

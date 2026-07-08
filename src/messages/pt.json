@@ -1462,7 +1462,61 @@
     "tabActivity": "Atividade",
     "markWon": "Ganho",
     "markLost": "Perdido",
-    "reopen": "Reabrir"
+    "reopen": "Reabrir",
+    "expectedCloseDate": "Data prevista de fechamento",
+    "won": "Ganho",
+    "lost": "Perdido"
+  },
+  "pipelineBoard": {
+    "dragDealHere": "Arraste um deal aqui",
+    "quickAddPlaceholder": "Título do deal...",
+    "addDeal": "Adicionar deal",
+    "collapseColumn": "Recolher coluna",
+    "dealCreated": "Deal criado",
+    "dealCreateError": "Erro ao criar deal"
+  },
+  "dealLabels": {
+    "label": "Label",
+    "createLabel": "Label criada",
+    "createLabelError": "Erro ao criar label",
+    "deleteLabelError": "Erro ao remover label",
+    "namePlaceholder": "Nome da label...",
+    "create": "Criar",
+    "cancel": "Cancelar"
+  },
+  "dealChecklist": {
+    "checklistCreated": "Checklist criado",
+    "checklistCreateError": "Erro ao criar checklist",
+    "checklistDeleteError": "Erro ao remover checklist",
+    "itemUpdateError": "Erro ao atualizar item",
+    "itemAddError": "Erro ao adicionar item",
+    "itemDeleteError": "Erro ao remover item",
+    "newItemPlaceholder": "Novo item...",
+    "namePlaceholder": "Nome do checklist...",
+    "addChecklist": "Adicionar checklist",
+    "create": "Criar",
+    "cancel": "Cancelar"
+  },
+  "dealActivity": {
+    "noActivity": "Nenhuma atividade ainda",
+    "system": "Sistema",
+    "user": "Usuário",
+    "commentPlaceholder": "Adicionar comentário...",
+    "commentError": "Erro ao enviar comentário"
+  },
+  "pipelineAnalytics": {
+    "totalDeals": "Total de Negócios",
+    "totalDealsTooltip": "Quantidade de todos os negócios neste funil que não estão marcados como Perdidos. Negócios ganhos ainda são incluídos.",
+    "pipelineValue": "Valor do Funil",
+    "pipelineValueTooltip": "Soma dos valores de todos os negócios neste funil, excluindo negócios marcados como Perdidos.",
+    "avgDealSize": "Tamanho Médio",
+    "avgDealSizeTooltip": "Valor do Funil dividido pelo Total de Negócios — o valor médio de um único negócio não perdido.",
+    "weightedValue": "Valor Ponderado",
+    "weightedValueTooltip": "Receita esperada: valor de cada negócio aberto × probabilidade da etapa. Primeira etapa ≈ 10%, etapas progredem até 90%, Ganho = 100%. Negócios perdidos são excluídos.",
+    "wonThisMonth": "Ganhos este Mês",
+    "wonThisMonthTooltip": "Negócios marcados como Ganho desde o primeiro dia do mês atual.",
+    "lostThisMonth": "Perdidos este Mês",
+    "lostThisMonthTooltip": "Negócios marcados como Perdidos desde o primeiro dia do mês atual."
   },
   "pipelineSettings": {
     "title": "Configurações do funil",

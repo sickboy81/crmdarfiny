@@ -411,7 +411,7 @@ export function DealForm({
                 </div>
 
                 <div className="grid gap-2">
-                  <Label className="text-muted-foreground">Expected Close Date</Label>
+                  <Label className="text-muted-foreground">{t("expectedCloseDate")}</Label>
                   <Input
                     type="date"
                     value={expectedCloseDate}

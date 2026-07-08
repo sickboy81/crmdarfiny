@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DealChecklist, DealChecklistItem } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 
@@ -19,6 +20,7 @@ function ChecklistSection({
   checklist: DealChecklist;
   onChange: () => void;
 }) {
+  const t = useTranslations("dealChecklist");
   const items = checklist.items ?? [];
   const total = items.length;
   const checked = items.filter((i) => i.is_checked).length;
@@ -35,7 +37,7 @@ function ChecklistSection({
       if (error) throw error;
       onChange();
     } catch {
-      toast.error("Erro ao atualizar item");
+      toast.error(t("itemUpdateError"));
     }
   }
 
@@ -63,7 +65,7 @@ function ChecklistSection({
       if (error) throw error;
       onChange();
     } catch {
-      toast.error("Erro ao remover item");
+      toast.error(t("itemDeleteError"));
     }
   }
 
@@ -139,6 +141,7 @@ function ChecklistSection({
 }
 
 export function DealChecklists({ dealId, checklists, onChecklistsChange }: DealChecklistProps) {
+  const t = useTranslations("dealChecklist");
   const [newName, setNewName] = useState("");
   const [showNew, setShowNew] = useState(false);
 
@@ -155,7 +158,7 @@ export function DealChecklists({ dealId, checklists, onChecklistsChange }: DealC
       setNewName("");
       setShowNew(false);
       onChecklistsChange();
-      toast.success("Checklist criado");
+      toast.success(t("checklistCreated"));
     } catch {
       toast.error("Erro ao criar checklist");
     }
@@ -173,12 +176,12 @@ export function DealChecklists({ dealId, checklists, onChecklistsChange }: DealC
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-            placeholder="Nome do checklist..."
+            placeholder={t("namePlaceholder")}
             className="flex-1 rounded border border-border bg-background px-2 py-1.5 text-xs"
             autoFocus
           />
-          <button onClick={handleCreate} className="rounded bg-primary px-2 py-1.5 text-[11px] text-primary-foreground hover:bg-primary/90">Criar</button>
-          <button onClick={() => { setShowNew(false); setNewName(""); }} className="rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted">Cancelar</button>
+          <button onClick={handleCreate} className="rounded bg-primary px-2 py-1.5 text-[11px] text-primary-foreground hover:bg-primary/90">{t("create")}</button>
+          <button onClick={() => { setShowNew(false); setNewName(""); }} className="rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted">{t("cancel")}</button>
         </div>
       ) : (
         <button
@@ -186,7 +189,7 @@ export function DealChecklists({ dealId, checklists, onChecklistsChange }: DealC
           className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:bg-muted/50"
         >
           <Plus className="h-3 w-3" />
-          Adicionar checklist
+          {t("addChecklist")}
         </button>
       )}
     </div>

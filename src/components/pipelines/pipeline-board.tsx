@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface PipelineBoardProps {
   stages: PipelineStage[];
@@ -43,6 +44,7 @@ export function PipelineBoard({
   onDealsChanged,
 }: PipelineBoardProps) {
   const { defaultCurrency, accountId } = useAuth();
+  const tb = useTranslations("pipelineBoard");
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(new Set());
 
@@ -222,6 +224,7 @@ function StageColumn({
     onDealsChanged?: () => void;
   }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const tb = useTranslations("pipelineBoard");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickAddTitle, setQuickAddTitle] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
@@ -248,7 +251,7 @@ function StageColumn({
       setQuickAddTitle("");
       setShowQuickAdd(false);
       onDealsChanged?.();
-      toast.success("Deal criado");
+      toast.success(tb("dealCreated"));
     } catch {
       toast.error("Erro ao criar deal");
     } finally {
@@ -364,7 +367,7 @@ function StageColumn({
           className="mt-3 w-full justify-start border border-dashed border-white/10 bg-transparent text-white/40 hover:border-white/20 hover:bg-white/5 hover:text-white/70"
         >
           <Plus className="mr-1 h-3 w-3" />
-          Adicionar deal
+          {tb("addDeal")}
         </Button>
       )}
     </div>

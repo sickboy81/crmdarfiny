@@ -1460,7 +1460,61 @@
     "tabActivity": "Activity",
     "markWon": "Won",
     "markLost": "Lost",
-    "reopen": "Reopen"
+    "reopen": "Reopen",
+    "expectedCloseDate": "Expected Close Date",
+    "Won": "Won",
+    "Lost": "Lost"
+  },
+  "pipelineBoard": {
+    "dragDealHere": "Drop a deal here",
+    "quickAddPlaceholder": "Deal title...",
+    "addDeal": "Add deal",
+    "collapseColumn": "Collapse column",
+    "dealCreated": "Deal created",
+    "dealCreateError": "Failed to create deal"
+  },
+  "dealLabels": {
+    "label": "Label",
+    "createLabel": "Label created",
+    "createLabelError": "Failed to create label",
+    "deleteLabelError": "Failed to remove label",
+    "namePlaceholder": "Label name...",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "dealChecklist": {
+    "checklistCreated": "Checklist created",
+    "checklistCreateError": "Failed to create checklist",
+    "checklistDeleteError": "Failed to remove checklist",
+    "itemUpdateError": "Failed to update item",
+    "itemAddError": "Failed to add item",
+    "itemDeleteError": "Failed to remove item",
+    "newItemPlaceholder": "New item...",
+    "namePlaceholder": "Checklist name...",
+    "addChecklist": "Add checklist",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "dealActivity": {
+    "noActivity": "No activity yet",
+    "system": "System",
+    "user": "User",
+    "commentPlaceholder": "Add a comment...",
+    "commentError": "Failed to send comment"
+  },
+  "pipelineAnalytics": {
+    "totalDeals": "Total Deals",
+    "totalDealsTooltip": "Count of every deal in this pipeline that isn't marked as Lost. Won deals are still included.",
+    "pipelineValue": "Pipeline Value",
+    "pipelineValueTooltip": "Sum of the dollar values of all deals in this pipeline, excluding deals marked as Lost.",
+    "avgDealSize": "Avg Deal Size",
+    "avgDealSizeTooltip": "Pipeline Value divided by Total Deals — the average value of a single non-lost deal.",
+    "weightedValue": "Weighted Value",
+    "weightedValueTooltip": "Expected revenue: each open deal's value × its stage probability. First stage ≈ 10%, stages progress up to 90%, Won = 100%. Lost deals are excluded.",
+    "wonThisMonth": "Won This Month",
+    "wonThisMonthTooltip": "Deals marked as Won since the first day of the current month.",
+    "lostThisMonth": "Lost This Month",
+    "lostThisMonthTooltip": "Deals marked as Lost since the first day of the current month."
   },
   "pipelineSettings": {
     "title": "Pipeline settings",
