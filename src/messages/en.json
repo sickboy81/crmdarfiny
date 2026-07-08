@@ -1454,7 +1454,13 @@
     "titleRequired": "Title is required",
     "stageRequired": "Stage is required",
     "delete": "Delete deal",
-    "deleteConfirm": "Delete this deal? This cannot be undone."
+    "deleteConfirm": "Delete this deal? This cannot be undone.",
+    "tabDetails": "Details",
+    "tabChecklist": "Checklist",
+    "tabActivity": "Activity",
+    "markWon": "Won",
+    "markLost": "Lost",
+    "reopen": "Reopen"
   },
   "pipelineSettings": {
     "title": "Pipeline settings",

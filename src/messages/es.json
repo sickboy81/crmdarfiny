@@ -1452,7 +1452,13 @@
     "titleRequired": "El título es obligatorio",
     "stageRequired": "La etapa es obligatoria",
     "delete": "Eliminar negocio",
-    "deleteConfirm": "¿Eliminar este negocio? Esta acción no se puede deshacer."
+    "deleteConfirm": "¿Eliminar este negocio? Esta acción no se puede deshacer.",
+    "tabDetails": "Detalles",
+    "tabChecklist": "Lista de verificación",
+    "tabActivity": "Actividad",
+    "markWon": "Ganado",
+    "markLost": "Perdido",
+    "reopen": "Reabrir"
   },
   "pipelineSettings": {
     "title": "Configuración del funil",

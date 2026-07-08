@@ -342,6 +342,43 @@ export interface Deal {
   assignee?: Profile;
 }
 
+export interface DealLabel {
+  id: string;
+  deal_id: string;
+  name: string;
+  color: string;
+  position: number;
+  created_at: string;
+}
+
+export interface DealChecklistItem {
+  id: string;
+  checklist_id: string;
+  text: string;
+  is_checked: boolean;
+  position: number;
+  created_at: string;
+}
+
+export interface DealChecklist {
+  id: string;
+  deal_id: string;
+  name: string;
+  position: number;
+  items?: DealChecklistItem[];
+  created_at: string;
+}
+
+export interface DealActivity {
+  id: string;
+  deal_id: string;
+  user_id?: string;
+  activity_type: "comment" | "system";
+  content?: string;
+  created_at: string;
+  user?: { full_name?: string };
+}
+
 export type BroadcastStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
 export type RecipientStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'replied' | 'failed';
 
