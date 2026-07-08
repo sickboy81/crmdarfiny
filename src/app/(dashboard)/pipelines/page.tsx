@@ -36,13 +36,13 @@ import { GatedButton } from "@/components/ui/gated-button";
 // agent+. The two CTAs gate on different `useCan` capabilities,
 // not on different copy.
 
-// Spec-defined seed — name and color per the product spec.
-const SPEC_DEFAULT_STAGES = [
-  { name: "New Lead", color: "#3b82f6", position: 0 }, // blue
-  { name: "Qualified", color: "#eab308", position: 1 }, // yellow
-  { name: "Proposal Sent", color: "#f97316", position: 2 }, // orange
-  { name: "Negotiation", color: "#8b5cf6", position: 3 }, // purple
-  { name: "Won", color: "#22c55e", position: 4 }, // green
+// Default stages with translated names via i18n
+const DEFAULT_STAGES = (t: (key: string) => string) => [
+  { name: t("stageNewLead"), color: "#3b82f6", position: 0 },
+  { name: t("stageQualified"), color: "#eab308", position: 1 },
+  { name: t("stageProposalSent"), color: "#f97316", position: 2 },
+  { name: t("stageNegotiation"), color: "#8b5cf6", position: 3 },
+  { name: t("stageWon"), color: "#22c55e", position: 4 },
 ];
 
 export default function PipelinesPage() {
@@ -157,7 +157,7 @@ export default function PipelinesPage() {
 
     const { data: pipeline, error } = await supabase
       .from("pipelines")
-      .insert({ user_id: user.id, account_id: accountId, name: "Sales Pipeline" })
+      .insert({ user_id: user.id, account_id: accountId, name: t("defaultPipelineName") })
       .select()
       .single();
 
@@ -166,7 +166,7 @@ export default function PipelinesPage() {
       return null;
     }
 
-    const stagesPayload = SPEC_DEFAULT_STAGES.map((s) => ({
+    const stagesPayload = DEFAULT_STAGES(t).map((s) => ({
       pipeline_id: pipeline.id,
       name: s.name,
       color: s.color,
@@ -175,7 +175,7 @@ export default function PipelinesPage() {
     await supabase.from("pipeline_stages").insert(stagesPayload);
 
     return pipeline as Pipeline;
-  }, [supabase, accountId]);
+  }, [supabase, accountId, t]);
 
   // Initial load + seed-if-empty
   useEffect(() => {
@@ -299,7 +299,7 @@ export default function PipelinesPage() {
     }
     // pipelines.account_id is NOT NULL post-017 with no DB default.
     if (!accountId) {
-      toast.error("Your profile is not linked to an account.");
+      toast.error(t("profileNotLinked"));
       setCreating(false);
       return;
     }
@@ -316,7 +316,7 @@ export default function PipelinesPage() {
       return;
     }
 
-    const stagesPayload = SPEC_DEFAULT_STAGES.map((s) => ({
+    const stagesPayload = DEFAULT_STAGES(t).map((s) => ({
       pipeline_id: pipeline.id,
       name: s.name,
       color: s.color,

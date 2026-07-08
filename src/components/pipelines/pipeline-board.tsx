@@ -111,7 +111,7 @@ export function PipelineBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="pipeline-board pipeline-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-xl p-4 pb-4 lg:snap-none">
+      <div className="pipeline-board pipeline-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-xl border border-border bg-muted/30 p-4 pb-4 lg:snap-none">
         {sortedStages.map((stage) => {
           const stageDeals = dealsByStage.get(stage.id) ?? [];
           const totalValue = stageDeals.reduce(
@@ -160,7 +160,7 @@ export function PipelineBoard({
 
       <style jsx>{`
         .pipeline-board {
-          background: hsl(222, 47%, 8%);
+          background: var(--muted);
         }
         .pipeline-scroll {
           scroll-behavior: smooth;
@@ -177,7 +177,7 @@ export function PipelineBoard({
         @media (hover: hover) and (pointer: fine) {
           .pipeline-scroll {
             scrollbar-width: thin;
-            scrollbar-color: hsl(222, 30%, 20%) transparent;
+            scrollbar-color: var(--border) transparent;
           }
           .pipeline-scroll::-webkit-scrollbar {
             height: 8px;
@@ -186,11 +186,11 @@ export function PipelineBoard({
             background: transparent;
           }
           .pipeline-scroll::-webkit-scrollbar-thumb {
-            background-color: hsl(222, 30%, 20%);
+            background-color: var(--border);
             border-radius: 9999px;
           }
           .pipeline-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: hsl(222, 20%, 30%);
+            background-color: var(--muted-foreground);
           }
         }
       `}</style>
@@ -221,8 +221,8 @@ function StageColumn({
   onEditDeal: (deal: Deal) => void;
   pipelineId?: string;
   accountId?: string;
-    onDealsChanged?: () => void;
-  }) {
+  onDealsChanged?: () => void;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const tb = useTranslations("pipelineBoard");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -253,39 +253,39 @@ function StageColumn({
       onDealsChanged?.();
       toast.success(tb("dealCreated"));
     } catch {
-      toast.error("Erro ao criar deal");
+      toast.error(tb("dealCreateError"));
     } finally {
       setQuickAdding(false);
     }
-  }, [quickAddTitle, pipelineId, accountId, stage.id, onDealsChanged]);
+  }, [quickAddTitle, pipelineId, accountId, stage.id, onDealsChanged, tb]);
 
   // Collapsed view — vertical bar
   if (collapsed) {
     return (
       <button
         onClick={onToggleCollapse}
-        className="flex w-12 shrink-0 snap-start flex-col items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] py-4 transition-colors hover:bg-white/[0.06] lg:w-12"
+        className="flex w-12 shrink-0 snap-start flex-col items-center gap-3 rounded-xl border border-border bg-card py-4 transition-colors hover:bg-muted lg:w-12"
       >
         <div
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: stage.color }}
         />
         <span
-          className="writing-mode-vertical text-[11px] font-medium text-white/50"
+          className="writing-mode-vertical text-[11px] font-medium text-muted-foreground"
           style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
         >
           {stage.name}
         </span>
-        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/60">
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
           {deals.length}
         </span>
-        <ChevronRight className="h-3 w-3 rotate-180 text-white/30" />
+        <ChevronRight className="h-3 w-3 rotate-180 text-muted-foreground/50" />
       </button>
     );
   }
 
   return (
-    <div className="flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-white/5 bg-white/[0.03] p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none">
+    <div className="flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-border bg-card p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none">
       {/* 3px colored top bar */}
       <div
         className="-mx-4 -mt-4 h-[3px] rounded-t-xl"
@@ -293,23 +293,23 @@ function StageColumn({
       />
 
       <div className="flex items-center justify-between pt-3">
-        <h3 className="truncate text-sm font-semibold text-white/90">
+        <h3 className="truncate text-sm font-semibold text-foreground">
           {stage.name}
         </h3>
         <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/60">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
             {deals.length}
           </span>
           <button
             onClick={onToggleCollapse}
-            className="rounded p-0.5 text-white/30 hover:bg-white/10 hover:text-white/60"
-            title="Recolher coluna"
+            className="rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground"
+            title={tb("collapseColumn")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
-      <p className="mt-0.5 text-xs text-white/40">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         {formatCurrency(totalValue, currency)}
       </p>
 
@@ -322,8 +322,8 @@ function StageColumn({
         }`}
       >
         {deals.length === 0 && !showQuickAdd ? (
-          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-white/10 py-10 text-xs text-white/30">
-            Arraste um deal aqui
+          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-border py-10 text-xs text-muted-foreground">
+            {tb("dragDealHere")}
           </div>
         ) : (
           deals.map((deal) => (
@@ -347,8 +347,8 @@ function StageColumn({
               if (e.key === "Enter") handleQuickAdd();
               if (e.key === "Escape") { setShowQuickAdd(false); setQuickAddTitle(""); }
             }}
-            placeholder="Título do deal..."
-            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-primary focus:outline-none"
+            placeholder={tb("quickAddPlaceholder")}
+            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             autoFocus
           />
           <button
@@ -364,7 +364,7 @@ function StageColumn({
           variant="ghost"
           size="sm"
           onClick={() => setShowQuickAdd(true)}
-          className="mt-3 w-full justify-start border border-dashed border-white/10 bg-transparent text-white/40 hover:border-white/20 hover:bg-white/5 hover:text-white/70"
+          className="mt-3 w-full justify-start border border-dashed border-border bg-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
         >
           <Plus className="mr-1 h-3 w-3" />
           {tb("addDeal")}

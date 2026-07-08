@@ -235,7 +235,13 @@
     "pipelineCreated": "Funil creado",
     "failedToCreate": "Error al crear funil",
     "failedToMove": "Error al mover negocio",
-    "profileNotLinked": "Tu perfil no está vinculado a una cuenta."
+    "profileNotLinked": "Tu perfil no está vinculado a una cuenta.",
+    "defaultPipelineName": "Funil de Ventas",
+    "stageNewLead": "Nuevo Lead",
+    "stageQualified": "Calificado",
+    "stageProposalSent": "Propuesta Enviada",
+    "stageNegotiation": "Negociación",
+    "stageWon": "Ganado"
   },
   "settings": {
     "title": "Configuración",

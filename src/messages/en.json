@@ -235,7 +235,13 @@
     "pipelineCreated": "Pipeline created",
     "failedToCreate": "Failed to create pipeline",
     "failedToMove": "Failed to move deal",
-    "profileNotLinked": "Your profile is not linked to an account."
+    "profileNotLinked": "Your profile is not linked to an account.",
+    "defaultPipelineName": "Sales Pipeline",
+    "stageNewLead": "New Lead",
+    "stageQualified": "Qualified",
+    "stageProposalSent": "Proposal Sent",
+    "stageNegotiation": "Negotiation",
+    "stageWon": "Won"
   },
   "settings": {
     "title": "Settings",
