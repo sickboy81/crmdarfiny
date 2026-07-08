@@ -17,7 +17,7 @@ import {
 import type { Deal, PipelineStage } from "@/types";
 import { DealCard } from "./deal-card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronRight, Loader2 } from "lucide-react";
+import { Plus, ChevronDown, Loader2, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/currency";
@@ -111,7 +111,7 @@ export function PipelineBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="pipeline-board pipeline-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-xl border border-border bg-muted/30 p-4 pb-4 lg:snap-none">
+      <div className="board-scroll flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-xl p-2 lg:snap-none">
         {sortedStages.map((stage) => {
           const stageDeals = dealsByStage.get(stage.id) ?? [];
           const totalValue = stageDeals.reduce(
@@ -145,7 +145,7 @@ export function PipelineBoard({
         }}
       >
         {activeDeal ? (
-          <div className="opacity-90">
+          <div className="opacity-95">
             <DealCard
               deal={activeDeal}
               stage={
@@ -159,38 +159,27 @@ export function PipelineBoard({
       </DragOverlay>
 
       <style jsx>{`
-        .pipeline-board {
-          background: var(--muted);
+        .board-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: var(--border) transparent;
         }
-        .pipeline-scroll {
-          scroll-behavior: smooth;
+        .board-scroll::-webkit-scrollbar {
+          height: 10px;
+        }
+        .board-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .board-scroll::-webkit-scrollbar-thumb {
+          background-color: var(--border);
+          border-radius: 9999px;
         }
         @media (hover: none), (pointer: coarse) {
-          .pipeline-scroll::-webkit-scrollbar {
+          .board-scroll::-webkit-scrollbar {
             height: 0;
             display: none;
           }
-          .pipeline-scroll {
+          .board-scroll {
             scrollbar-width: none;
-          }
-        }
-        @media (hover: hover) and (pointer: fine) {
-          .pipeline-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-          }
-          .pipeline-scroll::-webkit-scrollbar {
-            height: 8px;
-          }
-          .pipeline-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .pipeline-scroll::-webkit-scrollbar-thumb {
-            background-color: var(--border);
-            border-radius: 9999px;
-          }
-          .pipeline-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: var(--muted-foreground);
           }
         }
       `}</style>
@@ -259,70 +248,69 @@ function StageColumn({
     }
   }, [quickAddTitle, pipelineId, accountId, stage.id, onDealsChanged, tb]);
 
-  // Collapsed view — vertical bar
+  // Collapsed view — thin vertical strip
   if (collapsed) {
     return (
       <button
         onClick={onToggleCollapse}
-        className="flex w-12 shrink-0 snap-start flex-col items-center gap-3 rounded-xl border border-border bg-card py-4 transition-colors hover:bg-muted lg:w-12"
+        className="flex w-11 shrink-0 snap-start flex-col items-center gap-2 rounded-xl bg-black/5 py-3 transition-colors hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 lg:w-11"
+        style={{ borderLeft: `3px solid ${stage.color}` }}
       >
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: stage.color }}
-        />
         <span
-          className="writing-mode-vertical text-[11px] font-medium text-muted-foreground"
+          className="text-[10px] font-semibold text-muted-foreground"
           style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
         >
           {stage.name}
         </span>
-        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-background text-[10px] font-bold text-muted-foreground">
           {deals.length}
         </span>
-        <ChevronRight className="h-3 w-3 rotate-180 text-muted-foreground/50" />
       </button>
     );
   }
 
   return (
-    <div className="flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-border bg-card p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none">
-      {/* 3px colored top bar */}
-      <div
-        className="-mx-4 -mt-4 h-[3px] rounded-t-xl"
-        style={{ backgroundColor: stage.color }}
-      />
-
-      <div className="flex items-center justify-between pt-3">
-        <h3 className="truncate text-sm font-semibold text-foreground">
-          {stage.name}
-        </h3>
-        <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+    <div className="list-column flex w-[85vw] min-w-[272px] max-w-[300px] shrink-0 snap-start flex-col rounded-xl bg-muted/70 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[272px] lg:shrink lg:snap-none">
+      {/* Header */}
+      <div className="flex items-center justify-between px-2.5 pt-2.5 pb-1">
+        <div className="flex items-center gap-2">
+          <div
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: stage.color }}
+          />
+          <h3 className="text-[13px] font-semibold text-foreground">
+            {stage.name}
+          </h3>
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-background px-1.5 text-[11px] font-bold text-muted-foreground">
             {deals.length}
           </span>
-          <button
-            onClick={onToggleCollapse}
-            className="rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground"
-            title={tb("collapseColumn")}
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
         </div>
+        <button
+          onClick={onToggleCollapse}
+          className="rounded p-1 text-muted-foreground/60 hover:bg-black/5 hover:text-muted-foreground dark:hover:bg-white/10"
+          title={tb("collapseColumn")}
+        >
+          <ChevronDown className="h-4 w-4 -rotate-90" />
+        </button>
       </div>
-      <p className="mt-0.5 text-xs text-muted-foreground">
-        {formatCurrency(totalValue, currency)}
-      </p>
 
+      {/* Value subtitle */}
+      {totalValue > 0 && (
+        <p className="px-2.5 pb-1 text-[11px] text-muted-foreground">
+          {formatCurrency(totalValue, currency)}
+        </p>
+      )}
+
+      {/* Card list */}
       <div
         ref={setNodeRef}
-        className={`mt-3 flex flex-1 flex-col gap-2 rounded-lg transition-all ${
-          isOver
-            ? "bg-primary/10 outline outline-2 outline-dashed outline-primary outline-offset-2"
-            : ""
+        className={`flex flex-1 flex-col gap-2 overflow-y-auto px-1.5 py-1 transition-colors ${
+          isOver ? "rounded-lg bg-primary/5 outline outline-2 outline-dashed outline-primary/40" : ""
         }`}
+        style={{ maxHeight: "calc(100vh - 280px)" }}
       >
         {deals.length === 0 && !showQuickAdd ? (
-          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-border py-10 text-xs text-muted-foreground">
+          <div className="flex min-h-[40px] items-center justify-center rounded-lg border border-dashed border-transparent py-4 text-xs text-muted-foreground/50">
             {tb("dragDealHere")}
           </div>
         ) : (
@@ -337,39 +325,54 @@ function StageColumn({
         )}
       </div>
 
-      {/* Quick Add */}
-      {showQuickAdd ? (
-        <div className="mt-3 flex items-center gap-1.5">
-          <input
-            value={quickAddTitle}
-            onChange={(e) => setQuickAddTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleQuickAdd();
-              if (e.key === "Escape") { setShowQuickAdd(false); setQuickAddTitle(""); }
-            }}
-            placeholder={tb("quickAddPlaceholder")}
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            autoFocus
-          />
+      {/* Quick Add or Add button */}
+      <div className="px-1.5 pb-1.5 pt-1">
+        {showQuickAdd ? (
+          <div className="rounded-lg bg-background shadow-sm">
+            <textarea
+              value={quickAddTitle}
+              onChange={(e) => setQuickAddTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuickAdd();
+                }
+                if (e.key === "Escape") {
+                  setShowQuickAdd(false);
+                  setQuickAddTitle("");
+                }
+              }}
+              placeholder={tb("quickAddPlaceholder")}
+              className="w-full resize-none rounded-lg border-0 bg-transparent px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+              rows={2}
+              autoFocus
+            />
+            <div className="flex items-center gap-1.5 px-2 pb-2">
+              <button
+                onClick={handleQuickAdd}
+                disabled={!quickAddTitle.trim() || quickAdding}
+                className="rounded-md bg-primary px-3 py-1 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {quickAdding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tb("addDeal")}
+              </button>
+              <button
+                onClick={() => { setShowQuickAdd(false); setQuickAddTitle(""); }}
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
           <button
-            onClick={handleQuickAdd}
-            disabled={!quickAddTitle.trim() || quickAdding}
-            className="rounded-lg bg-primary px-3 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            onClick={() => setShowQuickAdd(true)}
+            className="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
           >
-            {quickAdding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            <Plus className="h-4 w-4" />
+            {tb("addDeal")}
           </button>
-        </div>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowQuickAdd(true)}
-          className="mt-3 w-full justify-start border border-dashed border-border bg-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
-        >
-          <Plus className="mr-1 h-3 w-3" />
-          {tb("addDeal")}
-        </Button>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -392,7 +395,7 @@ function DraggableDealCard({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      style={{ opacity: isDragging ? 0.3 : 1, touchAction: "none" }}
+      style={{ opacity: isDragging ? 0.4 : 1, touchAction: "none" }}
     >
       <DealCard deal={deal} stage={stage} onEdit={onEdit} />
     </div>

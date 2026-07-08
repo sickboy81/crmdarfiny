@@ -2,7 +2,7 @@
 
 import type { Deal, PipelineStage } from "@/types";
 import { useTranslations } from "next-intl";
-import { Calendar, Check, X, CheckSquare, MessageSquare } from "lucide-react";
+import { Calendar, Check, X, CheckSquare, MessageSquare, Paperclip } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
 interface DealCardProps {
@@ -12,31 +12,33 @@ interface DealCardProps {
   isOverlay?: boolean;
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function formatShortDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const isOverdue = d < now;
+  const date = d.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+  return { date, isOverdue };
 }
 
-function initials(name?: string, fallback?: string) {
-  const source = (name || fallback || "?").trim();
-  if (!source) return "?";
-  return source.charAt(0).toUpperCase();
+function getInitials(name?: string, fallback?: string) {
+  const source = (name || fallback || "").trim();
+  if (!source) return "";
+  const parts = source.split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return source.slice(0, 2).toUpperCase();
 }
 
 export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
   const ts = useTranslations("settings");
   const td = useTranslations("deals");
-  const contactLabel = deal.contact?.name || deal.contact?.phone || ts("noContact");
-  const assigneeLabel = deal.assignee?.full_name || null;
+  const contactName = deal.contact?.name || deal.contact?.phone || "";
+  const assigneeName = deal.assignee?.full_name || "";
+  const assigneeEmail = deal.assignee?.email || "";
 
   const labels = deal.labels ?? [];
   const checklists = deal.checklists ?? [];
   const activityCount = deal.activity_count ?? 0;
 
-  // Calculate overall checklist progress
   let totalItems = 0;
   let checkedItems = 0;
   for (const cl of checklists) {
@@ -46,6 +48,11 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
   }
   const checklistPct = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
 
+  const hasDueDate = !!deal.expected_close_date;
+  const dueInfo = deal.expected_close_date ? formatShortDate(deal.expected_close_date) : null;
+
+  const hasBadges = hasDueDate || totalItems > 0 || activityCount > 0 || deal.status === "won" || deal.status === "lost";
+
   return (
     <button
       type="button"
@@ -54,92 +61,81 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
         e.stopPropagation();
         onEdit(deal);
       }}
-      className={`group relative w-full cursor-pointer rounded-xl border border-border bg-card pl-4 pr-3 py-3 text-left shadow-sm transition-all ${
+      className={`deal-card group w-full cursor-pointer rounded-lg border bg-card text-left shadow-sm transition-all ${
         isOverlay
-          ? "shadow-xl"
-          : "hover:-translate-y-0.5 hover:shadow-md"
+          ? "border-primary/40 shadow-xl ring-2 ring-primary/20"
+          : "border-border hover:border-primary/30 hover:shadow-md"
       }`}
     >
-      {/* 4px left accent bar */}
-      <span
-        aria-hidden
-        className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
-        style={{ backgroundColor: stage?.color ?? "var(--muted-foreground)" }}
-      />
-
-      {/* Labels */}
+      {/* Labels row */}
       {labels.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 px-2.5 pt-2">
           {labels.map((label) => (
             <span
               key={label.id}
-              className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+              className="h-2 w-10 rounded-full"
               style={{ backgroundColor: label.color }}
-            >
-              {label.name}
-            </span>
+              title={label.name}
+            />
           ))}
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-2">
-        <h4 className="flex-1 text-sm font-semibold leading-snug text-foreground break-words">
+      {/* Title */}
+      <div className="px-2.5 pt-2 pb-1">
+        <h4 className="text-[13px] font-medium leading-snug text-foreground break-words">
           {deal.title}
         </h4>
-        {deal.status === "won" && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-semibold text-green-600 dark:text-green-400">
-            <Check className="h-3 w-3" />
-            {td("won")}
-          </span>
-        )}
-        {deal.status === "lost" && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
-            <X className="h-3 w-3" />
-            {td("lost")}
-          </span>
-        )}
       </div>
 
-      {/* Contact row */}
-      <div className="mt-2 flex items-center gap-2">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-          {initials(deal.contact?.name, deal.contact?.phone)}
-        </span>
-        <span className="truncate text-xs text-muted-foreground">{contactLabel}</span>
-      </div>
-
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-sm font-bold text-primary">
-          {formatCurrency(deal.value, deal.currency)}
-        </span>
-        {deal.expected_close_date && (
-          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Calendar className="h-3 w-3" />
-            {formatDate(deal.expected_close_date)}
-          </span>
-        )}
-      </div>
-
-      {/* Checklist progress + comment count */}
-      {(totalItems > 0 || activityCount > 0) && (
-        <div className="mt-2 flex items-center gap-3">
-          {totalItems > 0 && (
-            <div className="flex flex-1 items-center gap-1.5">
-              <CheckSquare className="h-3 w-3 text-muted-foreground" />
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${checklistPct}%`,
-                    backgroundColor: checklistPct === 100 ? "#22c55e" : "#3b82f6",
-                  }}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground tabular-nums">{checkedItems}/{totalItems}</span>
-            </div>
+      {/* Badges row */}
+      {hasBadges && (
+        <div className="flex flex-wrap items-center gap-1.5 px-2.5 pb-2">
+          {/* Due date badge */}
+          {dueInfo && (
+            <span
+              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] ${
+                dueInfo.isOverdue
+                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Calendar className="h-3 w-3" />
+              {dueInfo.date}
+            </span>
           )}
+
+          {/* Status badge */}
+          {deal.status === "won" && (
+            <span className="inline-flex items-center gap-0.5 rounded bg-green-100 px-1.5 py-0.5 text-[11px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              <Check className="h-3 w-3" />
+              {td("won")}
+            </span>
+          )}
+          {deal.status === "lost" && (
+            <span className="inline-flex items-center gap-0.5 rounded bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <X className="h-3 w-3" />
+              {td("lost")}
+            </span>
+          )}
+
+          {/* Checklist badge */}
+          {totalItems > 0 && (
+            <span
+              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] ${
+                checklistPct === 100
+                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <CheckSquare className="h-3 w-3" />
+              {checkedItems}/{totalItems}
+            </span>
+          )}
+
+          {/* Comment badge */}
           {activityCount > 0 && (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground">
               <MessageSquare className="h-3 w-3" />
               {activityCount}
             </span>
@@ -147,16 +143,32 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
         </div>
       )}
 
-      {assigneeLabel && (
-        <div className="mt-2 flex items-center justify-end">
-          <span
-            title={assigneeLabel}
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary"
-          >
-            {initials(assigneeLabel)}
-          </span>
+      {/* Footer: value + members */}
+      <div className="flex items-center justify-between border-t border-border/50 px-2.5 py-1.5">
+        <span className="text-xs font-semibold text-primary">
+          {formatCurrency(deal.value, deal.currency)}
+        </span>
+        <div className="flex items-center gap-1">
+          {/* Contact avatar */}
+          {contactName && (
+            <span
+              title={contactName}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary"
+            >
+              {getInitials(deal.contact?.name, deal.contact?.phone)}
+            </span>
+          )}
+          {/* Assignee avatar */}
+          {assigneeName && (
+            <span
+              title={assigneeName}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground"
+            >
+              {getInitials(assigneeName)}
+            </span>
+          )}
         </div>
-      )}
+      </div>
     </button>
   );
 }
