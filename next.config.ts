@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 /**
  * Baseline security headers applied to every response.
@@ -61,6 +62,21 @@ const SECURITY_HEADERS = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  /**
+   * Rewrites
+   *
+   * /bio → /api/bio (Edge Function that renders pure HTML)
+   * Matches the original Vercel architecture: the URL shows /bio
+   * but the response comes from the API route (no React wrapping).
+   */
+  async rewrites() {
+    return [
+      {
+        source: '/bio',
+        destination: '/api/bio',
+      },
+    ]
+  },
   /**
    * Cache-Control policy.
    *
@@ -125,4 +141,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

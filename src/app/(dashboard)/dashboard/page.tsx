@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/currency'
 import {
   MessageSquare,
@@ -38,6 +39,7 @@ type RangeDays = 7 | 30 | 90
 
 export default function DashboardPage() {
   const { defaultCurrency } = useAuth()
+  const t = useTranslations('dashboard')
   const [metrics, setMetrics] = useState<MetricsBundle | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
 
@@ -122,9 +124,9 @@ export default function DashboardPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Live analytics across conversations, contacts, deals, broadcasts, and automations.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -135,44 +137,38 @@ export default function DashboardPage() {
         ) : (
           <>
             <MetricCard
-              title="Active Conversations"
+              title={t('activeConversations')}
               value={metrics.activeConversations.current.toLocaleString()}
               icon={MessageSquare}
               delta={{
                 sign: metrics.activeConversations.previous,
-                label: deltaLabel(metrics.activeConversations.previous, 'new today vs yesterday'),
+                label: t('newTodayVsYesterday'),
               }}
             />
             <MetricCard
-              title="New Contacts Today"
+              title={t('newContactsToday')}
               value={metrics.newContactsToday.current.toLocaleString()}
               icon={UserPlus}
               delta={{
                 sign:
                   metrics.newContactsToday.current - metrics.newContactsToday.previous,
-                label: deltaLabel(
-                  metrics.newContactsToday.current - metrics.newContactsToday.previous,
-                  'vs yesterday',
-                ),
+                label: t('vsYesterday'),
               }}
             />
             <MetricCard
-              title="Open Deals Value"
+              title={t('openDealsValue')}
               value={formatCurrency(metrics.openDealsValue, defaultCurrency)}
               icon={DollarSign}
-              subtitle={`${metrics.openDealsCount} open deal${metrics.openDealsCount === 1 ? '' : 's'}`}
+              subtitle={metrics.openDealsCount === 1 ? t('openDeals', { count: metrics.openDealsCount }) : t('openDealsOther', { count: metrics.openDealsCount })}
             />
             <MetricCard
-              title="Messages Sent Today"
+              title={t('messagesSentToday')}
               value={metrics.messagesSentToday.current.toLocaleString()}
               icon={Send}
               delta={{
                 sign:
                   metrics.messagesSentToday.current - metrics.messagesSentToday.previous,
-                label: deltaLabel(
-                  metrics.messagesSentToday.current - metrics.messagesSentToday.previous,
-                  'vs yesterday',
-                ),
+                label: t('vsYesterday'),
               }}
             />
           </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { CornerUpLeft, Copy, SmilePlus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export function MessageActions({
   onReact,
   children,
 }: MessageActionsProps) {
+  const t = useTranslations("inbox");
   // Touch devices have no hover. Long-press fires `contextmenu`; we capture
   // it, suppress the native menu, and pin the toolbar open until the user
   // interacts elsewhere.
@@ -50,14 +52,14 @@ export function MessageActions({
   const handleCopy = async () => {
     const text = message.content_text ?? "";
     if (!text) {
-      toast.error("Nothing to copy");
+      toast.error(t("typeMessage"));
       return;
     }
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Copied");
+      toast.success(t("copied"));
     } catch {
-      toast.error("Copy failed");
+      toast.error(t("typeMessage"));
     }
     setTouchOpen(false);
   };

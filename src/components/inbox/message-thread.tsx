@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
@@ -108,10 +109,10 @@ interface MessageThreadProps {
   onToggleContactPanel?: () => void;
 }
 
-function formatDateSeparator(dateStr: string): string {
+function formatDateSeparator(dateStr: string, t: (key: string) => string): string {
   const date = new Date(dateStr);
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
+  if (isToday(date)) return t("today");
+  if (isYesterday(date)) return t("yesterday");
   return format(date, "MMMM d, yyyy");
 }
 
@@ -132,11 +133,13 @@ function groupMessagesByDate(messages: Message[]) {
   return groups;
 }
 
-const STATUS_OPTIONS: { label: string; value: ConversationStatus; color: string }[] = [
-  { label: "Open", value: "open", color: "text-primary" },
-  { label: "Pending", value: "pending", color: "text-amber-400" },
-  { label: "Closed", value: "closed", color: "text-muted-foreground" },
-];
+function getStatusOptions(t: (key: string) => string): { label: string; value: ConversationStatus; color: string }[] {
+  return [
+    { label: t("open"), value: "open", color: "text-primary" },
+    { label: t("pending"), value: "pending", color: "text-amber-400" },
+    { label: t("closed"), value: "closed", color: "text-muted-foreground" },
+  ];
+}
 
 /**
  * WhatsApp-style doodle background applied to the chat area (both the
@@ -165,6 +168,7 @@ export function MessageThread({
   contactPanelOpen,
   onToggleContactPanel,
 }: MessageThreadProps) {
+  const t = useTranslations("inbox");
   const { user } = useAuth();
   const { getPresence, getRow, now } = usePresence();
   const [loading, setLoading] = useState(false);
@@ -228,13 +232,13 @@ export function MessageThread({
       .reverse()
       .find((m) => m.sender_type === "customer");
 
-    if (!lastCustomerMsg) return { expired: true, remaining: "No customer messages" };
+    if (!lastCustomerMsg) return { expired: true, remaining: t("noCustomerMessages") };
 
     const hoursSince = differenceInHours(new Date(), new Date(lastCustomerMsg.created_at));
     const expired = hoursSince >= 24;
 
     if (expired) {
-      return { expired: true, remaining: "Expired" };
+      return { expired: true, remaining: t("expired") };
     }
 
     const hoursLeft = 24 - hoursSince;
@@ -504,7 +508,7 @@ export function MessageThread({
       // kinds use the caption as-is. Audio carries no caption.
       const contentText =
         payload.kind === "document"
-          ? payload.caption || payload.filename || "Document"
+          ? payload.caption || payload.filename || t("document")
           : payload.caption;
 
       const tempId = `temp-${Date.now()}`;
@@ -799,7 +803,8 @@ export function MessageThread({
 
   const displayName = contact.name || contact.phone;
   const messageGroups = groupMessagesByDate(messages);
-  const currentStatus = STATUS_OPTIONS.find(
+  const statusOptions = getStatusOptions(t);
+  const currentStatus = statusOptions.find(
     (s) => s.value === conversation.status
   );
   const assignedAgentId = conversation.assigned_agent_id ?? null;
@@ -918,7 +923,7 @@ export function MessageThread({
               align="end"
               className="border-border bg-popover"
             >
-              {STATUS_OPTIONS.map((opt) => (
+              {statusOptions.map((opt) => (
                 <DropdownMenuItem
                   key={opt.value}
                   onClick={() => handleStatusChange(opt.value)}
@@ -1017,7 +1022,7 @@ export function MessageThread({
                 {/* Date separator */}
                 <div className="mb-4 flex items-center justify-center">
                   <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-medium text-muted-foreground">
-                    {formatDateSeparator(group.date)}
+                    {formatDateSeparator(group.date, t)}
                   </span>
                 </div>
                 {/* Messages */}

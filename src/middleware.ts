@@ -1,7 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import createIntlMiddleware from 'next-intl/middleware'
+import { routing } from './i18n/routing'
+
+const handleI18nRouting = createIntlMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
+  // Run next-intl middleware first to resolve locale and set NEXT_LOCALE cookie.
+  // With localePrefix: 'never' this never redirects — it just resolves the
+  // locale from cookie → Accept-Language → default and attaches it to the
+  // request internals so getRequestConfig can read it server-side.
+  let response = handleI18nRouting(request)
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -38,6 +48,10 @@ export async function middleware(request: NextRequest) {
   const withRefreshedCookies = <T extends NextResponse>(response: T): T => {
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       response.cookies.set(cookie)
+    })
+    // Also copy any cookies set by the i18n middleware (e.g. NEXT_LOCALE)
+    response.cookies.getAll().forEach((cookie) => {
+      supabaseResponse.cookies.set(cookie)
     })
     return response
   }

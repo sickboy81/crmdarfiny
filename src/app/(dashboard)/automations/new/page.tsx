@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import {
   AutomationBuilder,
@@ -11,15 +12,30 @@ import {
 import { AUTOMATION_TEMPLATES, type TemplateSlug } from "@/lib/automations/templates"
 import type { AutomationStepType, AutomationTriggerType } from "@/types"
 
+const TEMPLATE_NAME_KEY: Record<TemplateSlug, string> = {
+  welcome_message: 'tplWelcomeName',
+  out_of_office: 'tplOutOfOfficeName',
+  lead_qualifier: 'tplLeadQualifierName',
+  follow_up_reminder: 'tplFollowUpName',
+}
+
+const TEMPLATE_DESC_KEY: Record<TemplateSlug, string> = {
+  welcome_message: 'tplWelcomeDesc',
+  out_of_office: 'tplOutOfOfficeDesc',
+  lead_qualifier: 'tplLeadQualifierDesc',
+  follow_up_reminder: 'tplFollowUpDesc',
+}
+
 export default function NewAutomationPage() {
   const params = useSearchParams()
   const template = params.get("template") as TemplateSlug | null
+  const t = useTranslations("automations")
 
   const initial: BuilderInitial = useMemo(() => {
     if (template && AUTOMATION_TEMPLATES[template]) {
-      const t = AUTOMATION_TEMPLATES[template]
+      const tmpl = AUTOMATION_TEMPLATES[template]
       const steps = expandFromSeeds(
-        t.steps.map((seed, idx) => ({
+        tmpl.steps.map((seed, idx) => ({
           index: idx,
           step_type: seed.step_type,
           step_config: seed.step_config as Record<string, unknown>,
@@ -28,10 +44,10 @@ export default function NewAutomationPage() {
         })),
       )
       return {
-        name: t.name,
-        description: t.description,
-        trigger_type: t.trigger_type,
-        trigger_config: t.trigger_config as Record<string, unknown>,
+        name: t(TEMPLATE_NAME_KEY[template]),
+        description: t(TEMPLATE_DESC_KEY[template]),
+        trigger_type: tmpl.trigger_type,
+        trigger_config: tmpl.trigger_config as Record<string, unknown>,
         is_active: false,
         steps,
       }
@@ -44,7 +60,7 @@ export default function NewAutomationPage() {
       is_active: false,
       steps: [],
     }
-  }, [template])
+  }, [template, t])
 
   return <AutomationBuilder initial={initial} />
 }

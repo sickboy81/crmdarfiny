@@ -28,6 +28,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   referrer: 'no-referrer',
   // Belt-and-braces against an invite URL ending up in search

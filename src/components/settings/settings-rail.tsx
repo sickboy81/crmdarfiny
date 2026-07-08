@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 import {
@@ -9,6 +10,26 @@ import {
   SETTINGS_SECTIONS,
   type SettingsSection,
 } from './settings-sections';
+
+/** Maps each section ID to its translation key under the `settings` namespace. */
+const SECTION_LABEL_KEY: Record<SettingsSection, string> = {
+  overview: 'overview',
+  profile: 'profile',
+  security: 'security',
+  appearance: 'appearance',
+  whatsapp: 'whatsapp',
+  templates: 'templates',
+  fields: 'fieldsAndTags',
+  deals: 'dealsAndCurrency',
+  members: 'teamMembers',
+  api: 'apiKeys',
+};
+
+/** Maps each rail group name to its translation key (null groups have no label). */
+const GROUP_LABEL_KEY: Record<string, string> = {
+  account: 'account',
+  workspace: 'workspace',
+};
 
 // Width at/above which the rail is a vertical column (already in view, so
 // no auto-scroll needed). Mirrors the Tailwind `lg:` breakpoint that
@@ -30,6 +51,7 @@ export function SettingsRail({
   onSelect: (section: SettingsSection) => void;
   hints?: Partial<Record<SettingsSection, ReactNode>>;
 }) {
+  const t = useTranslations('settings');
   const activeRef = useRef<HTMLButtonElement>(null);
 
   // When horizontal (mobile), keep the active chip in view. On desktop
@@ -53,18 +75,19 @@ export function SettingsRail({
         'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
       )}
     >
-      {RAIL_GROUPS.map(({ label, group }) => {
+      {RAIL_GROUPS.map(({ labelKey, group }) => {
         const items = SETTINGS_SECTIONS.filter(
           (s) => SECTION_META[s].group === group,
         );
+        const groupLabel = labelKey && GROUP_LABEL_KEY[group] ? t(GROUP_LABEL_KEY[group]) : labelKey ? t(labelKey) : null;
         return (
           <div
             key={group}
             className="flex shrink-0 gap-1 lg:flex-col lg:gap-0.5"
           >
-            {label ? (
+            {groupLabel ? (
               <div className="hidden px-3 pt-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.09em] text-muted-foreground uppercase lg:block">
-                {label}
+                {groupLabel}
               </div>
             ) : null}
             {items.map((s) => {
@@ -87,7 +110,7 @@ export function SettingsRail({
                   )}
                 >
                   <Icon className="size-4 shrink-0" />
-                  <span className="flex-1">{meta.label}</span>
+                  <span className="flex-1">{t(SECTION_LABEL_KEY[s])}</span>
                   {hints?.[s] != null ? (
                     <span
                       className={cn(

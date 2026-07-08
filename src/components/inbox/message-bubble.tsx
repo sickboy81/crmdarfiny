@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { Message, MessageReaction } from "@/types";
 import {
@@ -54,6 +55,7 @@ function MediaUnavailable({ label }: { label: string }) {
 }
 
 function MediaImage({ url, alt }: { url: string; alt: string }) {
+  const t = useTranslations("inbox");
   const [src, setSrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,7 @@ function MediaImage({ url, alt }: { url: string; alt: string }) {
 }
 
 function MessageContent({ message }: { message: Message }) {
+  const t = useTranslations("inbox");
   switch (message.content_type) {
     case "text":
       return (
@@ -131,7 +134,7 @@ function MessageContent({ message }: { message: Message }) {
           {message.media_url ? (
             <MediaImage url={message.media_url} alt="Shared image" />
           ) : (
-            <MediaUnavailable label="Image" />
+            <MediaUnavailable label={t("photo")} />
           )}
           {message.content_text && (
             <p className="mt-1 whitespace-pre-wrap break-words text-sm">
@@ -151,7 +154,7 @@ function MessageContent({ message }: { message: Message }) {
               className="max-h-64 max-w-60 rounded-lg"
             />
           ) : (
-            <MediaUnavailable label="Video" />
+            <MediaUnavailable label={t("video")} />
           )}
           {message.content_text && (
             <p className="mt-1 whitespace-pre-wrap break-words text-sm">
@@ -167,14 +170,14 @@ function MessageContent({ message }: { message: Message }) {
           {message.media_url ? (
             <audio src={message.media_url} controls className="max-w-60" />
           ) : (
-            <MediaUnavailable label="Audio" />
+            <MediaUnavailable label={t("voiceNote")} />
           )}
         </div>
       );
 
     case "document":
       if (!message.media_url) {
-        return <MediaUnavailable label={message.content_text || "Document"} />;
+        return <MediaUnavailable label={message.content_text || t("document")} />;
       }
       return (
         <a
@@ -185,7 +188,7 @@ function MessageContent({ message }: { message: Message }) {
         >
           <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
           <span className="truncate">
-            {message.content_text || "Document"}
+            {message.content_text || t("document")}
           </span>
         </a>
       );
@@ -209,7 +212,7 @@ function MessageContent({ message }: { message: Message }) {
       return (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span>{message.content_text || "Location shared"}</span>
+          <span>{message.content_text || t("locationShared")}</span>
         </div>
       );
 
@@ -248,6 +251,7 @@ export function MessageBubble({
   currentUserId,
   onToggleReaction,
 }: MessageBubbleProps) {
+  const t = useTranslations("inbox");
   const isAgent = message.sender_type === "agent" || message.sender_type === "bot";
   const time = format(new Date(message.created_at), "HH:mm");
 

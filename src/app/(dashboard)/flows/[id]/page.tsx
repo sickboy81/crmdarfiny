@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ import type { FlowRow, FlowNodeRow } from "@/lib/flows/types";
 export default function FlowEditorPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const t = useTranslations("flows");
 
   const [flow, setFlow] = useState<FlowRow | null>(null);
   const [nodes, setNodes] = useState<FlowNodeRow[]>([]);
@@ -51,7 +53,7 @@ export default function FlowEditorPage() {
       } catch (err) {
         if (!cancelled) {
           console.error(err);
-          toast.error("Couldn't load flow.");
+          toast.error(t("noFlows"));
         }
       } finally {
         if (!cancelled) setLoading(false);

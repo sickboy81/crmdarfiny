@@ -1,6 +1,7 @@
 "use client";
 
 import type { Deal, PipelineStage } from "@/types";
+import { useTranslations } from "next-intl";
 import { Calendar, Check, X } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
@@ -26,7 +27,8 @@ function initials(name?: string, fallback?: string) {
 }
 
 export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
-  const contactLabel = deal.contact?.name || deal.contact?.phone || "No contact";
+  const t = useTranslations("settings");
+  const contactLabel = deal.contact?.name || deal.contact?.phone || t("noContact");
   const assigneeLabel = deal.assignee?.full_name || null;
 
   return (

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Notification } from "@/types";
@@ -20,6 +21,8 @@ const TYPE_ICON: Record<Notification["type"], typeof Bell> = {
 export default function NotificationsPage() {
   const router = useRouter();
   const { accountId } = useAuth();
+  const t = useTranslations("notifications");
+  const tc = useTranslations("common");
   const [notifications, setNotifications] = useState<Notification[] | null>(
     null,
   );
@@ -147,7 +150,7 @@ export default function NotificationsPage() {
       <div className="flex h-64 flex-col items-center justify-center gap-2">
         <p className="text-sm text-destructive">{error}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>
-          Retry
+          {tc('retry')}
         </Button>
       </div>
     );
@@ -165,9 +168,9 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Conversations other teammates assign to you show up here.
+            {t('subtitle')}
           </p>
         </div>
         <Button
@@ -181,7 +184,7 @@ export default function NotificationsPage() {
           ) : (
             <CheckCheck className="h-4 w-4" />
           )}
-          Mark all as read
+          {t('markAllRead')}
         </Button>
       </div>
 
@@ -191,11 +194,10 @@ export default function NotificationsPage() {
             <Bell className="h-6 w-6 text-primary" />
           </div>
           <p className="mt-3 text-sm font-medium text-foreground">
-            No notifications yet
+            {t('noNotifications')}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            You&apos;ll see an alert here when someone assigns you a
-            conversation.
+            {t('assignAlert')}
           </p>
         </div>
       ) : (

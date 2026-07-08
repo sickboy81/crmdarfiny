@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   DndContext,
   PointerSensor,
@@ -68,6 +69,8 @@ export function PipelineSettings({
   onStagesChanged,
   onCreateNewPipeline,
 }: PipelineSettingsProps) {
+  const t = useTranslations("pipelineSettings");
+  const tc = useTranslations("common");
   const supabase = createClient();
 
   const [name, setName] = useState(pipeline.name);
@@ -127,14 +130,14 @@ export function PipelineSettings({
     setSaving(false);
 
     if (renameRes.error || stagesRes.error) {
-      toast.error("Failed to save pipeline");
+      toast.error(t("saveFailed"));
       return;
     }
 
     onOpenChange(false);
     onPipelinesChanged();
     onStagesChanged();
-    toast.success("Pipeline saved");
+    toast.success(t("saveSuccess"));
   }
 
   async function handleAddStage() {
@@ -151,7 +154,7 @@ export function PipelineSettings({
       .select()
       .single();
     if (error || !data) {
-      toast.error("Failed to add stage");
+      toast.error(t("saveFailed"));
       return;
     }
     setLocalStages([...localStages, data as PipelineStage]);
@@ -166,7 +169,7 @@ export function PipelineSettings({
       .select("id", { count: "exact", head: true })
       .eq("stage_id", stageId);
     if (count && count > 0) {
-      toast.error("Move or delete deals in this stage first");
+      toast.error(tc("error"));
       return;
     }
     const { error } = await supabase
@@ -174,7 +177,7 @@ export function PipelineSettings({
       .delete()
       .eq("id", stageId);
     if (error) {
-      toast.error("Failed to delete stage");
+      toast.error(t("saveFailed"));
       return;
     }
     setLocalStages(localStages.filter((s) => s.id !== stageId));
@@ -189,19 +192,19 @@ export function PipelineSettings({
       .eq("id", pipeline.id);
     setDeleting(false);
     if (error) {
-      toast.error("Failed to delete pipeline");
+      toast.error(t("saveFailed"));
       return;
     }
     onOpenChange(false);
     onPipelinesChanged();
-    toast.success("Pipeline deleted");
+    toast.success(t("deletedSuccess"));
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-popover border-border max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-popover-foreground">Manage Pipeline</DialogTitle>
+          <DialogTitle className="text-popover-foreground">{t("title")}</DialogTitle>
         </DialogHeader>
 
         {showDeleteConfirm ? (
@@ -231,7 +234,7 @@ export function PipelineSettings({
                 disabled={deleting}
                 className="bg-red-600 text-white hover:bg-red-700"
               >
-                {deleting ? "Deleting..." : "Delete Pipeline"}
+                {deleting ? tc("loading") : t("deletePipeline")}
               </Button>
             </div>
           </div>
@@ -239,7 +242,7 @@ export function PipelineSettings({
           <>
             <div className="grid gap-4 py-2">
               <div className="grid gap-2">
-                <Label className="text-muted-foreground">Pipeline Name</Label>
+                <Label className="text-muted-foreground">{t("pipelineName")}</Label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -248,7 +251,7 @@ export function PipelineSettings({
               </div>
 
               <div className="grid gap-2">
-                <Label className="text-muted-foreground">Stages</Label>
+                <Label className="text-muted-foreground">{t("stages")}</Label>
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -304,7 +307,7 @@ export function PipelineSettings({
                   <Input
                     value={newStageName}
                     onChange={(e) => setNewStageName(e.target.value)}
-                    placeholder="New stage name"
+                    placeholder={t("newStagePlaceholder")}
                     className="border-border bg-muted text-sm text-foreground"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleAddStage();
@@ -353,7 +356,7 @@ export function PipelineSettings({
                 disabled={saving || !name.trim()}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? t("saving") : tc("save")}
               </Button>
             </DialogFooter>
           </>
@@ -376,6 +379,7 @@ function SortableStageRow({
   onRemove: () => void;
   colors: string[];
 }) {
+  const t = useTranslations("pipelineSettings");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: stage.id });
 
@@ -396,7 +400,7 @@ function SortableStageRow({
         {...attributes}
         {...listeners}
         className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
-        aria-label="Drag to reorder"
+        aria-label={t("dragToReorder")}
       >
         <GripVertical className="h-4 w-4" />
       </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import {
   CONVERSATION_SELECT,
@@ -43,12 +44,13 @@ const STATUS_COLORS: Record<ConversationStatus, string> = {
 
 type InboxFilter = ConversationStatus | "all" | "unread";
 
-const FILTER_OPTIONS: { label: string; value: InboxFilter }[] = [
-  { label: "All", value: "all" },
-  { label: "Unread", value: "unread" },
-  { label: "Open", value: "open" },
-  { label: "Pending", value: "pending" },
-  { label: "Closed", value: "closed" },
+// Translated at render time using hook
+const FILTER_KEYS: { key: string; value: InboxFilter }[] = [
+  { key: "all", value: "all" },
+  { key: "unread", value: "unread" },
+  { key: "open", value: "open" },
+  { key: "pending", value: "pending" },
+  { key: "closed", value: "closed" },
 ];
 
 export function ConversationList({
@@ -58,6 +60,7 @@ export function ConversationList({
   onConversationsLoaded,
   resyncToken = 0,
 }: ConversationListProps) {
+  const t = useTranslations("inbox");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [loading, setLoading] = useState(true);
@@ -212,7 +215,8 @@ export function ConversationList({
     [onSelect]
   );
 
-  const activeFilter = FILTER_OPTIONS.find((o) => o.value === filter);
+  const filterOptions = FILTER_KEYS.map((o) => ({ label: t(o.key as "all" | "unread" | "open" | "pending" | "closed"), value: o.value }));
+  const activeFilter = filterOptions.find((o) => o.value === filter);
 
   return (
     // w-full on mobile so the list occupies the whole viewport when it's
@@ -226,7 +230,7 @@ export function ConversationList({
           <Input
             value={search}
             onChange={handleSearchChange}
-            placeholder="Search conversations..."
+            placeholder={t("searchPlaceholder")}
             className="border-border bg-muted pl-9 text-sm text-foreground placeholder-muted-foreground focus:border-primary/50"
           />
         </div>
@@ -241,7 +245,7 @@ export function ConversationList({
               align="start"
               className="border-border bg-popover"
             >
-              {FILTER_OPTIONS.map((opt) => (
+              {filterOptions.map((opt) => (
                 <DropdownMenuItem
                   key={opt.value}
                   onClick={() => setFilter(opt.value)}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { Contact, CustomField, MessageTemplate } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -48,11 +49,11 @@ function isValidHttpUrl(value: string): boolean {
   }
 }
 
-const contactFields = [
-  { value: 'name', label: 'Contact Name' },
-  { value: 'phone', label: 'Phone Number' },
-  { value: 'email', label: 'Email Address' },
-  { value: 'company', label: 'Company' },
+const contactFieldKeys = [
+  { value: 'name', labelKey: 'contactName' },
+  { value: 'phone', labelKey: 'phoneNumber' },
+  { value: 'email', labelKey: 'emailAddress' },
+  { value: 'company', labelKey: 'companyLabel' },
 ];
 
 const SAMPLE_CONTACT: Contact = {
@@ -76,8 +77,15 @@ export function Step3Personalize({
   onNext,
   onBack,
 }: Step3Props) {
+  const t = useTranslations('broadcasts');
+  const tc = useTranslations('common');
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loadingFields, setLoadingFields] = useState(true);
+
+  const contactFields = useMemo(
+    () => contactFieldKeys.map((f) => ({ value: f.value, label: t(f.labelKey) })),
+    [t],
+  );
   const [firstContact, setFirstContact] = useState<Contact | null>(null);
   const [firstContactCustomValues, setFirstContactCustomValues] = useState<
     Map<string, string>
@@ -230,15 +238,14 @@ export function Step3Personalize({
 
   const previewLabel = firstContact
     ? firstContact.name || firstContact.phone
-    : 'sample data';
+    : t('sampleData');
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Personalize Message</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('personalizeMessage')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Map template variables to contact fields, custom fields, or static
-          values.
+          {t('personalizeMessageDesc')}
         </p>
       </div>
 
@@ -246,13 +253,13 @@ export function Step3Personalize({
         <div className="rounded-xl border border-border bg-card/50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-primary" />
-            <p className="text-sm font-medium text-foreground">Header media</p>
+            <p className="text-sm font-medium text-foreground">{t('headerMedia')}</p>
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium uppercase text-primary">
               {mediaHeaderType}
             </span>
           </div>
           <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-            Media URL
+            {t('mediaUrl')}
           </label>
           <Input
             type="url"
@@ -268,8 +275,7 @@ export function Step3Personalize({
             className="border-border bg-muted text-foreground placeholder:text-muted-foreground"
           />
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Public URL of the {mediaHeaderType} sent as the message header.
-            Used for every recipient in this broadcast.
+            {t('mediaUrlHint', { type: mediaHeaderType })}
           </p>
           {mediaHeaderType === 'image' &&
             headerMediaError === null &&
@@ -277,15 +283,15 @@ export function Step3Personalize({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={headerMediaUrl.trim()}
-                alt="Header preview"
+                alt={t('headerPreview')}
                 className="mt-3 max-h-40 rounded-lg border border-border object-contain"
               />
             )}
           {headerMediaError && (
             <p className="mt-1.5 text-xs text-amber-300">
               {headerMediaError === 'missing'
-                ? 'A media URL is required to send this template.'
-                : 'Enter a valid http(s) URL.'}
+                ? t('mediaUrlRequired')
+                : t('invalidUrl')}
             </p>
           )}
         </div>
@@ -294,7 +300,7 @@ export function Step3Personalize({
       {placeholders.length === 0 && !mediaHeaderType ? (
         <div className="rounded-xl border border-border bg-card/50 p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            This template has no variables to personalize.
+            {t('noVariablesToPersonalize')}
           </p>
         </div>
       ) : placeholders.length === 0 ? null : (
@@ -317,7 +323,7 @@ export function Step3Personalize({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                      Mapping Type
+                      {t('mappingType')}
                     </label>
                     <Select
                       value={mapping.type}
@@ -332,10 +338,10 @@ export function Step3Personalize({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="border-border bg-popover">
-                        <SelectItem value="static">Static Value</SelectItem>
-                        <SelectItem value="field">Contact Field</SelectItem>
+                        <SelectItem value="static">{t('staticValue')}</SelectItem>
+                        <SelectItem value="field">{t('contactField')}</SelectItem>
                         <SelectItem value="custom_field">
-                          Custom Field
+                          {t('customFieldMapping')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -343,7 +349,7 @@ export function Step3Personalize({
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                      {mapping.type === 'static' ? 'Value' : 'Field'}
+                      {mapping.type === 'static' ? t('fieldValue') : t('fieldLabel')}
                     </label>
                     {mapping.type === 'static' ? (
                       <Input
@@ -362,7 +368,7 @@ export function Step3Personalize({
                         }
                       >
                         <SelectTrigger className="w-full border-border bg-muted text-foreground">
-                          <SelectValue placeholder="Select field..." />
+                          <SelectValue placeholder={t('selectFieldPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent className="border-border bg-popover">
                           {contactFields.map((field) => (
@@ -383,10 +389,10 @@ export function Step3Personalize({
                           <SelectValue
                             placeholder={
                               loadingFields
-                                ? 'Loading…'
+                                ? t('loadingFields')
                                 : customFields.length === 0
-                                  ? 'No custom fields'
-                                  : 'Select custom field…'
+                                  ? t('noCustomFieldsAvailable')
+                                  : t('selectCustomField')
                             }
                           />
                         </SelectTrigger>
@@ -412,7 +418,7 @@ export function Step3Personalize({
       <div className="rounded-xl border border-border bg-card/50 p-4">
         <div className="mb-3 flex items-center gap-2">
           <Eye className="h-4 w-4 text-primary" />
-          <p className="text-sm font-medium text-foreground">Live Preview</p>
+          <p className="text-sm font-medium text-foreground">{t('livePreview')}</p>
           <span className="text-xs text-muted-foreground">({previewLabel})</span>
           {loadingPreview && (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
@@ -429,11 +435,7 @@ export function Step3Personalize({
 
       {unmappedKeys.length > 0 && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-          Map every placeholder before continuing — still missing{' '}
-          <span className="font-mono font-semibold">
-            {unmappedKeys.join(', ')}
-          </span>
-          . Otherwise those placeholders will ship to Meta as empty strings.
+          {t('unmappedWarning', { keys: unmappedKeys.join(', ') })}
         </div>
       )}
 
@@ -444,14 +446,14 @@ export function Step3Personalize({
           className="border-border text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {tc('back')}
         </Button>
         <Button
           onClick={onNext}
           disabled={unmappedKeys.length > 0 || headerMediaError !== null}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          Next
+          {tc('next')}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

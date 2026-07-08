@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
+    alias: {
+      "next/server": "next/server.js",
+    },
   },
   test: {
     environment: "node",
@@ -17,5 +20,10 @@ export default defineConfig({
       META_APP_SECRET: "test-meta-app-secret",
     },
     clearMocks: true,
+    server: {
+      deps: {
+        inline: ["next-intl"],
+      },
+    },
   },
 });

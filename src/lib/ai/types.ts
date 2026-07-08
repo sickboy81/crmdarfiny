@@ -6,7 +6,7 @@
 // whether the account is on OpenAI or Anthropic.
 // ============================================================
 
-export type AiProvider = 'openai' | 'anthropic'
+export type AiProvider = 'openai' | 'anthropic' | 'openrouter'
 
 /**
  * Account AI setup, decrypted and ready to use. Produced by
@@ -30,7 +30,7 @@ export interface AiConfig {
 /** A single conversation turn in the shape both providers accept. */
 export interface ChatMessage {
   role: 'user' | 'assistant'
-  content: string
+  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>
 }
 
 /** Outcome of a generation call. */

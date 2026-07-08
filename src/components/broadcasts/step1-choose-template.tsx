@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { MessageTemplate } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, FileText, ArrowRight, Plus, X } from 'lucide-react';
 
 const categoryColors: Record<string, string> = {
   Marketing: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
@@ -20,34 +23,81 @@ interface Step1Props {
 }
 
 export function Step1ChooseTemplate({ selectedTemplate, onSelect, onNext, onBack }: Step1Props) {
+  const t = useTranslations('broadcasts');
+  const tc = useTranslations('common');
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: '',
+    category: 'Marketing',
+    language: 'pt_BR',
+    body_text: '',
+  });
 
   useEffect(() => {
-    async function fetchTemplates() {
-      try {
-        const supabase = createClient();
-        // Only APPROVED templates can be sent via Meta — anything else
-        // would 400 at broadcast time. Hide them rather than letting
-        // the user pick a template that will fail.
-        const { data, error: fetchError } = await supabase
-          .from('message_templates')
-          .select('*')
-          .eq('status', 'APPROVED')
-          .order('created_at', { ascending: false });
-
-        if (fetchError) throw fetchError;
-        setTemplates(data ?? []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load templates');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchTemplates();
   }, []);
+
+  async function fetchTemplates() {
+    try {
+      setLoading(true);
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from('message_templates')
+        .select('*')
+        .eq('status', 'APPROVED')
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setTemplates(data ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load templates');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCreateTemplate() {
+    if (!newTemplate.name.trim() || !newTemplate.body_text.trim()) return;
+
+    setCreating(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('message_templates')
+        .insert({
+          name: newTemplate.name.trim(),
+          category: newTemplate.category,
+          language: newTemplate.language,
+          body_text: newTemplate.body_text.trim(),
+          status: 'DRAFT',
+          user_id: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Refresh the list
+      await fetchTemplates();
+
+      // Auto-select the new template
+      if (data) {
+        onSelect(data);
+      }
+
+      setShowCreateDialog(false);
+      setNewTemplate({ name: '', category: 'Marketing', language: 'pt_BR', body_text: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create template');
+    } finally {
+      setCreating(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -68,20 +118,42 @@ export function Step1ChooseTemplate({ selectedTemplate, onSelect, onNext, onBack
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Choose a Template</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('chooseTemplate')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select an approved message template for your broadcast.
+          {t('chooseTemplateDesc')}
         </p>
       </div>
 
       {templates.length === 0 ? (
         <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-border bg-card/50">
           <FileText className="mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">No templates available.</p>
-          <p className="mt-1 text-xs text-muted-foreground">Create a template in Settings first.</p>
+          <p className="text-sm text-muted-foreground">{t('noTemplatesAvailable')}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {t('createTemplate') ?? 'Criar Modelo'}
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {templates.length} {templates.length === 1 ? 'modelo disponível' : 'modelos disponíveis'}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {t('createTemplate') ?? 'Criar Modelo'}
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => {
             const isSelected = selectedTemplate?.id === template.id;
             const catColor = categoryColors[template.category] ?? categoryColors.Utility;
@@ -115,18 +187,99 @@ export function Step1ChooseTemplate({ selectedTemplate, onSelect, onNext, onBack
             );
           })}
         </div>
+        </>
+      )}
+
+      {/* Create Template Dialog */}
+      {showCreateDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{t('createTemplate') ?? 'Criar Modelo'}</h3>
+              <button onClick={() => setShowCreateDialog(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">Nome</label>
+                <Input
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="Ex: Promoção de Verão"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">Categoria</label>
+                  <select
+                    value={newTemplate.category}
+                    onChange={(e) => setNewTemplate((p) => ({ ...p, category: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 text-sm border rounded-md bg-background"
+                  >
+                    <option value="Marketing">Marketing</option>
+                    <option value="Utility">Utility</option>
+                    <option value="Authentication">Authentication</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">Idioma</label>
+                  <select
+                    value={newTemplate.language}
+                    onChange={(e) => setNewTemplate((p) => ({ ...p, language: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 text-sm border rounded-md bg-background"
+                  >
+                    <option value="pt_BR">Português (BR)</option>
+                    <option value="en_US">English (US)</option>
+                    <option value="es_ES">Español (ES)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">Corpo da mensagem</label>
+                <textarea
+                  value={newTemplate.body_text}
+                  onChange={(e) => setNewTemplate((p) => ({ ...p, body_text: e.target.value }))}
+                  placeholder="Digite o texto da mensagem. Use {{1}}, {{2}} para variáveis."
+                  rows={4}
+                  className="w-full mt-1 px-3 py-2 text-sm border rounded-md bg-background resize-none"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Use {'{{1}}'}, {'{{2}}'} etc. para variáveis personalizáveis
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                {tc('cancel')}
+              </Button>
+              <Button
+                onClick={handleCreateTemplate}
+                disabled={!newTemplate.name.trim() || !newTemplate.body_text.trim() || creating}
+              >
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                {tc('create')}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="flex items-center justify-between border-t border-border pt-4">
         <Button variant="outline" onClick={onBack} className="border-border text-muted-foreground">
-          Back
+          {tc('back')}
         </Button>
         <Button
           onClick={onNext}
           disabled={!selectedTemplate}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          Next
+          {tc('next')}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

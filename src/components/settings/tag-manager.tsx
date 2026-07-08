@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Loader2, Plus, Tag as TagIcon, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -25,25 +26,26 @@ import {
 import { cn } from '@/lib/utils';
 import type { Tag } from '@/types';
 
-const PRESET_COLORS = [
-  { name: 'Red', value: '#ef4444' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Amber', value: '#f59e0b' },
-  { name: 'Emerald', value: '#10b981' },
-  { name: 'Cyan', value: '#06b6d4' },
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Violet', value: '#8b5cf6' },
-  { name: 'Pink', value: '#ec4899' },
-];
-
 /**
  * Tags card — colour-coded contact labels. Creation is an inline row
  * (name + colour swatch + Add); deletion goes through a confirmation
  * dialog since it detaches the tag from every contact.
  */
 export function TagManager() {
+  const t = useTranslations('settings');
   const supabase = createClient();
   const { user, accountId, loading: authLoading } = useAuth();
+
+  const PRESET_COLORS = [
+    { name: t('colorRed'), value: '#ef4444' },
+    { name: t('colorOrange'), value: '#f97316' },
+    { name: t('colorAmber'), value: '#f59e0b' },
+    { name: t('colorEmerald'), value: '#10b981' },
+    { name: t('colorCyan'), value: '#06b6d4' },
+    { name: t('colorBlue'), value: '#3b82f6' },
+    { name: t('colorViolet'), value: '#8b5cf6' },
+    { name: t('colorPink'), value: '#ec4899' },
+  ];
 
   const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -77,7 +79,7 @@ export function TagManager() {
       setTags(data || []);
     } catch (err) {
       console.error('Failed to fetch tags:', err);
-      toast.error('Failed to load tags');
+      toast.error(t('failedToLoadTags'));
     } finally {
       setLoading(false);
     }
@@ -85,14 +87,14 @@ export function TagManager() {
 
   async function handleCreate() {
     if (!newTagName.trim()) {
-      toast.error('Tag name is required');
+      toast.error(t('tagNameRequired'));
       return;
     }
 
     try {
       setSaving(true);
       if (!user || !accountId) {
-        toast.error('Not authenticated');
+        toast.error(t('notAuthenticated'));
         return;
       }
 
@@ -107,13 +109,13 @@ export function TagManager() {
 
       if (error) throw error;
 
-      toast.success('Tag created');
+      toast.success(t('tagCreated'));
       setNewTagName('');
       setSelectedColor(PRESET_COLORS[3].value);
       await fetchTags(user.id);
     } catch (err) {
       console.error('Create error:', err);
-      toast.error('Failed to create tag');
+      toast.error(t('failedToCreateTag'));
     } finally {
       setSaving(false);
     }
@@ -136,13 +138,13 @@ export function TagManager() {
 
       if (error) throw error;
 
-      toast.success('Tag deleted');
+      toast.success(t('tagDeleted'));
       setTags((prev) => prev.filter((t) => t.id !== tagToDelete.id));
       setDeleteDialogOpen(false);
       setTagToDelete(null);
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error('Failed to delete tag');
+      toast.error(t('failedToDeleteTag'));
     } finally {
       setDeleting(false);
     }
@@ -153,10 +155,10 @@ export function TagManager() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <TagIcon className="size-4 text-primary" />
-          Tags
+          {t('tags')}
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Colour-coded labels for grouping and filtering contacts.
+          {t('tagsDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -196,14 +198,14 @@ export function TagManager() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                No tags yet — create your first one below.
+                {t('noTags')}
               </p>
             )}
 
             {/* Inline create row */}
             <div className="flex flex-wrap items-center gap-2.5">
               <Input
-                placeholder="e.g. Newsletter"
+                placeholder={t('tagPlaceholder')}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 onKeyDown={(e) => {
@@ -242,7 +244,7 @@ export function TagManager() {
                 ) : (
                   <Plus className="size-4" />
                 )}
-                Add tag
+                {t('addTag')}
               </Button>
             </div>
           </>
@@ -253,10 +255,9 @@ export function TagManager() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete tag</DialogTitle>
+            <DialogTitle>{t('deleteTag')}</DialogTitle>
             <DialogDescription>
-              Delete the tag &quot;{tagToDelete?.name}&quot;? This removes it
-              from all contacts and cannot be undone.
+              {t('deleteTagConfirm', { name: tagToDelete?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -265,7 +266,7 @@ export function TagManager() {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleting}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -275,10 +276,10 @@ export function TagManager() {
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting...
+                  {t('deleting')}
                 </>
               ) : (
-                'Delete tag'
+                t('deleteTag')
               )}
             </Button>
           </DialogFooter>

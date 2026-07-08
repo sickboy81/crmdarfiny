@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { MessageTemplate } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,8 @@ export function TemplatePicker({
   onOpenChange,
   onSelect,
 }: TemplatePickerProps) {
+  const t = useTranslations("inbox");
+  const tc = useTranslations("common");
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MessageTemplate | null>(null);
@@ -190,7 +193,7 @@ export function TemplatePicker({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-popover-foreground">
             <LayoutTemplate className="h-4 w-4 text-primary" />
-            {selected ? selected.name : "Send template"}
+            {selected ? selected.name : t("send")}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
             {selected
@@ -267,7 +270,7 @@ export function TemplatePicker({
                 <Input
                   value={headerText}
                   onChange={(e) => setHeaderText(e.target.value)}
-                  placeholder="Value for the header variable"
+                  placeholder={t("searchPlaceholder")}
                   className="border-border bg-muted text-foreground placeholder:text-muted-foreground"
                 />
               </div>

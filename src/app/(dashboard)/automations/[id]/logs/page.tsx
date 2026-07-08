@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   ArrowLeft,
   Check,
@@ -28,6 +29,7 @@ export default function AutomationLogsPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const t = useTranslations("automations")
 
   const [automation, setAutomation] = useState<Automation | null>(null)
   const [logs, setLogs] = useState<AutomationLog[] | null>(null)
@@ -56,7 +58,7 @@ export default function AutomationLogsPage({
         setAutomation(autRes.data as Automation | null)
         setLogs((logRes.data ?? []) as AutomationLog[])
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load logs")
+        setError(err instanceof Error ? err.message : t("saveFailed"))
       }
     }
     load()
@@ -88,7 +90,7 @@ export default function AutomationLogsPage({
           type="button"
           onClick={() => router.push("/automations")}
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Back"
+          aria-label={t("backToAutomations")}
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -127,7 +129,7 @@ export default function AutomationLogsPage({
                   <StatusBadge status={log.status} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-foreground">
-                      {log.contact?.name ?? log.contact?.phone ?? "Unknown contact"}
+                      {log.contact?.name ?? log.contact?.phone ?? t("unknownContact")}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
                       {log.trigger_event} · {log.steps_executed?.length ?? 0} step

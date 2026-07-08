@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, Sparkles, CheckCircle2, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslations } from 'next-intl';
 import { canEditSettings } from '@/lib/auth/roles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,14 +35,17 @@ const MASKED_KEY = '••••••••••••••••';
 const PROVIDER_LABEL: Record<AiProvider, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic (Claude)',
+  openrouter: 'OpenRouter',
 };
 
 const KEY_PLACEHOLDER: Record<AiProvider, string> = {
   openai: 'sk-...',
-  anthropic: 'sk-ant-...',
+  anthropic: 'sk-ant...',
+  openrouter: 'sk-or-v1-...',
 };
 
 export function AiConfig() {
+  const t = useTranslations('aiConfig');
   const { accountId, accountRole, profileLoading } = useAuth();
   const canEdit = accountRole ? canEditSettings(accountRole) : false;
 
@@ -71,13 +75,19 @@ export function AiConfig() {
   // the loadedAccountIdRef pattern in whatsapp-config.tsx.
   const loadedAccountIdRef = useRef<string | null>(null);
 
+  const [modelList, setModelList] = useState<any[]>([]);
+  const [modelListLoading, setModelListLoading] = useState(false);
+  const [modelSearch, setModelSearch] = useState('');
+  const [modelComboboxOpen, setModelComboboxOpen] = useState(false);
+  const modelComboboxRef = useRef<HTMLDivElement>(null);
+
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/ai/config');
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? 'Failed to load AI configuration');
+        toast.error(data.error ?? t('loadModelFailed'));
         return;
       }
       if (data.configured) {
@@ -96,17 +106,55 @@ export function AiConfig() {
         setEmbeddingsKeyEdited(false);
       }
     } catch {
-      toast.error('Failed to load AI configuration');
+      toast.error(t('loadModelFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!accountId || loadedAccountIdRef.current === accountId) return;
     loadedAccountIdRef.current = accountId;
     void fetchConfig();
   }, [accountId, fetchConfig]);
+
+  // Fetch available models from OpenRouter
+  const fetchOpenRouterModels = useCallback(async () => {
+    setModelListLoading(true);
+    try {
+      const headers: Record<string, string> = {};
+      if (apiKey && apiKey !== MASKED_KEY) {
+        headers['x-api-key'] = apiKey;
+      }
+      const res = await fetch('/api/ai/models?provider=openrouter', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setModelList(data.models ?? []);
+      }
+    } catch {
+      // Silently fail — model list is a nice-to-have
+    } finally {
+      setModelListLoading(false);
+    }
+  }, [apiKey]);
+
+  // Fetch models if OpenRouter is selected and list is empty
+  useEffect(() => {
+    if (provider === 'openrouter' && modelList.length === 0 && (apiKey || hasStoredKey)) {
+      void fetchOpenRouterModels();
+    }
+  }, [provider, fetchOpenRouterModels, modelList.length, apiKey, hasStoredKey]);
+
+  // Close model combobox on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modelComboboxRef.current && !modelComboboxRef.current.contains(e.target as Node)) {
+        setModelComboboxOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Swap the model default when the provider changes, unless the user
   // typed a custom model.
@@ -115,6 +163,7 @@ export function AiConfig() {
     const isDefaultModel =
       model === AI_PROVIDER_DEFAULT_MODEL.openai ||
       model === AI_PROVIDER_DEFAULT_MODEL.anthropic ||
+      model === AI_PROVIDER_DEFAULT_MODEL.openrouter ||
       model.trim() === '';
     if (isDefaultModel) setModel(AI_PROVIDER_DEFAULT_MODEL[next]);
   };
@@ -149,10 +198,10 @@ export function AiConfig() {
         }),
       });
       const data = await res.json();
-      if (res.ok) toast.success('Key works — the provider responded.');
-      else toast.error(data.error ?? 'The provider rejected the request.');
+      if (res.ok) toast.success(t('testKeySuccess'));
+      else toast.error(data.error ?? t('testKeyFailed'));
     } catch {
-      toast.error('Could not reach the provider.');
+      toast.error(t('testKeyUnreachable'));
     } finally {
       setTesting(false);
     }
@@ -160,11 +209,11 @@ export function AiConfig() {
 
   const handleSave = async () => {
     if (!model.trim()) {
-      toast.error('Enter a model name.');
+      toast.error(t('enterModel'));
       return;
     }
     if (!configured && !keyEdited) {
-      toast.error('Enter your API key.');
+      toast.error(t('enterApiKey'));
       return;
     }
     setSaving(true);
@@ -176,13 +225,13 @@ export function AiConfig() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success('AI assistant saved.');
+        toast.success(t('saveSuccess'));
         await fetchConfig();
       } else {
-        toast.error(data.error ?? 'Failed to save.');
+        toast.error(data.error ?? t('saveFailed'));
       }
     } catch {
-      toast.error('Failed to save.');
+      toast.error(t('saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -193,7 +242,7 @@ export function AiConfig() {
     try {
       const res = await fetch('/api/ai/config', { method: 'DELETE' });
       if (res.ok) {
-        toast.success('AI configuration removed.');
+        toast.success(t('removeSuccess'));
         setConfigured(false);
         setHasStoredKey(false);
         setApiKey('');
@@ -203,10 +252,10 @@ export function AiConfig() {
         setSystemPrompt('');
       } else {
         const data = await res.json();
-        toast.error(data.error ?? 'Failed to remove.');
+        toast.error(data.error ?? t('removeFailed'));
       }
     } catch {
-      toast.error('Failed to remove.');
+      toast.error(t('removeFailed'));
     } finally {
       setRemoving(false);
     }
@@ -215,18 +264,24 @@ export function AiConfig() {
   if (loading || profileLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('loading')}
       </div>
     );
   }
 
   const disabled = !canEdit || saving;
 
+  const filteredModels = modelList.filter(
+    (m) =>
+      m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
+      (m.name ?? m.id).toLowerCase().includes(modelSearch.toLowerCase()),
+  );
+
   return (
     <div>
       <SettingsPanelHead
-        title="Agent setup"
-        description="Bring your own OpenAI or Anthropic key. wacrm calls the provider directly with your key — no per-seat AI fees, and your data stays yours. This powers AI-drafted replies in the inbox, the auto-reply bot, and the Playground."
+        title={t('title')}
+        description={t('description')}
       />
 
       {!canEdit && (
@@ -239,17 +294,16 @@ export function AiConfig() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-primary" /> Provider & key
+              <Sparkles className="h-4 w-4 text-primary" /> {t('providerKey')}
             </CardTitle>
             <CardDescription>
-              Your key is encrypted at rest (AES-256-GCM) and never shown again
-              after saving.
+              {t('providerKeyDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Provider</Label>
+                <Label>{t('provider')}</Label>
                 <Select
                   value={provider}
                   onValueChange={(v) => handleProviderChange(v as AiProvider)}
@@ -263,24 +317,88 @@ export function AiConfig() {
                     <SelectItem value="anthropic">
                       {PROVIDER_LABEL.anthropic}
                     </SelectItem>
+                    <SelectItem value="openrouter">
+                      {PROVIDER_LABEL.openrouter}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="ai-model">Model</Label>
-                <Input
-                  id="ai-model"
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  placeholder={AI_PROVIDER_DEFAULT_MODEL[provider]}
-                  disabled={disabled}
-                />
+              <div className="space-y-2 relative" ref={modelComboboxRef}>
+                <Label htmlFor="ai-model">{t('model')}</Label>
+                <div className="relative">
+                  <Input
+                    id="ai-model"
+                    value={model}
+                    onChange={(e) => {
+                      setModel(e.target.value);
+                      setModelSearch(e.target.value);
+                    }}
+                    onFocus={() => {
+                      if (provider === 'openrouter') {
+                        setModelComboboxOpen(true);
+                      }
+                    }}
+                    placeholder={AI_PROVIDER_DEFAULT_MODEL[provider]}
+                    disabled={disabled}
+                    autoComplete="off"
+                  />
+                  {provider === 'openrouter' && (
+                    <button
+                      type="button"
+                      onClick={() => setModelComboboxOpen((o) => !o)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                      disabled={disabled}
+                    >
+                      {modelComboboxOpen ? '▲' : '▼'}
+                    </button>
+                  )}
+                </div>
+
+                {provider === 'openrouter' && modelComboboxOpen && (
+                  <div className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md">
+                    <div className="px-2 py-1.5">
+                      <Input
+                        placeholder={t('modelSearchPlaceholder')}
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        className="h-8 text-xs"
+                        autoFocus
+                      />
+                    </div>
+                    {modelListLoading ? (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        {t('loadingModels')}
+                      </div>
+                    ) : filteredModels.length === 0 ? (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        {t('noModelsMatch')}
+                      </div>
+                    ) : (
+                      <div className="py-1">
+                        {filteredModels.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="w-full text-left px-2 py-1.5 text-xs rounded-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => {
+                              setModel(m.id);
+                              setModelComboboxOpen(false);
+                            }}
+                          >
+                            <span className="font-medium">{m.name}</span>
+                            <span className="ml-2 text-muted-foreground">({m.id})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ai-key">API key</Label>
+              <Label htmlFor="ai-key">{t('apiKey')}</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Input
@@ -324,16 +442,16 @@ export function AiConfig() {
                   ) : (
                     <CheckCircle2 className="mr-2 h-4 w-4" />
                   )}
-                  Test key
+                  {t('testKey')}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="ai-embeddings-key">
-                Embeddings key{' '}
+                {t('embeddingsKey')}{' '}
                 <span className="font-normal text-muted-foreground">
-                  (optional — enables semantic knowledge-base search)
+                  {t('embeddingsKeyOptional')}
                 </span>
               </Label>
               <Input
@@ -355,11 +473,9 @@ export function AiConfig() {
                 autoComplete="off"
               />
               <p className="text-xs text-muted-foreground">
-                An OpenAI key used only to embed your knowledge base
-                (text-embedding-3-small)
-                {provider === 'openai' ? ' — can be the same key as above' : ''}.
-                Leave blank to use keyword search instead. Clear it to turn
-                semantic search off.
+                {t('embeddingsKeyHint')}
+                {provider === 'openai' ? t('embeddingsKeyHintSame') : ''}
+                {t('embeddingsKeyHintBlank')}
               </p>
             </div>
           </CardContent>
@@ -367,21 +483,19 @@ export function AiConfig() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Behaviour</CardTitle>
+            <CardTitle className="text-base">{t('behaviour')}</CardTitle>
             <CardDescription>
-              Tell the assistant about your business — products, tone, what it
-              may and may not promise. This context feeds both drafts and
-              auto-replies.
+              {t('behaviourDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ai-prompt">Business context & instructions</Label>
+              <Label htmlFor="ai-prompt">{t('businessContext')}</Label>
               <Textarea
                 id="ai-prompt"
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                placeholder="e.g. We are Acme, a coffee-equipment store. Be warm and concise. Never quote prices or delivery dates — hand off to a human for those."
+                placeholder={t('businessContextPlaceholder')}
                 rows={5}
                 disabled={disabled}
               />
@@ -390,11 +504,10 @@ export function AiConfig() {
             <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Enable AI assistant
+                  {t('enableAi')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Master switch. Turns on the “Draft with AI” button in the
-                  inbox.
+                  {t('enableAiDesc')}
                 </p>
               </div>
               <Switch
@@ -407,12 +520,10 @@ export function AiConfig() {
             <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Auto-reply to inbound messages
+                  {t('autoReply')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  The bot answers new inbound messages automatically (only when
-                  no flow handles them and no agent is assigned). Hands off to a
-                  human when it can’t help.
+                  {t('autoReplyDesc')}
                 </p>
               </div>
               <Switch
@@ -424,9 +535,9 @@ export function AiConfig() {
 
             <div className="flex items-center justify-between gap-4">
               <div>
-                <Label htmlFor="ai-max">Max auto-replies per conversation</Label>
+                <Label htmlFor="ai-max">{t('maxReplies')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  After this many bot replies in one thread, the bot goes quiet.
+                  {t('maxRepliesDesc')}
                 </p>
               </div>
               <Input
@@ -470,7 +581,7 @@ export function AiConfig() {
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              Remove
+              {t('remove')}
             </Button>
           ) : (
             <span />
@@ -478,7 +589,7 @@ export function AiConfig() {
 
           <Button onClick={handleSave} disabled={disabled}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save
+            {t('save')}
           </Button>
         </div>
       </div>

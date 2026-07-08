@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCan } from '@/hooks/use-can';
 
 import { CustomFieldsSettings } from './custom-fields-settings';
@@ -14,13 +15,14 @@ import { TagManager } from './tag-manager';
  * regardless.
  */
 export function FieldsAndTagsPanel() {
+  const t = useTranslations('settings');
   const canEditSettings = useCan('edit-settings');
 
   return (
     <section className="max-w-3xl animate-in fade-in-50 space-y-4 duration-200">
       <SettingsPanelHead
-        title="Fields & tags"
-        description="Two ways to organize contacts: colour-coded tags for quick grouping, and custom fields for structured data."
+        title={t('fieldsTagsTitle')}
+        description={t('fieldsTagsDesc')}
       />
       <TagManager />
       {canEditSettings ? <CustomFieldsSettings /> : null}

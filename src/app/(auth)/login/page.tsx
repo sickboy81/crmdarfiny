@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MessageSquare, UsersRound } from "lucide-react";
+import { MessageSquare, UsersRound, Landmark, Eye, EyeOff } from "lucide-react";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
-// `useSearchParams` opts the component out of static prerendering
-// unless it sits under a Suspense boundary. We split the form into
-// a child component so the outer page can prerender the chrome
-// (background, card frame) while the form hydrates with the query
-// string on the client.
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
@@ -31,13 +28,12 @@ export default function LoginPage() {
 
 function LoginPageInner() {
   const searchParams = useSearchParams();
-  // Forwarded from `/join/<token>` when the visitor already has an
-  // account. After a successful sign-in we send them to the join
-  // page to accept rather than to /dashboard.
   const inviteToken = searchParams.get("invite");
+  const t = useTranslations("auth.login");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -68,22 +64,24 @@ function LoginPageInner() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="fixed top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md border-border bg-card">
-        <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <CardHeader className="flex flex-col items-center justify-center text-center pt-8">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary mx-auto shadow-sm">
             {inviteToken ? (
-              <UsersRound className="h-6 w-6 text-primary" />
+              <UsersRound className="h-7 w-7" />
             ) : (
-              <MessageSquare className="h-6 w-6 text-primary" />
+              <Landmark className="h-7 w-7" />
             )}
           </div>
-          <CardTitle className="text-xl text-foreground">
-            {inviteToken ? "Sign in to accept" : "Welcome back"}
+          <CardTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center justify-center gap-1.5">
+            <span>Darfiny Avila</span>
+            <span className="text-primary">CRM</span>
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {inviteToken
-              ? "Sign in and we'll take you to the invitation."
-              : "Sign in to your account"}
+          <CardDescription className="text-muted-foreground text-xs mt-1">
+            {inviteToken ? t("descriptionInvite") : "Faça login para continuar"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,7 +94,7 @@ function LoginPageInner() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="text-muted-foreground">
-                Email
+                {t("email")}
               </Label>
               <Input
                 id="email"
@@ -112,24 +110,40 @@ function LoginPageInner() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-muted-foreground">
-                  Password
+                  {t("password")}
                 </Label>
+                {/* Ocultado temporariamente:
                 <Link
                   href="/forgot-password"
                   className="text-sm text-primary hover:text-primary/80"
                 >
-                  Forgot password?
+                  {t("forgotPassword")}
                 </Link>
+                */}
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10 border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -137,12 +151,13 @@ function LoginPageInner() {
               disabled={loading}
               className="mt-2 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? t("signInLoading") : t("signIn")}
             </Button>
           </form>
 
+          {/* Ocultado temporariamente:
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            {t("noAccount")}{" "}
             <Link
               href={
                 inviteToken
@@ -151,9 +166,10 @@ function LoginPageInner() {
               }
               className="text-primary hover:text-primary/80"
             >
-              Create account
+              {t("createAccount")}
             </Link>
           </p>
+          */}
         </CardContent>
       </Card>
     </div>

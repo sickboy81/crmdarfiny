@@ -70,12 +70,13 @@ export async function providerHttpError(
  * Collapse consecutive same-role turns into one (joined with blank
  * lines). Anthropic requires strictly alternating roles; merging is
  * also harmless for OpenAI and keeps the transcript compact.
+ * Handles both string and multimodal array content.
  */
 export function mergeConsecutive(messages: ChatMessage[]): ChatMessage[] {
   const out: ChatMessage[] = []
   for (const m of messages) {
     const last = out[out.length - 1]
-    if (last && last.role === m.role) {
+    if (last && last.role === m.role && typeof last.content === 'string' && typeof m.content === 'string') {
       last.content = `${last.content}\n\n${m.content}`
     } else {
       out.push({ role: m.role, content: m.content })

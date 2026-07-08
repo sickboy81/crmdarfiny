@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronRight, Loader2 } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
@@ -35,6 +36,7 @@ export function SettingsOverview({
 }: {
   onSelect: (section: SettingsSection) => void;
 }) {
+  const t = useTranslations('settings');
   const { user, profile, accountId, accountRole, defaultCurrency, canManageMembers } =
     useAuth();
   const { mode, theme } = useTheme();
@@ -137,7 +139,7 @@ export function SettingsOverview({
     };
   }, [user?.id, accountId, canManageMembers]);
 
-  const displayName = profile?.full_name || profile?.email || 'Your account';
+  const displayName = profile?.full_name || profile?.email || t('yourAccount');
   const initial = (profile?.full_name || profile?.email || 'U').charAt(0).toUpperCase();
   const roleMeta = accountRole ? ROLE_META[accountRole] : null;
   const RoleIcon = roleMeta?.icon;
@@ -158,14 +160,14 @@ export function SettingsOverview({
       section: 'whatsapp',
       loading: whatsappLoading,
       subtitle: !whatsapp?.configured ? (
-        'Not set up yet'
+        t('notSetUp')
       ) : whatsapp.connected ? (
         <>
-          <StatusDot tone="ok" /> Connected
+          <StatusDot tone="ok" /> {t('connected')}
         </>
       ) : (
         <>
-          <StatusDot tone="muted" /> Needs reconnecting
+          <StatusDot tone="muted" /> {t('needsReconnecting')}
         </>
       ),
     },
@@ -174,12 +176,10 @@ export function SettingsOverview({
       loading: countsLoading,
       subtitle:
         counts?.members == null
-          ? 'View team members'
-          : `${counts.members} member${counts.members === 1 ? '' : 's'}${
+          ? t('viewMembers')
+          : `${counts.members} ${counts.members === 1 ? t('memberSingular') : t('memberPlural')}${
               counts.pendingInvites
-                ? ` · ${counts.pendingInvites} pending invite${
-                    counts.pendingInvites === 1 ? '' : 's'
-                  }`
+                ? ` · ${counts.pendingInvites} ${counts.pendingInvites === 1 ? t('pendingInviteSingular') : t('pendingInvitePlural')}`
                 : ''
             }`,
     },
@@ -188,10 +188,10 @@ export function SettingsOverview({
       loading: countsLoading,
       subtitle:
         counts?.templates == null
-          ? 'Manage message templates'
-          : `${counts.templates} template${counts.templates === 1 ? '' : 's'}${
+          ? t('manageTemplates')
+          : `${counts.templates} ${counts.templates === 1 ? t('templateSingular') : t('templatePlural')}${
               counts.templatesPending
-                ? ` · ${counts.templatesPending} pending review`
+                ? ` · ${counts.templatesPending} ${t('pendingReview')}`
                 : ''
             }`,
     },
@@ -205,10 +205,10 @@ export function SettingsOverview({
       loading: countsLoading,
       subtitle:
         counts?.tags == null && counts?.customFields == null
-          ? 'Tags and custom fields'
-          : `${counts?.tags ?? 0} tag${counts?.tags === 1 ? '' : 's'} · ${
+          ? t('tagsAndFields')
+          : `${counts?.tags ?? 0} ${counts?.tags === 1 ? t('tagSingular') : t('tagPlural')} · ${
               counts?.customFields ?? 0
-            } custom field${counts?.customFields === 1 ? '' : 's'}`,
+            } ${counts?.customFields === 1 ? t('customFieldSingular') : t('customFieldPlural')}`,
     },
     {
       section: 'appearance',
@@ -267,12 +267,12 @@ export function SettingsOverview({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">
-                  {meta.label}
+                  {t(meta.labelKey)}
                 </span>
                 <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                   {loading ? (
                     <>
-                      <Loader2 className="size-3 animate-spin" /> Loading…
+                      <Loader2 className="size-3 animate-spin" /> {t('loading')}
                     </>
                   ) : (
                     subtitle
