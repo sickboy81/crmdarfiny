@@ -363,7 +363,7 @@ export function ImageManager() {
       ) : (
         <div className="flex gap-4">
           {/* Grid or List */}
-          <div className={`flex-1 min-w-0 transition-all ${selectedFile && !showCropModal && !showPreview ? 'max-w-[calc(100%-300px)]' : ''}`}>
+          <div className={`flex-1 min-w-0 transition-all ${selectedFile && !showCropModal && !showPreview ? 'max-w-[calc(100%-420px)]' : ''}`}>
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                 {filteredFiles.map((file) => {
@@ -452,7 +452,7 @@ export function ImageManager() {
 
           {/* Side Panel - Selected File */}
           {selectedFile && !showCropModal && !showPreview && (
-            <div className="w-[280px] shrink-0">
+            <div className="w-[400px] shrink-0">
               <Card className="sticky top-4">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -462,7 +462,7 @@ export function ImageManager() {
                     </Button>
                   </div>
                   {isImageType(selectedFile.type) ? (
-                    <img src={selectedFile.url} alt="" className="w-full h-40 rounded-lg object-cover" />
+                    <img src={selectedFile.url} alt="" className="w-full max-h-[60vh] rounded-lg object-contain" />
                   ) : (
                     <div className="w-full h-40 rounded-lg bg-muted flex items-center justify-center">
                       {(() => {
