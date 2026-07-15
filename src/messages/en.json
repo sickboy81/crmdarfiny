@@ -244,7 +244,10 @@
     "stageWon": "Won",
     "boardBackground": "Board background",
     "backgroundSolid": "Solid color",
-    "backgroundGradient": "Gradient"
+    "backgroundGradient": "Gradient",
+    "templates": "Templates",
+    "reports": "Reports",
+    "customFields": "Custom Fields"
   },
   "settings": {
     "title": "Settings",
@@ -1491,7 +1494,11 @@
     "moveError": "Failed to move deal",
     "template": "Template",
     "fromTemplate": "Use template",
-    "noTemplates": "No templates available"
+    "noTemplates": "No templates available",
+    "labels": "Labels",
+    "actions": "Actions",
+    "watch": "Watch",
+    "unwatch": "Unwatch"
   },
   "pipelineBoard": {
     "dragDealHere": "Drop a deal here",
@@ -1499,7 +1506,15 @@
     "addDeal": "Add deal",
     "collapseColumn": "Collapse column",
     "dealCreated": "Deal created",
-    "dealCreateError": "Failed to create deal"
+    "dealCreateError": "Failed to create deal",
+    "sortBy": "Sort by",
+    "sortDefault": "Default",
+    "sortTitleAsc": "Title A-Z",
+    "sortTitleDesc": "Title Z-A",
+    "sortValueAsc": "Value ↑",
+    "sortValueDesc": "Value ↓",
+    "sortDateAsc": "Oldest first",
+    "sortDateDesc": "Newest first"
   },
   "dealLabels": {
     "label": "Label",
@@ -1553,6 +1568,57 @@
     "lostThisMonth": "Lost This Month",
     "lostThisMonthTooltip": "Deals marked as Lost since the first day of the current month."
   },
+  "advancedReports": {
+    "title": "Pipeline Reports",
+    "winRate": "Win Rate",
+    "avgValue": "Average Value",
+    "newThisWeek": "New this week",
+    "conversionFunnel": "Conversion Funnel",
+    "valueByStage": "Value by Stage",
+    "topPerformers": "Top Performers",
+    "totalDeals": "Total Deals",
+    "wonDeals": "Won Deals",
+    "lostDeals": "Lost Deals",
+    "deals": "deals",
+    "noData": "No data available",
+    "activityTimeline": "Activity Timeline",
+    "conversionRate": "Conversion Rate"
+  },
+  "notificationBell": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications"
+  },
+  "bulkActions": {
+    "selected": "{count} cards selected",
+    "moveTo": "Move to",
+    "archive": "Archive",
+    "delete": "Delete",
+    "deleteConfirm": "Delete {count} cards?",
+    "clear": "Clear",
+    "moveSuccess": "Moved {count} cards",
+    "archiveSuccess": "Archived {count} cards",
+    "deleteSuccess": "Deleted {count} cards",
+    "error": "Error"
+  },
+  "customFields": {
+    "title": "Custom Fields",
+    "addField": "Add field",
+    "fieldNamePlaceholder": "Field name",
+    "fieldType": "Type",
+    "required": "Required",
+    "options": "Options",
+    "addOption": "Add option",
+    "noFields": "No custom fields",
+    "fieldCreated": "Field created",
+    "fieldDeleted": "Field deleted",
+    "error": "Error",
+    "text": "Text",
+    "number": "Number",
+    "date": "Date",
+    "select": "Select",
+    "boolean": "Yes/No"
+  },
   "pipelineSettings": {
     "title": "Pipeline settings",
     "pipelines": "Pipelines",
@@ -1595,7 +1661,11 @@
     "clearFilters": "Clear filters",
     "noResults": "No deals found",
     "showArchived": "Show archived",
-    "hideArchived": "Hide archived"
+    "hideArchived": "Hide archived",
+    "boardBackground": "Board Background",
+    "default": "Default",
+    "gradients": "Gradients",
+    "clearBackground": "Clear background"
   },
   "dealTemplates": {
     "title": "Deal Templates",
@@ -1612,7 +1682,21 @@
     "templateLabels": "Labels",
     "addLabel": "Add label",
     "saveTemplate": "Save template",
-    "deleteConfirm": "Delete this template?"
+    "deleteConfirm": "Delete this template?",
+    "name": "Name",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "dealTitle": "Deal title",
+    "description": "Description",
+    "value": "Value",
+    "checklistItems": "Checklist items (one per line)",
+    "labels": "Labels (name:color per line)",
+    "noTemplates": "No templates yet",
+    "error": "Error",
+    "createSuccess": "Template created",
+    "updateSuccess": "Template updated",
+    "deleteSuccess": "Template deleted"
   },
   "empty": {
     "noData": "No data available",

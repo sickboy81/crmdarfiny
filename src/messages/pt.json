@@ -244,7 +244,10 @@
     "stageWon": "Ganho",
     "boardBackground": "Fundo do board",
     "backgroundSolid": "Cor solida",
-    "backgroundGradient": "Degradê"
+    "backgroundGradient": "Degradê",
+    "templates": "Modelos",
+    "reports": "Relatórios",
+    "customFields": "Campos Personalizados"
   },
   "settings": {
     "title": "Configurações",
@@ -1493,7 +1496,11 @@
     "moveError": "Erro ao mover deal",
     "template": "Modelo",
     "fromTemplate": "Usar modelo",
-    "noTemplates": "Nenhum modelo disponível"
+    "noTemplates": "Nenhum modelo disponível",
+    "labels": "Etiquetas",
+    "actions": "Ações",
+    "watch": "Observar",
+    "unwatch": "Parar de observar"
   },
   "pipelineBoard": {
     "dragDealHere": "Arraste um deal aqui",
@@ -1501,7 +1508,15 @@
     "addDeal": "Adicionar deal",
     "collapseColumn": "Recolher coluna",
     "dealCreated": "Deal criado",
-    "dealCreateError": "Erro ao criar deal"
+    "dealCreateError": "Erro ao criar deal",
+    "sortBy": "Ordenar por",
+    "sortDefault": "Padrão",
+    "sortTitleAsc": "Título A-Z",
+    "sortTitleDesc": "Título Z-A",
+    "sortValueAsc": "Valor ↑",
+    "sortValueDesc": "Valor ↓",
+    "sortDateAsc": "Mais antigos",
+    "sortDateDesc": "Mais recentes"
   },
   "dealLabels": {
     "label": "Label",
@@ -1555,6 +1570,57 @@
     "lostThisMonth": "Perdidos este Mês",
     "lostThisMonthTooltip": "Negócios marcados como Perdidos desde o primeiro dia do mês atual."
   },
+  "advancedReports": {
+    "title": "Relatórios do Funil",
+    "winRate": "Taxa de Vitória",
+    "avgValue": "Valor Médio",
+    "newThisWeek": "Novos esta semana",
+    "conversionFunnel": "Funil de Conversão",
+    "valueByStage": "Valor por Etapa",
+    "topPerformers": "Melhores Performers",
+    "totalDeals": "Negócios Totais",
+    "wonDeals": "Negócios Ganhos",
+    "lostDeals": "Negócios Perdidos",
+    "deals": "negócios",
+    "noData": "Nenhum dado disponível",
+    "activityTimeline": "Linha do Tempo de Atividades",
+    "conversionRate": "Taxa de Conversão"
+  },
+  "notificationBell": {
+    "title": "Notificações",
+    "markAllRead": "Marcar todas como lidas",
+    "noNotifications": "Sem notificações"
+  },
+  "bulkActions": {
+    "selected": "{count} cards selecionados",
+    "moveTo": "Mover para",
+    "archive": "Arquivar",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir {count} cards?",
+    "clear": "Limpar",
+    "moveSuccess": "{count} cards movidos",
+    "archiveSuccess": "{count} cards arquivados",
+    "deleteSuccess": "{count} cards excluídos",
+    "error": "Erro"
+  },
+  "customFields": {
+    "title": "Campos Personalizados",
+    "addField": "Adicionar campo",
+    "fieldNamePlaceholder": "Nome do campo",
+    "fieldType": "Tipo",
+    "required": "Obrigatório",
+    "options": "Opções",
+    "addOption": "Adicionar opção",
+    "noFields": "Sem campos personalizados",
+    "fieldCreated": "Campo criado",
+    "fieldDeleted": "Campo excluído",
+    "error": "Erro",
+    "text": "Texto",
+    "number": "Número",
+    "date": "Data",
+    "select": "Seleção",
+    "boolean": "Sim/Não"
+  },
   "pipelineSettings": {
     "title": "Configurações do funil",
     "pipelines": "Funis",
@@ -1597,7 +1663,11 @@
     "clearFilters": "Limpar filtros",
     "noResults": "Nenhum deal encontrado",
     "showArchived": "Mostrar arquivados",
-    "hideArchived": "Ocultar arquivados"
+    "hideArchived": "Ocultar arquivados",
+    "boardBackground": "Fundo do board",
+    "default": "Padrão",
+    "gradients": "Gradientes",
+    "clearBackground": "Limpar fundo"
   },
   "dealTemplates": {
     "title": "Modelos de Deal",
@@ -1614,7 +1684,21 @@
     "templateLabels": "Labels",
     "addLabel": "Adicionar label",
     "saveTemplate": "Salvar modelo",
-    "deleteConfirm": "Excluir este modelo?"
+    "deleteConfirm": "Excluir este modelo?",
+    "name": "Nome",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "close": "Fechar",
+    "dealTitle": "Título do deal",
+    "description": "Descrição",
+    "value": "Valor",
+    "checklistItems": "Itens do checklist (um por linha)",
+    "labels": "Labels (nome:cor por linha)",
+    "noTemplates": "Nenhum modelo ainda",
+    "error": "Erro",
+    "createSuccess": "Modelo criado",
+    "updateSuccess": "Modelo atualizado",
+    "deleteSuccess": "Modelo excluído"
   },
   "empty": {
     "noData": "Nenhum dado disponível",

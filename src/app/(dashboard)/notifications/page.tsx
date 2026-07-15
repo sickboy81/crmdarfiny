@@ -90,22 +90,20 @@ export default function NotificationsPage() {
 
   const markRead = useCallback(
     async (id: string) => {
-      // Optimistic — the row is already visually "read" by the time the
-      // request lands, so the UI doesn't wait on the round-trip.
       setNotifications(
         (prev) =>
           prev?.map((n) =>
-            n.id === id && !n.read_at
-              ? { ...n, read_at: new Date().toISOString() }
+            n.id === id && !n.is_read
+              ? { ...n, is_read: true }
               : n,
           ) ?? prev,
       );
       const supabase = createClient();
       const { error: updateErr } = await supabase
         .from("notifications")
-        .update({ read_at: new Date().toISOString() })
+        .update({ is_read: true })
         .eq("id", id)
-        .is("read_at", null);
+        .eq("is_read", false);
       if (updateErr) {
         toast.error("Failed to mark notification as read");
         load();
@@ -116,7 +114,7 @@ export default function NotificationsPage() {
 
   const handleClick = useCallback(
     (n: Notification) => {
-      if (!n.read_at) markRead(n.id);
+      if (!n.is_read) markRead(n.id);
       if (n.conversation_id) {
         router.push(`/inbox?c=${n.conversation_id}`);
       }
@@ -124,20 +122,19 @@ export default function NotificationsPage() {
     [markRead, router],
   );
 
-  const unreadIds = notifications?.filter((n) => !n.read_at).map((n) => n.id) ?? [];
+  const unreadIds = notifications?.filter((n) => !n.is_read).map((n) => n.id) ?? [];
 
   const markAllRead = useCallback(async () => {
     if (unreadIds.length === 0) return;
     setMarkingAll(true);
-    const now = new Date().toISOString();
     setNotifications(
-      (prev) => prev?.map((n) => (n.read_at ? n : { ...n, read_at: now })) ?? prev,
+      (prev) => prev?.map((n) => (n.is_read ? n : { ...n, is_read: true })) ?? prev,
     );
     const supabase = createClient();
     const { error: updateErr } = await supabase
       .from("notifications")
-      .update({ read_at: now })
-      .is("read_at", null);
+      .update({ is_read: true })
+      .eq("is_read", false);
     setMarkingAll(false);
     if (updateErr) {
       toast.error("Failed to mark all as read");
@@ -204,7 +201,7 @@ export default function NotificationsPage() {
         <ul className="space-y-2">
           {notifications.map((n) => {
             const Icon = TYPE_ICON[n.type] ?? Bell;
-            const isUnread = !n.read_at;
+            const isUnread = !n.is_read;
             return (
               <li key={n.id}>
                 <button

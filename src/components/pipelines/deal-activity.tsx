@@ -26,7 +26,7 @@ function timeAgo(dateStr: string) {
 }
 
 export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActivityProps) {
-  const { user } = useAuth();
+  const { user, accountId } = useAuth();
   const t = useTranslations("dealActivity");
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
@@ -43,6 +43,27 @@ export function DealActivityTimeline({ dealId, activities, onRefresh }: DealActi
         content: comment.trim(),
       });
       if (error) throw error;
+
+      // Notify watchers of this deal (except the commenter)
+      const { data: watchers } = await db
+        .from("deal_watchers")
+        .select("user_id")
+        .eq("deal_id", dealId)
+        .neq("user_id", user?.id ?? "");
+
+      if (watchers?.length) {
+        const notifications = watchers.map((w) => ({
+          account_id: accountId,
+          user_id: w.user_id,
+          type: "comment" as const,
+          title: "New comment on deal",
+          body: comment.trim().slice(0, 200),
+          deal_id: dealId,
+          from_user_id: user?.id,
+        }));
+        await db.from("notifications").insert(notifications);
+      }
+
       setComment("");
       onRefresh();
     } catch {

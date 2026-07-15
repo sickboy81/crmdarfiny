@@ -244,7 +244,10 @@
     "stageWon": "Ganado",
     "boardBackground": "Fondo del tablero",
     "backgroundSolid": "Color solido",
-    "backgroundGradient": "Degradado"
+    "backgroundGradient": "Degradado",
+    "templates": "Plantillas",
+    "reports": "Informes",
+    "customFields": "Campos Personalizados"
   },
   "settings": {
     "title": "Configuración",
@@ -1489,7 +1492,11 @@
     "moveError": "Error al mover negocio",
     "template": "Plantilla",
     "fromTemplate": "Usar plantilla",
-    "noTemplates": "Sin plantillas disponibles"
+    "noTemplates": "Sin plantillas disponibles",
+    "labels": "Etiquetas",
+    "actions": "Acciones",
+    "watch": "Observar",
+    "unwatch": "Dejar de observar"
   },
   "pipelineBoard": {
     "dragDealHere": "Arrastra un negocio aquí",
@@ -1497,7 +1504,15 @@
     "addDeal": "Agregar negocio",
     "collapseColumn": "Recolgar columna",
     "dealCreated": "Negocio creado",
-    "dealCreateError": "Error al crear negocio"
+    "dealCreateError": "Error al crear negocio",
+    "sortBy": "Ordenar por",
+    "sortDefault": "Predeterminado",
+    "sortTitleAsc": "Título A-Z",
+    "sortTitleDesc": "Título Z-A",
+    "sortValueAsc": "Valor ↑",
+    "sortValueDesc": "Valor ↓",
+    "sortDateAsc": "Más antiguos",
+    "sortDateDesc": "Más recientes"
   },
   "dealLabels": {
     "label": "Etiqueta",
@@ -1551,6 +1566,57 @@
     "lostThisMonth": "Perdidos este Mes",
     "lostThisMonthTooltip": "Negocios marcados como Perdidos desde el primer dia del mes actual."
   },
+  "advancedReports": {
+    "title": "Informes del Funil",
+    "winRate": "Tasa de Éxito",
+    "avgValue": "Valor Promedio",
+    "newThisWeek": "Nuevos esta semana",
+    "conversionFunnel": "Funil de Conversión",
+    "valueByStage": "Valor por Etapa",
+    "topPerformers": "Mejores Performers",
+    "totalDeals": "Negocios Totales",
+    "wonDeals": "Negocios Ganados",
+    "lostDeals": "Negocios Perdidos",
+    "deals": "negocios",
+    "noData": "Sin datos disponibles",
+    "activityTimeline": "Línea de Tiempo de Actividades",
+    "conversionRate": "Tasa de Conversión"
+  },
+  "notificationBell": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "noNotifications": "Sin notificaciones"
+  },
+  "bulkActions": {
+    "selected": "{count} tarjetas seleccionadas",
+    "moveTo": "Mover a",
+    "archive": "Archivar",
+    "delete": "Eliminar",
+    "deleteConfirm": "Eliminar {count} tarjetas?",
+    "clear": "Limpiar",
+    "moveSuccess": "{count} tarjetas movidas",
+    "archiveSuccess": "{count} tarjetas archivadas",
+    "deleteSuccess": "{count} tarjetas eliminadas",
+    "error": "Error"
+  },
+  "customFields": {
+    "title": "Campos Personalizados",
+    "addField": "Agregar campo",
+    "fieldNamePlaceholder": "Nombre del campo",
+    "fieldType": "Tipo",
+    "required": "Obligatorio",
+    "options": "Opciones",
+    "addOption": "Agregar opción",
+    "noFields": "Sin campos personalizados",
+    "fieldCreated": "Campo creado",
+    "fieldDeleted": "Campo eliminado",
+    "error": "Error",
+    "text": "Texto",
+    "number": "Número",
+    "date": "Fecha",
+    "select": "Selección",
+    "boolean": "Sí/No"
+  },
   "pipelineSettings": {
     "title": "Configuración del funil",
     "pipelines": "Funiles",
@@ -1593,7 +1659,11 @@
     "clearFilters": "Limpiar filtros",
     "noResults": "Sin resultados",
     "showArchived": "Mostrar archivados",
-    "hideArchived": "Ocultar archivados"
+    "hideArchived": "Ocultar archivados",
+    "boardBackground": "Fondo del tablero",
+    "default": "Predeterminado",
+    "gradients": "Gradientes",
+    "clearBackground": "Limpiar fondo"
   },
   "dealTemplates": {
     "title": "Plantillas de Negocio",
@@ -1610,7 +1680,21 @@
     "templateLabels": "Etiquetas",
     "addLabel": "Agregar etiqueta",
     "saveTemplate": "Guardar plantilla",
-    "deleteConfirm": "Eliminar esta plantilla?"
+    "deleteConfirm": "Eliminar esta plantilla?",
+    "name": "Nombre",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "dealTitle": "Título del negocio",
+    "description": "Descripción",
+    "value": "Valor",
+    "checklistItems": "Items de verificación (uno por línea)",
+    "labels": "Etiquetas (nombre:color por línea)",
+    "noTemplates": "Sin plantillas aún",
+    "error": "Error",
+    "createSuccess": "Plantilla creada",
+    "updateSuccess": "Plantilla actualizada",
+    "deleteSuccess": "Plantilla eliminada"
   },
   "empty": {
     "noData": "No hay datos disponibles",

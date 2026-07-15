@@ -137,6 +137,30 @@ export interface ContactCustomValue {
   value?: string;
 }
 
+// ============================================================
+// Pipeline custom fields
+// ============================================================
+
+export interface CustomFieldDefinition {
+  id: string;
+  account_id: string;
+  pipeline_id: string;
+  name: string;
+  field_type: "text" | "number" | "date" | "select" | "boolean";
+  options?: string[];
+  position: number;
+  required: boolean;
+  created_at: string;
+}
+
+export interface CustomFieldValue {
+  id: string;
+  deal_id: string;
+  field_definition_id: string;
+  value: string | null;
+  created_at: string;
+}
+
 export interface ContactNote {
   id: string;
   contact_id: string;
@@ -175,10 +199,14 @@ export interface Notification {
   type: NotificationType;
   conversation_id?: string;
   contact_id?: string;
+  deal_id?: string;
+  pipeline_id?: string;
+  from_user_id?: string;
   /** Who triggered it. Null when an automation/system assigned it. */
   actor_user_id?: string;
   title: string;
   body?: string;
+  is_read: boolean;
   read_at?: string;
   created_at: string;
 }
@@ -401,6 +429,13 @@ export interface DealActivity {
   content?: string;
   created_at: string;
   user?: { full_name?: string };
+}
+
+export interface DealWatcher {
+  id: string;
+  deal_id: string;
+  user_id: string;
+  created_at: string;
 }
 
 export type BroadcastStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';

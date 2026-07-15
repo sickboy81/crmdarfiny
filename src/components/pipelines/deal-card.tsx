@@ -16,6 +16,8 @@ interface DealCardProps {
   onUnarchive?: (dealId: string) => void;
   onCopy?: (deal: Deal) => void;
   isOverlay?: boolean;
+  isSelected?: boolean;
+  onToggleSelection?: () => void;
 }
 
 function formatShortDate(dateStr: string) {
@@ -34,7 +36,7 @@ function getInitials(name?: string, fallback?: string) {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function DealCard({ deal, stage, onEdit, onColorChange, onArchive, onUnarchive, onCopy, isOverlay }: DealCardProps) {
+export function DealCard({ deal, stage, onEdit, onColorChange, onArchive, onUnarchive, onCopy, isOverlay, isSelected, onToggleSelection }: DealCardProps) {
   const ts = useTranslations("settings");
   const td = useTranslations("deals");
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -93,7 +95,31 @@ export function DealCard({ deal, stage, onEdit, onColorChange, onArchive, onUnar
   }
 
   return (
-    <div className="relative">
+    <div className="relative pl-5">
+      {/* Selection checkbox */}
+      {onToggleSelection && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelection();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onToggleSelection();
+            }
+          }}
+          className={`absolute left-0 top-1 z-10 flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
+            isSelected
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-muted-foreground/30 bg-background/80 text-transparent hover:border-muted-foreground/60"
+          }`}
+        >
+          {isSelected && <Check className="h-3 w-3" />}
+        </div>
+      )}
       {/* Cover image */}
       {deal.cover_url && (
         <div className="overflow-hidden rounded-t-lg">

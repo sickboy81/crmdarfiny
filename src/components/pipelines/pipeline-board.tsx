@@ -17,7 +17,8 @@ import {
 import type { Deal, PipelineStage } from "@/types";
 import { DealCard } from "./deal-card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronDown, Loader2, X, Search } from "lucide-react";
+import { Plus, ChevronDown, Loader2, X, Search, ArrowUpDown } from "lucide-react";
+import { BoardBackgroundPicker } from "./board-background-picker";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/currency";
@@ -48,6 +49,8 @@ interface PipelineBoardProps {
   onDealsChanged?: () => void;
   boardBackground?: string | null;
   onBoardBackgroundChange?: (bg: string | null) => void;
+  selectedDealIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
 }
 
 export function PipelineBoard({
@@ -74,6 +77,8 @@ export function PipelineBoard({
   onDealsChanged,
   boardBackground,
   onBoardBackgroundChange,
+  selectedDealIds = [],
+  onSelectionChange,
 }: PipelineBoardProps) {
   const { defaultCurrency, accountId } = useAuth();
   const tb = useTranslations("pipelineBoard");
@@ -136,6 +141,14 @@ export function PipelineBoard({
     });
   }, []);
 
+  const toggleDealSelection = useCallback((dealId: string) => {
+    onSelectionChange?.(
+      selectedDealIds.includes(dealId)
+        ? selectedDealIds.filter((id) => id !== dealId)
+        : [...selectedDealIds, dealId]
+    );
+  }, [selectedDealIds, onSelectionChange]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -189,6 +202,12 @@ export function PipelineBoard({
         >
           {showArchived ? tf("hideArchived") : tf("showArchived")}
         </button>
+        {onBoardBackgroundChange && (
+          <BoardBackgroundPicker
+            currentBackground={boardBackground ?? null}
+            onBackgroundChange={onBoardBackgroundChange}
+          />
+        )}
       </div>
       <div className="board-scroll flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-xl p-2 lg:snap-none"
         style={boardBackground ? { background: boardBackground } : undefined}
@@ -218,6 +237,8 @@ export function PipelineBoard({
               pipelineId={pipelineId}
               accountId={accountId ?? undefined}
               onDealsChanged={onDealsChanged}
+              selectedDealIds={selectedDealIds}
+              onToggleDealSelection={toggleDealSelection}
             />
           );
         })}
@@ -288,6 +309,8 @@ function StageColumn({
   pipelineId,
   accountId,
   onDealsChanged,
+  selectedDealIds = [],
+  onToggleDealSelection,
 }: {
   stage: PipelineStage;
   deals: Deal[];
@@ -304,12 +327,15 @@ function StageColumn({
   pipelineId?: string;
   accountId?: string;
   onDealsChanged?: () => void;
+  selectedDealIds?: string[];
+  onToggleDealSelection?: (dealId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const tb = useTranslations("pipelineBoard");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickAddTitle, setQuickAddTitle] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("default");
 
   const handleQuickAdd = useCallback(async () => {
     if (!quickAddTitle.trim() || !pipelineId || !accountId) return;
@@ -340,6 +366,27 @@ function StageColumn({
       setQuickAdding(false);
     }
   }, [quickAddTitle, pipelineId, accountId, stage.id, onDealsChanged, tb]);
+
+  // Sort deals within this column
+  const sortedDeals = useMemo(() => {
+    const list = [...deals];
+    switch (sortBy) {
+      case "title_asc":
+        return list.sort((a, b) => a.title.localeCompare(b.title));
+      case "title_desc":
+        return list.sort((a, b) => b.title.localeCompare(a.title));
+      case "value_asc":
+        return list.sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
+      case "value_desc":
+        return list.sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+      case "date_asc":
+        return list.sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""));
+      case "date_desc":
+        return list.sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+      default:
+        return list;
+    }
+  }, [deals, sortBy]);
 
   // Collapsed view — thin vertical strip
   if (collapsed) {
@@ -378,13 +425,30 @@ function StageColumn({
             {deals.length}
           </span>
         </div>
-        <button
-          onClick={onToggleCollapse}
-          className="rounded p-1 text-muted-foreground/60 hover:bg-black/5 hover:text-muted-foreground dark:hover:bg-white/10"
-          title={tb("collapseColumn")}
-        >
-          <ChevronDown className="h-4 w-4 -rotate-90" />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Sort dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded p-1 text-[10px] text-muted-foreground/60 bg-transparent border-0 outline-none hover:text-muted-foreground cursor-pointer"
+            title={tb("sortBy")}
+          >
+            <option value="default">{tb("sortDefault")}</option>
+            <option value="title_asc">{tb("sortTitleAsc")}</option>
+            <option value="title_desc">{tb("sortTitleDesc")}</option>
+            <option value="value_asc">{tb("sortValueAsc")}</option>
+            <option value="value_desc">{tb("sortValueDesc")}</option>
+            <option value="date_asc">{tb("sortDateAsc")}</option>
+            <option value="date_desc">{tb("sortDateDesc")}</option>
+          </select>
+          <button
+            onClick={onToggleCollapse}
+            className="rounded p-1 text-muted-foreground/60 hover:bg-black/5 hover:text-muted-foreground dark:hover:bg-white/10"
+            title={tb("collapseColumn")}
+          >
+            <ChevronDown className="h-4 w-4 -rotate-90" />
+          </button>
+        </div>
       </div>
 
       {/* Value subtitle */}
@@ -402,12 +466,12 @@ function StageColumn({
         }`}
         style={{ maxHeight: "calc(100vh - 280px)" }}
       >
-        {deals.length === 0 && !showQuickAdd ? (
+        {sortedDeals.length === 0 && !showQuickAdd ? (
           <div className="flex min-h-[40px] items-center justify-center rounded-lg border border-dashed border-transparent py-4 text-xs text-muted-foreground/50">
             {tb("dragDealHere")}
           </div>
         ) : (
-          deals.map((deal) => (
+          sortedDeals.map((deal) => (
             <DraggableDealCard
               key={deal.id}
               deal={deal}
@@ -417,6 +481,8 @@ function StageColumn({
               onArchive={onArchive}
               onUnarchive={onUnarchive}
               onCopy={onCopy}
+              isSelected={selectedDealIds.includes(deal.id)}
+              onToggleSelection={() => onToggleDealSelection?.(deal.id)}
             />
           ))
         )}
@@ -482,6 +548,8 @@ function DraggableDealCard({
   onArchive,
   onUnarchive,
   onCopy,
+  isSelected,
+  onToggleSelection,
 }: {
   deal: Deal;
   stage: PipelineStage;
@@ -490,6 +558,8 @@ function DraggableDealCard({
   onArchive?: (dealId: string) => void;
   onUnarchive?: (dealId: string) => void;
   onCopy?: (deal: Deal) => void;
+  isSelected?: boolean;
+  onToggleSelection?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: deal.id,
@@ -502,7 +572,7 @@ function DraggableDealCard({
       {...attributes}
       style={{ opacity: isDragging ? 0.4 : 1, touchAction: "none" }}
     >
-      <DealCard deal={deal} stage={stage} onEdit={onEdit} onColorChange={onColorChange} onArchive={onArchive} onUnarchive={onUnarchive} onCopy={onCopy} />
+      <DealCard deal={deal} stage={stage} onEdit={onEdit} onColorChange={onColorChange} onArchive={onArchive} onUnarchive={onUnarchive} onCopy={onCopy} isSelected={isSelected} onToggleSelection={onToggleSelection} />
     </div>
   );
 }

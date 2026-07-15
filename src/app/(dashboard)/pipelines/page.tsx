@@ -3,11 +3,17 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
-import type { Pipeline, PipelineStage, Deal } from "@/types";
+import type { Pipeline, PipelineStage, Deal, Profile } from "@/types";
 import { PipelineBoard } from "@/components/pipelines/pipeline-board";
 import { PipelineSettings } from "@/components/pipelines/pipeline-settings";
 import { DealForm } from "@/components/pipelines/deal-form";
+import { DealDetailModal } from "@/components/pipelines/deal-detail-modal";
+import { DealTemplatesManager } from "@/components/pipelines/deal-templates-manager";
 import { PipelineAnalytics } from "@/components/pipelines/pipeline-analytics";
+import { NotificationBell } from "@/components/pipelines/notification-bell";
+import { BulkActions } from "@/components/pipelines/bulk-actions";
+import { AdvancedReports } from "@/components/pipelines/advanced-reports";
+import { CustomFieldsManager } from "@/components/pipelines/custom-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GitBranch, Plus, ChevronDown, Settings } from "lucide-react";
+import { GitBranch, Plus, ChevronDown, Settings, ClipboardList, BarChart3, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/use-can";
 import { useAuth } from "@/hooks/use-auth";
@@ -70,6 +76,25 @@ export default function PipelinesPage() {
   const [dealFormOpen, setDealFormOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
+
+  // Detail modal state (Trello-style card detail view)
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
+
+  // Supporting data for detail modal
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+
+  // Templates manager state
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+
+  // Advanced reports state
+  const [reportsOpen, setReportsOpen] = useState(false);
+
+  // Custom fields manager state
+  const [customFieldsOpen, setCustomFieldsOpen] = useState(false);
+
+  // Bulk selection state
+  const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -246,6 +271,17 @@ export default function PipelinesPage() {
     };
   }, [selectedPipelineId, loadStages, loadDeals]);
 
+  // Load profiles for the detail modal
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from("profiles").select("*").order("full_name");
+      if (cancelled) return;
+      setProfiles((data ?? []) as Profile[]);
+    })();
+    return () => { cancelled = true; };
+  }, [supabase]);
+
   const refreshPipelines = useCallback(async () => {
     const list = await loadPipelines();
     setPipelines(list);
@@ -292,16 +328,35 @@ export default function PipelinesPage() {
   );
 
   const handleEditDeal = useCallback((deal: Deal) => {
-    setEditingDeal(deal);
-    setDefaultStageId(deal.stage_id);
-    setDealFormOpen(true);
+    // Open the Trello-style detail modal instead of the form sheet
+    setDetailDeal(deal);
+    setDetailModalOpen(true);
   }, []);
 
   const handleColorChange = useCallback((dealId: string, color: string | null) => {
     setDeals((prev) =>
       prev.map((d) => (d.id === dealId ? { ...d, color } : d))
     );
-  }, []);
+    if (detailDeal?.id === dealId) {
+      setDetailDeal((prev) => prev ? { ...prev, color } : prev);
+    }
+  }, [detailDeal?.id]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable) return;
+      if (dealFormOpen || detailModalOpen || settingsOpen || newPipelineOpen || templatesOpen) return;
+
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        handleAddDeal();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dealFormOpen, detailModalOpen, settingsOpen, newPipelineOpen, templatesOpen, stages, handleAddDeal]);
 
   // Collect all unique labels and members for filter dropdowns
   const allLabels = useMemo(() => {
@@ -536,6 +591,16 @@ export default function PipelinesPage() {
             variant="outline"
             canAct={canEditSettings}
             gateReason="create pipelines"
+            onClick={() => setTemplatesOpen(true)}
+            className="border-border bg-card text-foreground hover:bg-muted"
+          >
+            <ClipboardList className="mr-1 h-4 w-4" />
+            {t("templates")}
+          </GatedButton>
+          <GatedButton
+            variant="outline"
+            canAct={canEditSettings}
+            gateReason="create pipelines"
             onClick={() => setNewPipelineOpen(true)}
             className="border-border bg-card text-foreground hover:bg-muted"
           >
@@ -552,6 +617,27 @@ export default function PipelinesPage() {
             <Plus className="mr-1 h-4 w-4" />
             {t("addDeal")}
           </GatedButton>
+          {selectedPipelineId && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setReportsOpen(true)}
+                className="border-border bg-card text-foreground hover:bg-muted"
+              >
+                <BarChart3 className="mr-1 h-4 w-4" />
+                {t("reports")}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setCustomFieldsOpen(true)}
+                className="border-border bg-card text-foreground hover:bg-muted"
+              >
+                <Settings2 className="mr-1 h-4 w-4" />
+                {t("customFields")}
+              </Button>
+            </>
+          )}
+          <NotificationBell />
         </div>
       </div>
 
@@ -602,6 +688,19 @@ export default function PipelinesPage() {
             allMembers={allMembers}
             boardBackground={selectedPipeline?.board_background ?? null}
             onBoardBackgroundChange={handleBoardBackground}
+            selectedDealIds={selectedDealIds}
+            onSelectionChange={setSelectedDealIds}
+          />
+
+          {/* Bulk Actions Bar */}
+          <BulkActions
+            selectedDealIds={selectedDealIds}
+            stages={stages}
+            onClearSelection={() => setSelectedDealIds([])}
+            onActionComplete={() => {
+              refreshDeals();
+              setSelectedDealIds([]);
+            }}
           />
         </>
       )}
@@ -662,7 +761,24 @@ export default function PipelinesPage() {
         />
       )}
 
-      {/* Deal Form (Sheet) */}
+      {/* Advanced Reports */}
+      <AdvancedReports
+        open={reportsOpen}
+        onOpenChange={setReportsOpen}
+        pipelineId={selectedPipelineId}
+        stages={stages}
+      />
+
+      {/* Custom Fields Manager */}
+      {selectedPipelineId && (
+        <CustomFieldsManager
+          pipelineId={selectedPipelineId}
+          open={customFieldsOpen}
+          onOpenChange={setCustomFieldsOpen}
+        />
+      )}
+
+      {/* Deal Form (Sheet) — used for creating new deals */}
       <DealForm
         open={dealFormOpen}
         onOpenChange={setDealFormOpen}
@@ -671,6 +787,30 @@ export default function PipelinesPage() {
         stages={stages}
         defaultStageId={defaultStageId}
         onSaved={refreshDeals}
+      />
+
+      {/* Deal Detail Modal (Trello-style) — used for viewing/editing existing deals */}
+      <DealDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        deal={detailDeal}
+        stages={stages}
+        allPipelines={pipelines}
+        profiles={profiles}
+        onSaved={() => {
+          refreshDeals();
+          // Refresh the detail deal with fresh data
+          if (detailDeal) {
+            const fresh = deals.find((d) => d.id === detailDeal.id);
+            if (fresh) setDetailDeal(fresh);
+          }
+        }}
+      />
+
+      {/* Templates Manager */}
+      <DealTemplatesManager
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
       />
     </div>
   );
