@@ -359,129 +359,143 @@ export function ImageManager() {
           <FolderOpen className="h-16 w-16 mb-3 opacity-30" />
           <p className="text-sm">{t('noFiles')}</p>
         </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {filteredFiles.map((file) => {
-            const FileIcon = getFileIcon(file.type)
-            const isImg = isImageType(file.type)
-            return (
-              <Card
-                key={file.id}
-                className={`cursor-pointer overflow-hidden transition-all hover:ring-2 hover:ring-primary ${
-                  selectedFile?.id === file.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => setSelectedFile(file)}
-              >
-                <div className="aspect-square bg-muted flex items-center justify-center">
-                  {isImg ? (
-                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <FileIcon className="h-12 w-12 text-muted-foreground/40" />
-                  )}
-                </div>
-                <CardContent className="p-2">
-                  <p className="text-xs font-medium truncate">{file.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{formatSize(file.size)}</p>
+      ) : (
+        <div className="flex gap-4">
+          {/* Grid or List */}
+          <div className={`flex-1 min-w-0 transition-all ${selectedFile && !showCropModal && !showPreview ? 'max-w-[calc(100%-300px)]' : ''}`}>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                {filteredFiles.map((file) => {
+                  const FileIcon = getFileIcon(file.type)
+                  const isImg = isImageType(file.type)
+                  return (
+                    <Card
+                      key={file.id}
+                      className={`cursor-pointer overflow-hidden transition-all hover:ring-2 hover:ring-primary ${
+                        selectedFile?.id === file.id ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => setSelectedFile(file)}
+                    >
+                      <div className="aspect-square bg-muted flex items-center justify-center">
+                        {isImg ? (
+                          <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <FileIcon className="h-12 w-12 text-muted-foreground/40" />
+                        )}
+                      </div>
+                      <CardContent className="p-2">
+                        <p className="text-xs font-medium truncate">{file.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatSize(file.size)}</p>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-muted sticky top-0">
+                          <th className="px-4 py-2 text-left font-bold">{t('preview')}</th>
+                          <th className="px-4 py-2 text-left font-bold">{t('name')}</th>
+                          <th className="px-4 py-2 text-left font-bold">{t('size')}</th>
+                          <th className="px-4 py-2 text-left font-bold">{t('date')}</th>
+                          <th className="px-4 py-2 text-right font-bold">{t('actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredFiles.map((file) => {
+                          const FileIcon = getFileIcon(file.type)
+                          const isImg = isImageType(file.type)
+                          return (
+                            <tr key={file.id} className="border-t hover:bg-muted/50">
+                              <td className="px-4 py-2">
+                                {isImg ? (
+                                  <img src={file.url} alt="" className="w-10 h-10 rounded object-cover" />
+                                ) : (
+                                  <FileIcon className="w-10 h-10 p-1 text-muted-foreground/40" />
+                                )}
+                              </td>
+                              <td className="px-4 py-2 font-medium">{file.name}</td>
+                              <td className="px-4 py-2 text-muted-foreground">{formatSize(file.size)}</td>
+                              <td className="px-4 py-2 text-muted-foreground">
+                                {new Date(file.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                <div className="flex gap-1 justify-end">
+                                  {isImg && (
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedFile(file)}>
+                                      <Crop className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(file)}>
+                                    <Download className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteFile(file)}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
-            )
-          })}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="max-h-[500px] overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-muted sticky top-0">
-                    <th className="px-4 py-2 text-left font-bold">{t('preview')}</th>
-                    <th className="px-4 py-2 text-left font-bold">{t('name')}</th>
-                    <th className="px-4 py-2 text-left font-bold">{t('size')}</th>
-                    <th className="px-4 py-2 text-left font-bold">{t('date')}</th>
-                    <th className="px-4 py-2 text-right font-bold">{t('actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFiles.map((file) => {
-                    const FileIcon = getFileIcon(file.type)
-                    const isImg = isImageType(file.type)
-                    return (
-                      <tr key={file.id} className="border-t hover:bg-muted/50">
-                        <td className="px-4 py-2">
-                          {isImg ? (
-                            <img src={file.url} alt="" className="w-10 h-10 rounded object-cover" />
-                          ) : (
-                            <FileIcon className="w-10 h-10 p-1 text-muted-foreground/40" />
-                          )}
-                        </td>
-                        <td className="px-4 py-2 font-medium">{file.name}</td>
-                        <td className="px-4 py-2 text-muted-foreground">{formatSize(file.size)}</td>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          {new Date(file.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2 text-right">
-                          <div className="flex gap-1 justify-end">
-                            {isImg && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedFile(file)}>
-                                <Crop className="h-3 w-3" />
-                              </Button>
-                            )}
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(file)}>
-                              <Download className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteFile(file)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </div>
 
-      {/* Selected File Actions */}
-      {selectedFile && !showCropModal && !showPreview && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              {isImageType(selectedFile.type) ? (
-                <img src={selectedFile.url} alt="" className="w-20 h-20 rounded object-cover" />
-              ) : (
-                <div className="w-20 h-20 rounded bg-muted flex items-center justify-center">
-                  {(() => {
-                    const FileIcon = getFileIcon(selectedFile.type)
-                    return <FileIcon className="h-10 w-10 text-muted-foreground/40" />
-                  })()}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm truncate">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)} · {selectedFile.type}</p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {isImageType(selectedFile.type) && (
-                  <Button variant="outline" size="sm" onClick={() => setShowCropModal(true)}>
-                    <Crop className="h-3 w-3 mr-1" /> {t('crop')}
-                  </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={() => downloadFile(selectedFile)}>
-                  <Download className="h-3 w-3 mr-1" /> {t('download')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => copyUrl(selectedFile)}>
-                  <Copy className="h-3 w-3 mr-1" /> {t('copyUrl')}
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => deleteFile(selectedFile)}>
-                  <Trash2 className="h-3 w-3 mr-1" /> {t('delete')}
-                </Button>
-              </div>
+          {/* Side Panel - Selected File */}
+          {selectedFile && !showCropModal && !showPreview && (
+            <div className="w-[280px] shrink-0">
+              <Card className="sticky top-4">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold truncate">{t('details')}</p>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSelectedFile(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {isImageType(selectedFile.type) ? (
+                    <img src={selectedFile.url} alt="" className="w-full h-40 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-full h-40 rounded-lg bg-muted flex items-center justify-center">
+                      {(() => {
+                        const FileIcon = getFileIcon(selectedFile.type)
+                        return <FileIcon className="h-12 w-12 text-muted-foreground/40" />
+                      })()}
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium truncate">{selectedFile.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{formatSize(selectedFile.size)} · {selectedFile.type}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(selectedFile.created_at).toLocaleString()}</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {isImageType(selectedFile.type) && (
+                      <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => setShowCropModal(true)}>
+                        <Crop className="h-3 w-3 mr-2" /> {t('crop')}
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => downloadFile(selectedFile)}>
+                      <Download className="h-3 w-3 mr-2" /> {t('download')}
+                    </Button>
+                    <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => copyUrl(selectedFile)}>
+                      <Copy className="h-3 w-3 mr-2" /> {t('copyUrl')}
+                    </Button>
+                    <Button variant="destructive" size="sm" className="w-full justify-start" onClick={() => deleteFile(selectedFile)}>
+                      <Trash2 className="h-3 w-3 mr-2" /> {t('delete')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       )}
 
       {/* Crop Modal */}
